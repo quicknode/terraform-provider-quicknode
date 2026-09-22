@@ -22,28 +22,57 @@ terraform {
 provider "quicknode" {}
 
 resource "quicknode_endpoint" "payments" {
-  chain   = "ethereum"
+  chain   = "eth"
   network = "mainnet"
   label   = "payments-prod"
+  tags    = ["prod", "payments"]
 }
 
+# Working endpoint, credential included.
 output "rpc_url" {
-  value     = quicknode_endpoint.payments.http_url
-  sensitive = true # the URL embeds your auth token
+  value     = quicknode_endpoint.payments.http_url_with_token
+  sensitive = true
+}
+
+# Same endpoint with the credential removed: safe to log or display.
+output "rpc_base_url" {
+  value = quicknode_endpoint.payments.http_url
 }
 ```
 
-Authentication uses a Quicknode [Admin API](https://www.quicknode.com/docs/admin-api) key (paid plans), via the `QUICKNODE_API_KEY` environment variable or the provider block. Endpoint URLs contain auth tokens and are stored in Terraform state — use encrypted remote state.
+Chain slugs are abbreviations that often differ from the chain's name — Ethereum is `eth`, Avalanche is `avax`, Arbitrum is `arb`, Polygon is `matic`. Read `data.quicknode_chains` for the full list.
+
+Authentication uses a Quicknode [Admin API](https://www.quicknode.com/docs/admin-api) key (paid plans), via the `QUICKNODE_API_KEY` environment variable or the provider block.
+
+The Admin API returns endpoint URLs with the auth token embedded. The provider exposes both forms:
+
+| Attribute | Sensitive | Use it for |
+|---|---|---|
+| `http_url_with_token`, `wss_url_with_token` | yes | anything that makes RPC calls |
+| `http_url`, `wss_url` | no | logging, display, anything that must not hold a credential |
+| `tokens` | yes | rotation workflows that need token ids |
+
+Do not rebuild a URL by joining `http_url` to a token. The token is not always the last path segment — some chains append a suffix, as in `https://<host>/<token>/evm` — so a hand-assembled URL works on Ethereum and breaks elsewhere. `wss_url` is null on chains without WebSocket support.
+
+Token values land in Terraform state either way — use encrypted remote state.
 
 ## Resources
 
 | Name | Status |
 |---|---|
-| `quicknode_endpoint` | ✅ available |
-| Endpoint security (IP / domain allowlists, method filters) | ✅ available (being redesigned) |
+| `quicknode_endpoint` (label, status, tags, multichain, import) | ✅ available |
+| `data.quicknode_chains` | ✅ available |
+| `security_options` on `quicknode_endpoint` | 🚧 planned |
+| `quicknode_endpoint_ip`, `quicknode_endpoint_domain_mask`, `quicknode_endpoint_referrer`, `quicknode_endpoint_jwt`, `quicknode_endpoint_request_filter` | 🚧 planned |
 | `quicknode_endpoint_rate_limits`, `quicknode_method_rate_limit` | 🚧 planned |
-| `quicknode_stream`, `quicknode_webhook` | 🚧 planned |
-| Data sources: `quicknode_chains`, `quicknode_endpoint(s)` | ✅ available |
+| `data.quicknode_endpoint(s)` | 🚧 planned |
+| `quicknode_stream`, `quicknode_webhook` | 🚧 planned, blocked on published specs |
+
+Security splits along the way the API splits. The toggles are a single PATCH on
+the endpoint, so they become a `security_options` attribute on
+`quicknode_endpoint`. Each allowlist entry is a POST/DELETE with no update, so
+each becomes its own resource keyed by `endpoint_id` — which also keeps a
+one-address change from showing up as a diff on the whole endpoint.
 
 Full documentation lives in [`docs/`](./docs) and, once published, on the Terraform Registry.
 
@@ -52,11 +81,16 @@ Full documentation lives in [`docs/`](./docs) and, once published, on the Terraf
 Requires Go (see `go.mod`) and Terraform >= 1.13.
 
 ```sh
-make generate   # regenerate the API client and docs
-make lint       # golangci-lint
-go build ./...
-TF_ACC=1 go test ./... # acceptance tests: creates real, billable resources
+make vendor     # refresh the upstream Admin API spec
+make generate   # apply api/admin/patches.json, then regenerate the client
+make lint       # gofmt + go vet
+make test       # unit tests
+make testacc    # acceptance tests: creates real, billable resources
 ```
+
+The client is generated from `api/admin/openapi.upstream.json`, which is vendored
+verbatim so `make vendor` can refresh it. `api/admin/patches.json` holds the local
+schema corrections applied before generation, keeping the vendored copy unmodified.
 
 Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md).
 

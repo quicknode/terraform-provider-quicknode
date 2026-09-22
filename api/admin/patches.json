@@ -1,0 +1,173 @@
+[
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}/get/responses/200/content/application~1json/schema/properties/data/properties/tags",
+    "value": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tag_id": {
+            "type": "integer"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}/get/responses/200/content/application~1json/schema/properties/data/properties/is_multichain",
+    "value": {
+      "type": "boolean"
+    }
+  },
+  {
+    "op": "remove",
+    "path": "/paths/~1v0~1endpoints~1{id}/get/responses/200/content/application~1json/schema/properties/tags"
+  },
+  {
+    "op": "remove",
+    "path": "/paths/~1v0~1endpoints~1{id}/get/responses/200/content/application~1json/schema/properties/is_multichain"
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}/get/responses/200/content/application~1json/schema/properties/data/properties/security/properties/options",
+    "value": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "boolean"
+        },
+        "referrers": {
+          "type": "boolean"
+        },
+        "jwts": {
+          "type": "boolean"
+        },
+        "ips": {
+          "type": "boolean"
+        },
+        "domainMasks": {
+          "type": "boolean"
+        },
+        "hsts": {
+          "type": "boolean"
+        },
+        "cors": {
+          "type": "boolean"
+        },
+        "responseLogging": {
+          "type": "boolean"
+        },
+        "requestFilters": {
+          "type": "boolean"
+        },
+        "ipCustomHeader": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1chains/get/responses/200/content/application~1json/schema/properties/data/items/properties/networks/items/properties/chain_id",
+    "value": {
+      "type": "integer"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1chains/get/responses/200/content/application~1json/schema/properties/data/items/properties/is_select_chain",
+    "value": {
+      "type": "boolean"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1method-rate-limits/post/requestBody/content/application~1json/schema/properties/methods/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security~1request_filters/post/requestBody/content/application~1json/schema/properties/method/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints/get/parameters/10/schema",
+    "value": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints/get/parameters/11/schema",
+    "value": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}/get/responses/200/content/application~1json/schema/properties/data/properties/security/properties/domain_masks",
+    "value": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  {
+    "op": "remove",
+    "path": "/paths/~1v0~1endpoints~1{id}/get/responses/200/content/application~1json/schema/properties/data/properties/security/properties/domainMasks"
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}/get/responses/200/content/application~1json/schema/properties/data/properties/security/properties/request_filters",
+    "value": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "method": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+]
