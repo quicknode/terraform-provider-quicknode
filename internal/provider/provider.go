@@ -130,9 +130,13 @@ func (p *quicknodeProvider) Configure(ctx context.Context, req provider.Configur
 }
 
 func (p *quicknodeProvider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
+	resources := []func() resource.Resource{
 		NewEndpointResource,
+		NewEndpointTokenResource,
+		NewJWTResource,
+		NewRequestFilterResource,
 	}
+	return append(resources, securityEntryResources()...)
 }
 
 func (p *quicknodeProvider) DataSources(_ context.Context) []func() datasource.DataSource {

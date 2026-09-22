@@ -169,5 +169,85 @@
         }
       }
     }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/ips/items",
+    "value": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/domain_masks/items",
+    "value": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "domain_mask": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/referrers/items",
+    "value": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "referrer": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/jwts/items",
+    "value": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kid": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/request_filters/items/properties/method/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security~1request_filters~1{request_filter_id}/put/requestBody/content/application~1json/schema/properties/method/items",
+    "value": {
+      "type": "string"
+    }
   }
 ]

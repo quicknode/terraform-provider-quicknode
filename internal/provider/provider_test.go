@@ -23,8 +23,18 @@ func TestProviderSchema(t *testing.T) {
 		}
 	}
 
-	if _, ok := schema.ResourceSchemas["quicknode_endpoint"]; !ok {
-		t.Errorf("quicknode_endpoint is missing, got %v", keys(schema.ResourceSchemas))
+	for _, name := range []string{
+		"quicknode_endpoint",
+		"quicknode_endpoint_ip",
+		"quicknode_endpoint_domain_mask",
+		"quicknode_endpoint_referrer",
+		"quicknode_endpoint_jwt",
+		"quicknode_endpoint_request_filter",
+		"quicknode_endpoint_token",
+	} {
+		if _, ok := schema.ResourceSchemas[name]; !ok {
+			t.Errorf("%s is missing, got %v", name, keys(schema.ResourceSchemas))
+		}
 	}
 	if _, ok := schema.DataSourceSchemas["quicknode_chains"]; !ok {
 		t.Errorf("quicknode_chains is missing, got %v", keys(schema.DataSourceSchemas))

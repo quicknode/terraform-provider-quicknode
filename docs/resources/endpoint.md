@@ -22,6 +22,19 @@ resource "quicknode_endpoint" "payments" {
   label   = "payments-prod"
   status  = "active"
   tags    = ["prod", "payments"]
+
+  # Each toggle decides whether a mechanism is enforced. The entries it applies
+  # to are separate resources, such as quicknode_endpoint_ip. A toggle left out
+  # keeps whatever value the endpoint already has.
+  security_options = {
+    tokens = true
+    ips    = true
+    cors   = false
+  }
+
+  # Read the caller's address from this header when calls arrive through a
+  # proxy, so IP restrictions match the original caller.
+  ip_custom_header = "X-Real-IP"
 }
 
 # Pass the credentialed URL to whatever makes RPC calls.
@@ -46,8 +59,10 @@ output "payments_rpc_host" {
 
 ### Optional
 
+- `ip_custom_header` (String) Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions match the original caller rather than the proxy.
 - `label` (String) Descriptive label for the endpoint. Labels are not unique and are not used to identify the endpoint.
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
+- `security_options` (Attributes) Which security mechanisms the endpoint enforces. Each toggle only decides whether a mechanism is applied; the entries it applies to are separate resources, such as `quicknode_endpoint_ip`. A toggle left out of the configuration keeps whatever value the endpoint already has. (see [below for nested schema](#nestedatt--security_options))
 - `status` (String) `active` or `paused`.
 - `tags` (Set of String) Tag labels applied to the endpoint. Omitting the attribute removes every tag the provider finds on the endpoint.
 
@@ -59,6 +74,25 @@ output "payments_rpc_host" {
 - `tokens` (Attributes List) Auth tokens for the endpoint. An endpoint can carry several. Token values are stored in Terraform state, so keep state encrypted and remote. (see [below for nested schema](#nestedatt--tokens))
 - `wss_url` (String) WebSocket URL with the auth token removed, or null on chains without WebSocket support.
 - `wss_url_with_token` (String, Sensitive) The working WebSocket endpoint, or null on chains without WebSocket support.
+
+<a id="nestedatt--security_options"></a>
+### Nested Schema for `security_options`
+
+Optional:
+
+- `cors` (Boolean) Apply Cross-Origin Resource Sharing policy. New endpoints have this enabled.
+- `domain_masks` (Boolean) Serve the endpoint from an approved custom domain. Add them with `quicknode_endpoint_domain_mask`.
+- `hsts` (Boolean) Send the HTTP Strict Transport Security header.
+- `ips` (Boolean) Restrict calls to the approved IP addresses. Add them with `quicknode_endpoint_ip`.
+- `jwts` (Boolean) Require a signed JWT. Register signing keys with `quicknode_endpoint_jwt`.
+- `referrers` (Boolean) Restrict calls to the approved referrers. Add them with `quicknode_endpoint_referrer`.
+- `tokens` (Boolean) Require one of the endpoint's auth tokens. New endpoints have this enabled.
+
+Read-Only:
+
+- `request_filters` (Boolean) Whether RPC method filtering is applied. Read-only: the Admin API turns this on when a `quicknode_endpoint_request_filter` exists and off when the last one is removed.
+- `response_logging` (Boolean) Whether responses are logged for the endpoint. Read-only: it is set by the account's plan rather than per endpoint.
+
 
 <a id="nestedatt--tokens"></a>
 ### Nested Schema for `tokens`

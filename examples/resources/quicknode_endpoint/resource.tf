@@ -4,6 +4,19 @@ resource "quicknode_endpoint" "payments" {
   label   = "payments-prod"
   status  = "active"
   tags    = ["prod", "payments"]
+
+  # Each toggle decides whether a mechanism is enforced. The entries it applies
+  # to are separate resources, such as quicknode_endpoint_ip. A toggle left out
+  # keeps whatever value the endpoint already has.
+  security_options = {
+    tokens = true
+    ips    = true
+    cors   = false
+  }
+
+  # Read the caller's address from this header when calls arrive through a
+  # proxy, so IP restrictions match the original caller.
+  ip_custom_header = "X-Real-IP"
 }
 
 # Pass the credentialed URL to whatever makes RPC calls.

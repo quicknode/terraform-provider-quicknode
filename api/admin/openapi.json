@@ -2852,17 +2852,53 @@
                       "properties": {
                         "domain_masks": {
                           "description": "An array of domain mask entries; null if none configured",
-                          "items": {},
+                          "items": {
+                            "properties": {
+                              "domain_mask": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
                           "type": "array"
                         },
                         "ips": {
                           "description": "An array of allowed IP entries; null if none configured",
-                          "items": {},
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "ip": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
                           "type": "array"
                         },
                         "jwts": {
                           "description": "An array of JWT configuration objects; null if none configured",
-                          "items": {},
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "kid": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "public_key": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
                           "type": "array"
                         },
                         "options": {
@@ -2919,7 +2955,17 @@
                         },
                         "referrers": {
                           "description": "An array of allowed referrer entries; null if none configured",
-                          "items": {},
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "referrer": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
                           "type": "array"
                         },
                         "request_filters": {
@@ -2932,7 +2978,9 @@
                               },
                               "method": {
                                 "description": "An array of whitelisted method names",
-                                "items": {},
+                                "items": {
+                                  "type": "string"
+                                },
                                 "type": "array"
                               },
                               "params": {
@@ -3673,7 +3721,9 @@
                 "properties": {
                   "method": {
                     "description": "An array of method names to whitelist",
-                    "items": {},
+                    "items": {
+                      "type": "string"
+                    },
                     "type": "array"
                   }
                 },

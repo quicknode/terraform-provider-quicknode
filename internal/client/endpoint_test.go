@@ -106,3 +106,27 @@ func TestGetEndpointRejectsEnvelopeError(t *testing.T) {
 		t.Fatal("expected an error from a 200 response carrying an error field")
 	}
 }
+
+// liveEndpointBody is a verbatim GET /v0/endpoints/{id} response with the token
+// replaced. It carries ipCustomHeader and responseLogging, which the published
+// spec either mistypes or omits.
+const liveEndpointBody = `{"data":{"id":"652052","label":null,"chain":"hype","network":"hype-testnet",` +
+	`"http_url":"https://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm",` +
+	`"wss_url":"wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm",` +
+	`"security":{"options":{"tokens":true,"referrers":false,"jwts":false,"ips":false,` +
+	`"domainMasks":false,"hsts":false,"cors":true,"responseLogging":true,` +
+	`"requestFilters":false,"ipCustomHeader":{"value":null}},` +
+	`"tokens":[{"id":"d3312bd2-c1a2-4d89-865f-11c99fa3863a","token":"TOKENVALUE"}],` +
+	`"jwts":null,"referrers":null,"domain_masks":null,"ips":null,"request_filters":null},` +
+	`"status":"active","rate_limits":{"rate_limit_by_ip":false,"account":-1,"rps":-1,"rpd":-1,"rpm":-1},` +
+	`"tags":[],"is_multichain":false}}`
+
+func TestGetEndpointDecodesLiveBody(t *testing.T) {
+	endpoint, err := newTestClient(t, liveEndpointBody).GetEndpoint(context.Background(), "652052")
+	if err != nil {
+		t.Fatalf("GetEndpoint on a verbatim live body: %v", err)
+	}
+	if len(endpoint.Tokens) != 1 {
+		t.Errorf("Tokens = %+v", endpoint.Tokens)
+	}
+}

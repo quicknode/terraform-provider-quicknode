@@ -120,6 +120,7 @@ type Endpoint struct {
 	Multichain bool
 	Tokens     []EndpointToken
 	Tags       []Tag
+	Security   SecurityOptions
 }
 
 // EndpointToken is one of an endpoint's auth tokens. An endpoint can carry
@@ -238,6 +239,23 @@ func (c *Client) GetEndpoint(ctx context.Context, id string) (*Endpoint, error) 
 		Multichain: deref(data.IsMultichain),
 	}
 	endpoint.setURLs(deref(data.HttpUrl), deref(data.WssUrl))
+	if data.Security != nil && data.Security.Options != nil {
+		options := data.Security.Options
+		endpoint.Security = SecurityOptions{
+			Tokens:          deref(options.Tokens),
+			Referrers:       deref(options.Referrers),
+			JWTs:            deref(options.Jwts),
+			IPs:             deref(options.Ips),
+			DomainMasks:     deref(options.DomainMasks),
+			HSTS:            deref(options.Hsts),
+			Cors:            deref(options.Cors),
+			RequestFilters:  deref(options.RequestFilters),
+			ResponseLogging: deref(options.ResponseLogging),
+		}
+		if options.IpCustomHeader != nil {
+			endpoint.Security.IPCustomHeader = deref(options.IpCustomHeader.Value)
+		}
+	}
 	if data.Security != nil && data.Security.Tokens != nil {
 		for _, rawToken := range *data.Security.Tokens {
 			endpoint.Tokens = append(endpoint.Tokens, EndpointToken{

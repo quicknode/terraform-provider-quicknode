@@ -223,7 +223,7 @@ type PostV0EndpointsByIdSecurityRequestFiltersJSONBody struct {
 // PutV0EndpointsByIdSecurityRequestFiltersByRequestFilterIdJSONBody defines parameters for PutV0EndpointsByIdSecurityRequestFiltersByRequestFilterId.
 type PutV0EndpointsByIdSecurityRequestFiltersByRequestFilterIdJSONBody struct {
 	// Method An array of method names to whitelist
-	Method *[]interface{} `json:"method,omitempty"`
+	Method *[]string `json:"method,omitempty"`
 }
 
 // PatchV0EndpointsByIdSecurityOptionsJSONBody defines parameters for PatchV0EndpointsByIdSecurityOptions.
@@ -9247,13 +9247,24 @@ type GetV0EndpointsByIdSecurityResponse struct {
 		// Data Contains the security state of the endpoint
 		Data *struct {
 			// DomainMasks An array of domain mask entries; null if none configured
-			DomainMasks *[]interface{} `json:"domain_masks,omitempty"`
+			DomainMasks *[]struct {
+				DomainMask *string `json:"domain_mask,omitempty"`
+				Id         *string `json:"id,omitempty"`
+			} `json:"domain_masks,omitempty"`
 
 			// Ips An array of allowed IP entries; null if none configured
-			Ips *[]interface{} `json:"ips,omitempty"`
+			Ips *[]struct {
+				Id *string `json:"id,omitempty"`
+				Ip *string `json:"ip,omitempty"`
+			} `json:"ips,omitempty"`
 
 			// Jwts An array of JWT configuration objects; null if none configured
-			Jwts *[]interface{} `json:"jwts,omitempty"`
+			Jwts *[]struct {
+				Id        *string `json:"id,omitempty"`
+				Kid       *string `json:"kid,omitempty"`
+				Name      *string `json:"name,omitempty"`
+				PublicKey *string `json:"public_key,omitempty"`
+			} `json:"jwts,omitempty"`
 
 			// Options Security feature toggles for the endpoint
 			Options *struct {
@@ -9292,7 +9303,10 @@ type GetV0EndpointsByIdSecurityResponse struct {
 			} `json:"options,omitempty"`
 
 			// Referrers An array of allowed referrer entries; null if none configured
-			Referrers *[]interface{} `json:"referrers,omitempty"`
+			Referrers *[]struct {
+				Id       *string `json:"id,omitempty"`
+				Referrer *string `json:"referrer,omitempty"`
+			} `json:"referrers,omitempty"`
 
 			// RequestFilters An array of request filter objects; null if none configured
 			RequestFilters *[]struct {
@@ -9300,7 +9314,7 @@ type GetV0EndpointsByIdSecurityResponse struct {
 				Id *string `json:"id,omitempty"`
 
 				// Method An array of whitelisted method names
-				Method *[]interface{} `json:"method,omitempty"`
+				Method *[]string `json:"method,omitempty"`
 
 				// Params Parameter constraints for the filter
 				Params *map[string]interface{} `json:"params,omitempty"`
@@ -9326,13 +9340,24 @@ func (r GetV0EndpointsByIdSecurityResponse) GetJSON200() *struct {
 	// Data Contains the security state of the endpoint
 	Data *struct {
 		// DomainMasks An array of domain mask entries; null if none configured
-		DomainMasks *[]interface{} `json:"domain_masks,omitempty"`
+		DomainMasks *[]struct {
+			DomainMask *string `json:"domain_mask,omitempty"`
+			Id         *string `json:"id,omitempty"`
+		} `json:"domain_masks,omitempty"`
 
 		// Ips An array of allowed IP entries; null if none configured
-		Ips *[]interface{} `json:"ips,omitempty"`
+		Ips *[]struct {
+			Id *string `json:"id,omitempty"`
+			Ip *string `json:"ip,omitempty"`
+		} `json:"ips,omitempty"`
 
 		// Jwts An array of JWT configuration objects; null if none configured
-		Jwts *[]interface{} `json:"jwts,omitempty"`
+		Jwts *[]struct {
+			Id        *string `json:"id,omitempty"`
+			Kid       *string `json:"kid,omitempty"`
+			Name      *string `json:"name,omitempty"`
+			PublicKey *string `json:"public_key,omitempty"`
+		} `json:"jwts,omitempty"`
 
 		// Options Security feature toggles for the endpoint
 		Options *struct {
@@ -9371,7 +9396,10 @@ func (r GetV0EndpointsByIdSecurityResponse) GetJSON200() *struct {
 		} `json:"options,omitempty"`
 
 		// Referrers An array of allowed referrer entries; null if none configured
-		Referrers *[]interface{} `json:"referrers,omitempty"`
+		Referrers *[]struct {
+			Id       *string `json:"id,omitempty"`
+			Referrer *string `json:"referrer,omitempty"`
+		} `json:"referrers,omitempty"`
 
 		// RequestFilters An array of request filter objects; null if none configured
 		RequestFilters *[]struct {
@@ -9379,7 +9407,7 @@ func (r GetV0EndpointsByIdSecurityResponse) GetJSON200() *struct {
 			Id *string `json:"id,omitempty"`
 
 			// Method An array of whitelisted method names
-			Method *[]interface{} `json:"method,omitempty"`
+			Method *[]string `json:"method,omitempty"`
 
 			// Params Parameter constraints for the filter
 			Params *map[string]interface{} `json:"params,omitempty"`
@@ -15109,13 +15137,24 @@ func ParseGetV0EndpointsByIdSecurityResponse(rsp *http.Response) (*GetV0Endpoint
 			// Data Contains the security state of the endpoint
 			Data *struct {
 				// DomainMasks An array of domain mask entries; null if none configured
-				DomainMasks *[]interface{} `json:"domain_masks,omitempty"`
+				DomainMasks *[]struct {
+					DomainMask *string `json:"domain_mask,omitempty"`
+					Id         *string `json:"id,omitempty"`
+				} `json:"domain_masks,omitempty"`
 
 				// Ips An array of allowed IP entries; null if none configured
-				Ips *[]interface{} `json:"ips,omitempty"`
+				Ips *[]struct {
+					Id *string `json:"id,omitempty"`
+					Ip *string `json:"ip,omitempty"`
+				} `json:"ips,omitempty"`
 
 				// Jwts An array of JWT configuration objects; null if none configured
-				Jwts *[]interface{} `json:"jwts,omitempty"`
+				Jwts *[]struct {
+					Id        *string `json:"id,omitempty"`
+					Kid       *string `json:"kid,omitempty"`
+					Name      *string `json:"name,omitempty"`
+					PublicKey *string `json:"public_key,omitempty"`
+				} `json:"jwts,omitempty"`
 
 				// Options Security feature toggles for the endpoint
 				Options *struct {
@@ -15154,7 +15193,10 @@ func ParseGetV0EndpointsByIdSecurityResponse(rsp *http.Response) (*GetV0Endpoint
 				} `json:"options,omitempty"`
 
 				// Referrers An array of allowed referrer entries; null if none configured
-				Referrers *[]interface{} `json:"referrers,omitempty"`
+				Referrers *[]struct {
+					Id       *string `json:"id,omitempty"`
+					Referrer *string `json:"referrer,omitempty"`
+				} `json:"referrers,omitempty"`
 
 				// RequestFilters An array of request filter objects; null if none configured
 				RequestFilters *[]struct {
@@ -15162,7 +15204,7 @@ func ParseGetV0EndpointsByIdSecurityResponse(rsp *http.Response) (*GetV0Endpoint
 					Id *string `json:"id,omitempty"`
 
 					// Method An array of whitelisted method names
-					Method *[]interface{} `json:"method,omitempty"`
+					Method *[]string `json:"method,omitempty"`
 
 					// Params Parameter constraints for the filter
 					Params *map[string]interface{} `json:"params,omitempty"`
