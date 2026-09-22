@@ -1,0 +1,44 @@
+---
+page_title: "Quicknode Provider"
+description: |-
+  Manage Quicknode RPC endpoints, security rules and rate limits with Terraform.
+---
+
+# Quicknode Provider
+
+Manage your Quicknode blockchain infrastructure as code: RPC endpoints, security
+rules, and rate limits, through `terraform plan` and `terraform apply`.
+
+## Authentication
+
+The provider authenticates with a Quicknode [Admin API](https://www.quicknode.com/docs/admin-api)
+key, available on paid plans. Set it in the environment rather than in a
+configuration file:
+
+```sh
+export QUICKNODE_API_KEY="your-api-key"
+```
+
+## Example Usage
+
+{{ tffile "examples/provider/provider.tf" }}
+
+## Endpoint URLs
+
+The Admin API returns endpoint URLs with the auth token embedded. Endpoints
+expose both forms:
+
+| Attribute | Sensitive | Use it for |
+|---|---|---|
+| `http_url_with_token`, `wss_url_with_token` | yes | anything that makes RPC calls |
+| `http_url`, `wss_url` | no | logging, display, anything that must not hold a credential |
+
+Do not rebuild a URL by joining `http_url` to a token. The token is not always
+the last path segment — some chains append a suffix, as in
+`https://<host>/<token>/evm` — so a hand-assembled URL works on Ethereum and
+breaks elsewhere.
+
+Token values are written to Terraform state. Use
+[encrypted remote state](https://developer.hashicorp.com/terraform/language/state/sensitive-data).
+
+{{ .SchemaMarkdown | trimspace }}

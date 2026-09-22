@@ -1,12 +1,19 @@
 # Terraform Provider for Quicknode
 
-The official [Terraform](https://developer.hashicorp.com/terraform) provider for [Quicknode](https://www.quicknode.com) — manage your blockchain infrastructure as code: RPC endpoints, security rules, rate limits, Streams, and Webhooks, all through `terraform plan` and `apply`.
+The official [Terraform](https://developer.hashicorp.com/terraform) provider for
+[Quicknode](https://www.quicknode.com). Manage RPC endpoints, security rules and
+rate limits with `terraform plan` and `terraform apply`.
 
-## Why
+- [Provider documentation](./docs) — also published to the Terraform Registry
+- [Contributing](./CONTRIBUTING.md)
+- [Changelog](./CHANGELOG.md)
 
-Teams run their Quicknode setup across environments and chains, and that setup deserves the same workflow as the rest of their infrastructure: version control, pull-request review for security changes, drift detection, and repeatable environments — no click-ops.
+## Requirements
 
-## Usage
+- [Terraform](https://developer.hashicorp.com/terraform/install) 1.13 or later
+- [Go](https://go.dev/doc/install) — the version in [`go.mod`](./go.mod), to build from source
+
+## Using the provider
 
 ```hcl
 terraform {
@@ -18,47 +25,76 @@ terraform {
   }
 }
 
-# Reads QUICKNODE_API_KEY from the environment
 provider "quicknode" {}
 
 resource "quicknode_endpoint" "payments" {
-  chain   = "ethereum"
+  chain   = "eth"
   network = "mainnet"
   label   = "payments-prod"
 }
+```
 
-output "rpc_url" {
-  value     = quicknode_endpoint.payments.http_url
-  sensitive = true # the URL embeds your auth token
+Authentication uses a Quicknode [Admin API](https://www.quicknode.com/docs/admin-api)
+key, available on paid plans. Set `QUICKNODE_API_KEY` in the environment rather
+than writing it into a configuration file.
+
+Full resource and attribute reference lives in [`docs/`](./docs).
+
+## Building
+
+```sh
+make build
+```
+
+## Developing
+
+To run Terraform against a local build, add a development override to
+`~/.terraformrc`:
+
+```hcl
+provider_installation {
+  dev_overrides {
+    "quicknode/quicknode" = "/path/to/your/GOPATH/bin"
+  }
+  direct {}
 }
 ```
 
-Authentication uses a Quicknode [Admin API](https://www.quicknode.com/docs/admin-api) key (paid plans), via the `QUICKNODE_API_KEY` environment variable or the provider block. Endpoint URLs contain auth tokens and are stored in Terraform state — use encrypted remote state.
-
-## Resources
-
-| Name | Status |
-|---|---|
-| `quicknode_endpoint` | ✅ available |
-| Endpoint security (IP / domain allowlists, method filters) | ✅ available (being redesigned) |
-| `quicknode_endpoint_rate_limits`, `quicknode_method_rate_limit` | 🚧 planned |
-| `quicknode_stream`, `quicknode_webhook` | 🚧 planned |
-| Data sources: `quicknode_chains`, `quicknode_endpoint(s)` | ✅ available |
-
-Full documentation lives in [`docs/`](./docs) and, once published, on the Terraform Registry.
-
-## Development
-
-Requires Go (see `go.mod`) and Terraform >= 1.13.
+Then `go install .` and run Terraform normally. With an override in place,
+`terraform init` is neither needed nor supported.
 
 ```sh
-make generate   # regenerate the API client and docs
-make lint       # golangci-lint
-go build ./...
-TF_ACC=1 go test ./... # acceptance tests: creates real, billable resources
+make lint   # gofmt, go vet, golangci-lint
+make docs   # regenerate docs/ from the provider schema and examples/
+make fmt    # format Go and Terraform sources
 ```
 
-Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md).
+`docs/` is generated. CI fails if it is out of date with the schema, so run
+`make docs` after any schema change and commit the result.
+
+The API client in `api/admin/` is generated and should not be edited by hand.
+See [CONTRIBUTING.md](./CONTRIBUTING.md#making-changes) for how to refresh it.
+
+## Testing
+
+Unit tests need no credentials:
+
+```sh
+make test
+```
+
+Acceptance tests create real, billable Quicknode resources and require an Admin
+API key for a paid account dedicated to testing:
+
+```sh
+QUICKNODE_API_KEY=... make testacc
+```
+
+## Security
+
+Endpoint tokens and credentialed URLs are written to Terraform state. Use
+encrypted remote state and treat state files as credential material. See
+[SECURITY.md](./SECURITY.md) to report a vulnerability.
 
 ## License
 

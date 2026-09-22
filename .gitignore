@@ -1,0 +1,7 @@
+terraform-provider-quicknode
+dist/
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+.env

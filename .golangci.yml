@@ -1,0 +1,27 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - misspell
+    - nilerr
+    - predeclared
+    - unconvert
+    - usestdlibvars
+  exclusions:
+    generated: lax
+    paths:
+      - api/admin/admin.gen.go
+
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    paths:
+      - api/admin/admin.gen.go
