@@ -135,6 +135,8 @@ func (p *quicknodeProvider) Resources(_ context.Context) []func() resource.Resou
 		NewEndpointTokenResource,
 		NewJWTResource,
 		NewRequestFilterResource,
+		NewRateLimitsResource,
+		NewMethodRateLimitResource,
 	}
 	return append(resources, securityEntryResources()...)
 }
@@ -142,5 +144,7 @@ func (p *quicknodeProvider) Resources(_ context.Context) []func() resource.Resou
 func (p *quicknodeProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewChainsDataSource,
+		NewEndpointDataSource,
+		NewEndpointsDataSource,
 	}
 }

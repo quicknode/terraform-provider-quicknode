@@ -34,13 +34,13 @@ type GetV0EndpointsParams struct {
 	SortDirection *string `form:"sort_direction,omitempty" json:"sort_direction,omitempty"`
 
 	// Networks Filter by network name(s)
-	Networks *[]interface{} `form:"networks,omitempty" json:"networks,omitempty"`
+	Networks *[]string `form:"networks,omitempty" json:"networks,omitempty"`
 
 	// Statuses Filter by endpoint status. Accepted values: active, paused
-	Statuses *[]interface{} `form:"statuses,omitempty" json:"statuses,omitempty"`
+	Statuses *[]string `form:"statuses,omitempty" json:"statuses,omitempty"`
 
 	// Labels Filter by endpoint label(s)
-	Labels *[]interface{} `form:"labels,omitempty" json:"labels,omitempty"`
+	Labels *[]string `form:"labels,omitempty" json:"labels,omitempty"`
 
 	// Dedicated Filter for dedicated endpoints only
 	Dedicated *bool `form:"dedicated,omitempty" json:"dedicated,omitempty"`
@@ -148,7 +148,7 @@ type PostV0EndpointsByIdMethodRateLimitsJSONBody struct {
 // PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdJSONBody defines parameters for PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId.
 type PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdJSONBody struct {
 	// Methods An array of method names to which the rate limiter applies
-	Methods []interface{} `json:"methods"`
+	Methods []string `json:"methods"`
 
 	// Rate  Specifies the maximum number of requests allowed for the specified methods within the defined interval
 	Rate int `json:"rate"`
@@ -8648,7 +8648,7 @@ type GetV0EndpointsByIdMethodRateLimitsResponse struct {
 				Interval *string `json:"interval,omitempty"`
 
 				// Methods A list of method names to which the rate limiter applies
-				Methods *[]interface{} `json:"methods,omitempty"`
+				Methods *[]string `json:"methods,omitempty"`
 
 				// Rate The number of allowed requests within the specified interval
 				Rate *int `json:"rate,omitempty"`
@@ -8679,7 +8679,7 @@ func (r GetV0EndpointsByIdMethodRateLimitsResponse) GetJSON200() *struct {
 			Interval *string `json:"interval,omitempty"`
 
 			// Methods A list of method names to which the rate limiter applies
-			Methods *[]interface{} `json:"methods,omitempty"`
+			Methods *[]string `json:"methods,omitempty"`
 
 			// Rate The number of allowed requests within the specified interval
 			Rate *int `json:"rate,omitempty"`
@@ -8741,7 +8741,7 @@ type PostV0EndpointsByIdMethodRateLimitsResponse struct {
 			Interval *string `json:"interval,omitempty"`
 
 			// Methods A list of methods the rate limiter applies to
-			Methods *[]interface{} `json:"methods,omitempty"`
+			Methods *[]string `json:"methods,omitempty"`
 
 			// Rate The maximum number of requests allowed within the specified interval
 			Rate *int `json:"rate,omitempty"`
@@ -8769,7 +8769,7 @@ func (r PostV0EndpointsByIdMethodRateLimitsResponse) GetJSON200() *struct {
 		Interval *string `json:"interval,omitempty"`
 
 		// Methods A list of methods the rate limiter applies to
-		Methods *[]interface{} `json:"methods,omitempty"`
+		Methods *[]string `json:"methods,omitempty"`
 
 		// Rate The maximum number of requests allowed within the specified interval
 		Rate *int `json:"rate,omitempty"`
@@ -8883,7 +8883,7 @@ type PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse struct {
 			Interval *string `json:"interval,omitempty"`
 
 			// Methods A list of methods the rate limiter applies to
-			Methods *[]interface{} `json:"methods,omitempty"`
+			Methods *[]string `json:"methods,omitempty"`
 
 			// Rate The maximum number of requests allowed within the specified interval
 			Rate *int `json:"rate,omitempty"`
@@ -8911,7 +8911,7 @@ func (r PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse) GetJSON
 		Interval *string `json:"interval,omitempty"`
 
 		// Methods A list of methods the rate limiter applies to
-		Methods *[]interface{} `json:"methods,omitempty"`
+		Methods *[]string `json:"methods,omitempty"`
 
 		// Rate The maximum number of requests allowed within the specified interval
 		Rate *int `json:"rate,omitempty"`
@@ -14799,7 +14799,7 @@ func ParseGetV0EndpointsByIdMethodRateLimitsResponse(rsp *http.Response) (*GetV0
 					Interval *string `json:"interval,omitempty"`
 
 					// Methods A list of method names to which the rate limiter applies
-					Methods *[]interface{} `json:"methods,omitempty"`
+					Methods *[]string `json:"methods,omitempty"`
 
 					// Rate The number of allowed requests within the specified interval
 					Rate *int `json:"rate,omitempty"`
@@ -14850,7 +14850,7 @@ func ParsePostV0EndpointsByIdMethodRateLimitsResponse(rsp *http.Response) (*Post
 				Interval *string `json:"interval,omitempty"`
 
 				// Methods A list of methods the rate limiter applies to
-				Methods *[]interface{} `json:"methods,omitempty"`
+				Methods *[]string `json:"methods,omitempty"`
 
 				// Rate The maximum number of requests allowed within the specified interval
 				Rate *int `json:"rate,omitempty"`
@@ -14932,7 +14932,7 @@ func ParsePatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse(rsp *h
 				Interval *string `json:"interval,omitempty"`
 
 				// Methods A list of methods the rate limiter applies to
-				Methods *[]interface{} `json:"methods,omitempty"`
+				Methods *[]string `json:"methods,omitempty"`
 
 				// Rate The maximum number of requests allowed within the specified interval
 				Rate *int `json:"rate,omitempty"`
