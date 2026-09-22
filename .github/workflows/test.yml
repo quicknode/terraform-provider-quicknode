@@ -9,15 +9,16 @@ on:
       - main
     paths-ignore:
       - "README.md"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build
+    name: Build and lint
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -26,26 +27,32 @@ jobs:
           cache: true
       - run: go mod download
       - run: go build -v ./...
-      - name: Run linters
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.5.0
+      # golangci-lint runs through the Makefile so it is compiled with this
+      # repo's Go toolchain. The prebuilt action binary lags the Go version in
+      # go.mod and refuses to run against a newer one.
+      - run: make lint
 
   generate:
     name: Docs up to date
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
+      # tfplugindocs needs Terraform to read the provider schema. Installing it
+      # here keeps tfplugindocs from downloading its own copy.
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.*"
+          terraform_wrapper: false
       - run: make docs
       - name: Check for uncommitted changes
         run: |
           git diff --compact-summary --exit-code || \
-            (echo; echo "Unexpected difference in directories after code generation. Run 'make docs' and commit."; exit 1)
+            (echo; echo "docs/ is out of date. Run 'make docs' and commit the result."; exit 1)
 
   test:
     name: Unit tests
@@ -60,12 +67,14 @@ jobs:
       - run: go mod download
       - run: go test -v -cover ./...
 
+  # Acceptance tests create real, billable Quicknode resources, so they run only
+  # when triggered by hand. They need QUICKNODE_API_KEY for a paid account that
+  # is dedicated to testing.
   acceptance:
     name: Acceptance tests
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:

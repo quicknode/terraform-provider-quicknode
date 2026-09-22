@@ -1,6 +1,6 @@
 OAPI_CODEGEN_VERSION ?= v2.8.0
 TFPLUGINDOCS_VERSION ?= v0.23.0
-GOLANGCI_LINT_VERSION ?= v2.5.0
+GOLANGCI_LINT_VERSION ?= v2.13.2
 ADMIN_SPEC_URL ?= https://www.quicknode.com/docs/openapi/admin-api.openapi.json
 
 default: build
