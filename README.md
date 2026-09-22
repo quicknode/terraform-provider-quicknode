@@ -38,6 +38,15 @@ Authentication uses a Quicknode [Admin API](https://www.quicknode.com/docs/admin
 key, available on paid plans. Set `QUICKNODE_API_KEY` in the environment rather
 than writing it into a configuration file.
 
+The provider covers endpoints, the security mechanisms they enforce and who is
+allowed past them, RPC method filtering, and rate limits both endpoint-wide and
+per method. Endpoints created elsewhere are readable through
+`data.quicknode_endpoint` and `data.quicknode_endpoints`.
+
+A security mechanism is enabled on the endpoint and the entries it applies to
+are separate resources, so an entry added outside Terraform is left alone rather
+than deleted on the next apply.
+
 Full resource and attribute reference lives in [`docs/`](./docs).
 
 ## Building

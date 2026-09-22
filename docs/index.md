@@ -35,6 +35,23 @@ terraform {
 provider "quicknode" {}
 ```
 
+## What you can manage
+
+| | |
+|---|---|
+| `quicknode_endpoint` | the endpoint itself, its label, status, tags and which security mechanisms it enforces |
+| `quicknode_endpoint_ip`, `_domain_mask`, `_referrer` | who is allowed to call it |
+| `quicknode_endpoint_jwt` | signing keys, for authenticating without a token in the URL |
+| `quicknode_endpoint_token` | additional auth tokens, so one consumer can be revoked without disturbing the rest |
+| `quicknode_endpoint_request_filter` | which RPC methods it accepts |
+| `quicknode_endpoint_rate_limits`, `_method_rate_limit` | how much traffic it accepts, overall and per method |
+| `data.quicknode_endpoint`, `data.quicknode_endpoints` | endpoints created elsewhere |
+| `data.quicknode_chains` | every chain and network slug, for validating configuration at plan time |
+
+A security mechanism is enabled on the endpoint and the entries it applies to
+are separate resources, so an entry added outside Terraform is left alone rather
+than deleted on the next apply.
+
 ## Endpoint URLs
 
 The Admin API returns endpoint URLs with the auth token embedded. Endpoints
