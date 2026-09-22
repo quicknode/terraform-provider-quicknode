@@ -88,7 +88,7 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			},
 			"label": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Descriptive label. The Admin API cannot set a label while creating an endpoint, so the provider applies it in a second call.",
+				MarkdownDescription: "Descriptive label for the endpoint. Labels are not unique and are not used to identify the endpoint.",
 			},
 			"status": schema.StringAttribute{
 				Optional:            true,
