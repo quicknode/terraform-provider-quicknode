@@ -201,3 +201,33 @@ func TestAddEndpointIPRejectsEnvelopeError(t *testing.T) {
 		t.Fatal("an error inside a 200 body has to surface as an error")
 	}
 }
+
+// TestEmptyWritesAreSkipped covers the configuration that manages none of the
+// toggles or buckets. An empty body is a pointless call at best, so the client
+// makes none at all.
+func TestEmptyWritesAreSkipped(t *testing.T) {
+	var calls int
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":{}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	quicknode, err := New("test-key", WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	ctx := context.Background()
+	if err := quicknode.SetSecurityOptions(ctx, "1", SecurityOptionsPatch{}); err != nil {
+		t.Fatalf("SetSecurityOptions: %v", err)
+	}
+	if err := quicknode.SetRateLimits(ctx, "1", RateLimitOverrides{}); err != nil {
+		t.Fatalf("SetRateLimits: %v", err)
+	}
+	if calls != 0 {
+		t.Errorf("made %d requests for writes that manage nothing, want 0", calls)
+	}
+}

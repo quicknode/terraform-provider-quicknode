@@ -85,8 +85,14 @@ func (c *Client) GetRateLimits(ctx context.Context, endpointID string) ([]RateLi
 	return limits, nil
 }
 
+// SetRateLimits writes the buckets the caller manages. Managing none is a no-op
+// rather than an empty write.
 func (c *Client) SetRateLimits(ctx context.Context, endpointID string, overrides RateLimitOverrides) error {
 	const operation = "update endpoint rate limits"
+
+	if overrides.RPS == nil && overrides.RPM == nil && overrides.RPD == nil {
+		return nil
+	}
 
 	body := admin.PatchV0EndpointsByIdRateLimitsJSONRequestBody{}
 	body.RateLimits.Rps = overrides.RPS
