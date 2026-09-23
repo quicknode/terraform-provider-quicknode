@@ -1,6 +1,7 @@
 package provider_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
+	"github.com/quicknode/terraform-provider-quicknode/internal/client"
 	"github.com/quicknode/terraform-provider-quicknode/internal/provider"
 )
 
@@ -21,7 +23,7 @@ import (
 // what it created. Run them with `make testacc`.
 const (
 	acceptanceChain   = "eth"
-	acceptanceNetwork = "sepolia"
+	acceptanceNetwork = "ethereum-sepolia"
 )
 
 var protoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -33,6 +35,34 @@ func testAccPreCheck(t *testing.T) {
 	if os.Getenv("QUICKNODE_API_KEY") == "" {
 		t.Fatal("QUICKNODE_API_KEY must be set for acceptance tests")
 	}
+}
+
+// testAccCheckEndpointsDestroyed asks the Admin API whether the endpoints the
+// test created are really gone. Terraform calls a destroy successful as soon as
+// the provider's Delete returns no error, so a delete the API did not honour
+// would otherwise pass and leave a billable endpoint behind. Every other
+// resource in these tests belongs to an endpoint and goes with it.
+func testAccCheckEndpointsDestroyed(state *terraform.State) error {
+	quicknode, err := client.New(os.Getenv("QUICKNODE_API_KEY"))
+	if err != nil {
+		return fmt.Errorf("could not build a client to confirm the destroy: %w", err)
+	}
+
+	for name, resourceState := range state.RootModule().Resources {
+		if resourceState.Type != "quicknode_endpoint" {
+			continue
+		}
+		id := resourceState.Primary.ID
+		endpoint, err := quicknode.GetEndpoint(context.Background(), id)
+		if client.IsNotFound(err) {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("%s: could not confirm endpoint %s was destroyed: %w", name, id, err)
+		}
+		return fmt.Errorf("%s: endpoint %s still exists after destroy, with status %q", name, id, endpoint.Status)
+	}
+	return nil
 }
 
 func endpointConfig(label string) string {
@@ -49,6 +79,7 @@ func TestAccEndpoint_lifecycle(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: endpointConfig("tfacc-endpoint"),
@@ -99,6 +130,7 @@ resource "quicknode_endpoint" "test" {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: withOptions(false),
@@ -121,7 +153,7 @@ func TestAccEndpointIP_importByValue(t *testing.T) {
 	const config = `
 resource "quicknode_endpoint" "test" {
   chain   = "eth"
-  network = "sepolia"
+  network = "ethereum-sepolia"
   label   = "tfacc-ip"
 
   security_options = {
@@ -137,6 +169,7 @@ resource "quicknode_endpoint_ip" "test" {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -182,6 +215,7 @@ resource "quicknode_endpoint_request_filter" "test" {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: withMethods(`["eth_call"]`),
@@ -219,6 +253,7 @@ resource "quicknode_endpoint_rate_limits" "test" {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: withBuckets("  rps = 25\n  rpm = 500"),
@@ -261,6 +296,7 @@ resource "quicknode_endpoint_method_rate_limit" "test" {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: withRate(5, true),
@@ -284,7 +320,7 @@ func TestAccEndpointDataSource_byLabel(t *testing.T) {
 	const config = `
 resource "quicknode_endpoint" "test" {
   chain   = "eth"
-  network = "sepolia"
+  network = "ethereum-sepolia"
   label   = "tfacc-data-source"
 }
 
@@ -301,6 +337,7 @@ data "quicknode_endpoints" "test" {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -320,6 +357,7 @@ func TestAccChainsDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: `data "quicknode_chains" "all" {}`,
