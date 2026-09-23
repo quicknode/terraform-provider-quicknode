@@ -17,7 +17,7 @@ const securityBody = `{"data":{
 "hsts":true,"cors":false,"requestFilters":true,"responseLogging":false,
 "ipCustomHeader":{"value":"X-Real-IP"}},
 "ips":[{"id":"ip-1","ip":"203.0.113.7"}],
-"domain_masks":[{"id":"dm-1","domain_mask":"rpc.example.com"}],
+"domain_masks":[{"id":"dm-1","domain":"rpc.example.com"}],
 "referrers":[{"id":"rf-1","referrer":"https://example.com"}],
 "jwts":[{"id":"jwt-1","name":"signer","kid":"kid-1","public_key":"-----BEGIN PUBLIC KEY-----"}],
 "request_filters":[{"id":"filter-1","method":["eth_call","eth_getLogs"]}],

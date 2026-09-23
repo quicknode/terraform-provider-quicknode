@@ -117,7 +117,7 @@ func (c *Client) GetEndpointSecurity(ctx context.Context, endpointID string) (*E
 	}
 	if data.DomainMasks != nil {
 		for _, raw := range *data.DomainMasks {
-			security.DomainMasks = append(security.DomainMasks, SecurityEntry{ID: deref(raw.Id), Value: deref(raw.DomainMask)})
+			security.DomainMasks = append(security.DomainMasks, SecurityEntry{ID: deref(raw.Id), Value: deref(raw.Domain)})
 		}
 	}
 	if data.Referrers != nil {

@@ -2875,7 +2875,7 @@
                           "description": "An array of domain mask entries; null if none configured",
                           "items": {
                             "properties": {
-                              "domain_mask": {
+                              "domain": {
                                 "type": "string"
                               },
                               "id": {
