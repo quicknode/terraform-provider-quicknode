@@ -7176,10 +7176,10 @@ type PostV0EndpointsResponse struct {
 					Hosts *bool `json:"hosts,omitempty"`
 
 					// Hsts Indicates whether HTTP Strict Transport Security (HSTS) is enforced
-					Hsts *bool `json:"hsts,omitempty"`
-
-					// IpCustomHeader Indicates whether a custom IP header is applied
-					IpCustomHeader *bool `json:"ipCustomHeader,omitempty"`
+					Hsts           *bool `json:"hsts,omitempty"`
+					IpCustomHeader *struct {
+						Value *string `json:"value,omitempty"`
+					} `json:"ipCustomHeader,omitempty"`
 
 					// Ips Indicates whether IP-based security is enabled
 					Ips *bool `json:"ips,omitempty"`
@@ -7318,10 +7318,10 @@ func (r PostV0EndpointsResponse) GetJSON200() *struct {
 				Hosts *bool `json:"hosts,omitempty"`
 
 				// Hsts Indicates whether HTTP Strict Transport Security (HSTS) is enforced
-				Hsts *bool `json:"hsts,omitempty"`
-
-				// IpCustomHeader Indicates whether a custom IP header is applied
-				IpCustomHeader *bool `json:"ipCustomHeader,omitempty"`
+				Hsts           *bool `json:"hsts,omitempty"`
+				IpCustomHeader *struct {
+					Value *string `json:"value,omitempty"`
+				} `json:"ipCustomHeader,omitempty"`
 
 				// Ips Indicates whether IP-based security is enabled
 				Ips *bool `json:"ips,omitempty"`
@@ -10257,12 +10257,8 @@ type PatchV0EndpointsByIdSecurityOptionsResponse struct {
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *struct {
-		// Data The data object which contains the following fields:
-		Data *struct {
-			// Option Represents the security options
+		Data *[]struct {
 			Option *string `json:"option,omitempty"`
-
-			// Status Indicates the status of the option. Possible values: enabled, disabled
 			Status *string `json:"status,omitempty"`
 		} `json:"data,omitempty"`
 
@@ -10273,12 +10269,8 @@ type PatchV0EndpointsByIdSecurityOptionsResponse struct {
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r PatchV0EndpointsByIdSecurityOptionsResponse) GetJSON200() *struct {
-	// Data The data object which contains the following fields:
-	Data *struct {
-		// Option Represents the security options
+	Data *[]struct {
 		Option *string `json:"option,omitempty"`
-
-		// Status Indicates the status of the option. Possible values: enabled, disabled
 		Status *string `json:"status,omitempty"`
 	} `json:"data,omitempty"`
 
@@ -14012,10 +14004,10 @@ func ParsePostV0EndpointsResponse(rsp *http.Response) (*PostV0EndpointsResponse,
 						Hosts *bool `json:"hosts,omitempty"`
 
 						// Hsts Indicates whether HTTP Strict Transport Security (HSTS) is enforced
-						Hsts *bool `json:"hsts,omitempty"`
-
-						// IpCustomHeader Indicates whether a custom IP header is applied
-						IpCustomHeader *bool `json:"ipCustomHeader,omitempty"`
+						Hsts           *bool `json:"hsts,omitempty"`
+						IpCustomHeader *struct {
+							Value *string `json:"value,omitempty"`
+						} `json:"ipCustomHeader,omitempty"`
 
 						// Ips Indicates whether IP-based security is enabled
 						Ips *bool `json:"ips,omitempty"`
@@ -15710,12 +15702,8 @@ func ParsePatchV0EndpointsByIdSecurityOptionsResponse(rsp *http.Response) (*Patc
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// Data The data object which contains the following fields:
-			Data *struct {
-				// Option Represents the security options
+			Data *[]struct {
 				Option *string `json:"option,omitempty"`
-
-				// Status Indicates the status of the option. Possible values: enabled, disabled
 				Status *string `json:"status,omitempty"`
 			} `json:"data,omitempty"`
 

@@ -78,7 +78,7 @@ func TestSetSecurityOptionsSendsStrings(t *testing.T) {
 		raw, _ := io.ReadAll(r.Body)
 		_ = json.Unmarshal(raw, &captured)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"option":"tokens","status":"enabled"}}`))
+		_, _ = w.Write([]byte(`{"data":[{"option":"tokens","status":"enabled"},{"option":"cors","status":"disabled"}]}`))
 	}))
 	t.Cleanup(server.Close)
 

@@ -800,8 +800,15 @@
                                   "type": "boolean"
                                 },
                                 "ipCustomHeader": {
-                                  "description": "Indicates whether a custom IP header is applied",
-                                  "type": "boolean"
+                                  "properties": {
+                                    "value": {
+                                      "type": [
+                                        "string",
+                                        "null"
+                                      ]
+                                    }
+                                  },
+                                  "type": "object"
                                 },
                                 "ips": {
                                   "description": "Indicates whether IP-based security is enabled",
@@ -3999,18 +4006,18 @@
                 "schema": {
                   "properties": {
                     "data": {
-                      "description": "The data object which contains the following fields:",
-                      "properties": {
-                        "option": {
-                          "description": "Represents the security options",
-                          "type": "string"
+                      "items": {
+                        "properties": {
+                          "option": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          }
                         },
-                        "status": {
-                          "description": "Indicates the status of the option. Possible values: enabled, disabled",
-                          "type": "string"
-                        }
+                        "type": "object"
                       },
-                      "type": "object"
+                      "type": "array"
                     },
                     "error": {
                       "description": "A field containing an error message if any issue occurs",
