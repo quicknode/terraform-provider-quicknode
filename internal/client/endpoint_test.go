@@ -10,19 +10,19 @@ import (
 
 // hypeEndpointBody mirrors a live GET /v0/endpoints/{id} response for a chain
 // that appends a path suffix after the token. The token is fabricated.
-const hypeEndpointBody = `{"data":{"id":"652052","label":null,"chain":"hype","network":"hype-testnet",
-"http_url":"https://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm",
-"wss_url":"wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm",
+const hypeEndpointBody = `{"data":{"id":"123456","label":null,"chain":"hype","network":"hype-testnet",
+"http_url":"https://example-name.hype-testnet.quiknode.pro/TOKENVALUE/evm",
+"wss_url":"wss://example-name.hype-testnet.quiknode.pro/TOKENVALUE/evm",
 "security":{"options":{"tokens":true,"cors":true},
-"tokens":[{"id":"d3312bd2-c1a2-4d89-865f-11c99fa3863a","token":"TOKENVALUE"}],
+"tokens":[{"id":"e5d4c3b2-a1f0-4876-9432-10fedcba9876","token":"TOKENVALUE"}],
 "jwts":null,"referrers":null,"domain_masks":null,"ips":null,"request_filters":null},
 "status":"active","rate_limits":{"rate_limit_by_ip":false,"account":-1,"rps":-1,"rpd":-1,"rpm":-1},
 "tags":[{"tag_id":7,"label":"prod"}],"is_multichain":false}}`
 
 // bitcoinEndpointBody mirrors a live response for a chain with no WebSocket
 // support and no path suffix.
-const bitcoinEndpointBody = `{"data":{"id":"613071","label":"ledger","chain":"btc","network":"btc",
-"http_url":"https://frosty-capable-pallet.btc.quiknode.pro/TOKENVALUE/","wss_url":null,
+const bitcoinEndpointBody = `{"data":{"id":"123457","label":"ledger","chain":"btc","network":"btc",
+"http_url":"https://example-name.btc.quiknode.pro/TOKENVALUE/","wss_url":null,
 "security":{"options":{"tokens":true},"tokens":[{"id":"abc","token":"TOKENVALUE"}]},
 "status":"paused","tags":[],"is_multichain":false}}`
 
@@ -47,26 +47,26 @@ func newTestClient(t *testing.T, body string) *Client {
 }
 
 func TestGetEndpointWithPathSuffix(t *testing.T) {
-	endpoint, err := newTestClient(t, hypeEndpointBody).GetEndpoint(context.Background(), "652052")
+	endpoint, err := newTestClient(t, hypeEndpointBody).GetEndpoint(context.Background(), "123456")
 	if err != nil {
 		t.Fatalf("GetEndpoint: %v", err)
 	}
 
-	const wantWorking = "https://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm"
+	const wantWorking = "https://example-name.hype-testnet.quiknode.pro/TOKENVALUE/evm"
 	if endpoint.HTTPURLWithToken != wantWorking {
 		t.Errorf("HTTPURLWithToken = %q, want %q", endpoint.HTTPURLWithToken, wantWorking)
 	}
-	if endpoint.WSSURLWithToken != "wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm" {
+	if endpoint.WSSURLWithToken != "wss://example-name.hype-testnet.quiknode.pro/TOKENVALUE/evm" {
 		t.Errorf("WSSURLWithToken = %q", endpoint.WSSURLWithToken)
 	}
-	if endpoint.SafeWSSURL != "wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm" {
+	if endpoint.SafeWSSURL != "wss://example-name.hype-testnet.quiknode.pro/TOKEN/evm" {
 		t.Errorf("SafeWSSURL = %q", endpoint.SafeWSSURL)
 	}
 
 	// The redacted URL keeps the real one's shape, so substituting a token
 	// reproduces it exactly. That is what the placeholder buys over cutting
 	// the token out: this chain puts a suffix after it.
-	const wantRedacted = "https://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm"
+	const wantRedacted = "https://example-name.hype-testnet.quiknode.pro/TOKEN/evm"
 	if endpoint.SafeHTTPURL != wantRedacted {
 		t.Errorf("SafeHTTPURL = %q, want %q", endpoint.SafeHTTPURL, wantRedacted)
 	}
@@ -86,7 +86,7 @@ func TestGetEndpointWithPathSuffix(t *testing.T) {
 }
 
 func TestGetEndpointWithoutWebsocket(t *testing.T) {
-	endpoint, err := newTestClient(t, bitcoinEndpointBody).GetEndpoint(context.Background(), "613071")
+	endpoint, err := newTestClient(t, bitcoinEndpointBody).GetEndpoint(context.Background(), "123457")
 	if err != nil {
 		t.Fatalf("GetEndpoint: %v", err)
 	}
@@ -94,10 +94,10 @@ func TestGetEndpointWithoutWebsocket(t *testing.T) {
 	if endpoint.SafeWSSURL != "" || endpoint.WSSURLWithToken != "" {
 		t.Errorf("SafeWSSURL = %q, WSSURLWithToken = %q, want both empty", endpoint.SafeWSSURL, endpoint.WSSURLWithToken)
 	}
-	if endpoint.HTTPURLWithToken != "https://frosty-capable-pallet.btc.quiknode.pro/TOKENVALUE/" {
+	if endpoint.HTTPURLWithToken != "https://example-name.btc.quiknode.pro/TOKENVALUE/" {
 		t.Errorf("HTTPURLWithToken = %q", endpoint.HTTPURLWithToken)
 	}
-	if endpoint.SafeHTTPURL != "https://frosty-capable-pallet.btc.quiknode.pro/TOKEN/" {
+	if endpoint.SafeHTTPURL != "https://example-name.btc.quiknode.pro/TOKEN/" {
 		t.Errorf("SafeHTTPURL = %q", endpoint.SafeHTTPURL)
 	}
 	if endpoint.Status != "paused" || endpoint.Label != "ledger" {
@@ -116,19 +116,19 @@ func TestGetEndpointRejectsEnvelopeError(t *testing.T) {
 // liveEndpointBody is a verbatim GET /v0/endpoints/{id} response with the token
 // replaced. It carries ipCustomHeader and responseLogging, which the published
 // spec either mistypes or omits.
-const liveEndpointBody = `{"data":{"id":"652052","label":null,"chain":"hype","network":"hype-testnet",` +
-	`"http_url":"https://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm",` +
-	`"wss_url":"wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm",` +
+const liveEndpointBody = `{"data":{"id":"123456","label":null,"chain":"hype","network":"hype-testnet",` +
+	`"http_url":"https://example-name.hype-testnet.quiknode.pro/TOKENVALUE/evm",` +
+	`"wss_url":"wss://example-name.hype-testnet.quiknode.pro/TOKENVALUE/evm",` +
 	`"security":{"options":{"tokens":true,"referrers":false,"jwts":false,"ips":false,` +
 	`"domainMasks":false,"hsts":false,"cors":true,"responseLogging":true,` +
 	`"requestFilters":false,"ipCustomHeader":{"value":null}},` +
-	`"tokens":[{"id":"d3312bd2-c1a2-4d89-865f-11c99fa3863a","token":"TOKENVALUE"}],` +
+	`"tokens":[{"id":"e5d4c3b2-a1f0-4876-9432-10fedcba9876","token":"TOKENVALUE"}],` +
 	`"jwts":null,"referrers":null,"domain_masks":null,"ips":null,"request_filters":null},` +
 	`"status":"active","rate_limits":{"rate_limit_by_ip":false,"account":-1,"rps":-1,"rpd":-1,"rpm":-1},` +
 	`"tags":[],"is_multichain":false}}`
 
 func TestGetEndpointDecodesLiveBody(t *testing.T) {
-	endpoint, err := newTestClient(t, liveEndpointBody).GetEndpoint(context.Background(), "652052")
+	endpoint, err := newTestClient(t, liveEndpointBody).GetEndpoint(context.Background(), "123456")
 	if err != nil {
 		t.Fatalf("GetEndpoint on a verbatim live body: %v", err)
 	}

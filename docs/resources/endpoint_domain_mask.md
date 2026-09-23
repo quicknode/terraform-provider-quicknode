@@ -51,5 +51,5 @@ The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/c
 
 ```shell
 # Import by the domain itself, as "<endpoint id>/<domain>".
-terraform import quicknode_endpoint_domain_mask.rpc 652052/rpc.example.com
+terraform import quicknode_endpoint_domain_mask.rpc 123456/rpc.example.com
 ```
