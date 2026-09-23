@@ -68,9 +68,10 @@ func (r *jwtResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"kid": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "Key id Quicknode assigns. Put it in the `kid` header of the tokens signed with the matching private key.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Required:            true,
+				MarkdownDescription: "Key id for this signing key. Put the same value in the `kid` header of the tokens signed with the matching private key. Changing it replaces the entry, because the Admin API has no route to edit one in place.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 		},
 	}
@@ -97,6 +98,7 @@ func (r *jwtResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	created, err := r.client.AddJWT(ctx, plan.EndpointID.ValueString(), client.JWT{
 		Name:      plan.Name.ValueString(),
+		KID:       plan.KID.ValueString(),
 		PublicKey: plan.PublicKey.ValueString(),
 	})
 	if err != nil {
@@ -105,7 +107,6 @@ func (r *jwtResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	plan.ID = types.StringValue(created.ID)
-	plan.KID = types.StringValue(created.KID)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	resp.Diagnostics.Append(warnToggleDisabled(ctx, r.client, plan.EndpointID.ValueString(), "jwts", "JWT authentication")...)
 }
@@ -142,8 +143,7 @@ func (r *jwtResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	resp.State.RemoveResource(ctx)
 }
 
-// Update exists only to satisfy the interface. Every attribute replaces the
-// resource, so Terraform never calls it.
+// Update never runs: every attribute replaces the resource.
 func (r *jwtResource) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 }
 
