@@ -140,6 +140,12 @@ func (r *jwtResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return
 	}
+	// The security route omits a list entirely while its toggle is disabled,
+	// so an entry that cannot be seen has not necessarily been deleted.
+	// Dropping it from state here would have the next apply create a duplicate.
+	if !securityToggleEnabled(security.Options, "jwts") {
+		return
+	}
 	resp.State.RemoveResource(ctx)
 }
 
