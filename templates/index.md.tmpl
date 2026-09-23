@@ -11,8 +11,8 @@ rules, and rate limits, through `terraform plan` and `terraform apply`.
 
 ## Authentication
 
-The provider authenticates with a Quicknode [Admin API](https://www.quicknode.com/docs/admin-api)
-key, available on paid plans. Set it in the environment rather than in a
+The provider authenticates with a Quicknode [API key](https://www.quicknode.com/docs/admin-api),
+available on paid plans. Set it in the environment rather than in a
 configuration file:
 
 ```sh
@@ -23,20 +23,49 @@ export QUICKNODE_API_KEY="your-api-key"
 
 {{ tffile "examples/provider/provider.tf" }}
 
+## What you can manage
+
+| | |
+|---|---|
+| `quicknode_endpoint` | the endpoint itself, its label, status, tags and which security mechanisms it enforces |
+| `quicknode_endpoint_ip`, `_domain_mask`, `_referrer` | who is allowed to call it |
+| `quicknode_endpoint_jwt` | signing keys, for authenticating without a token in the URL |
+| `quicknode_endpoint_token` | additional auth tokens, so one consumer can be revoked without disturbing the rest |
+| `quicknode_endpoint_request_filter` | which RPC methods it accepts |
+| `quicknode_endpoint_rate_limits`, `_method_rate_limit` | how much traffic it accepts, overall and per method |
+| `data.quicknode_endpoint`, `data.quicknode_endpoints` | endpoints created elsewhere |
+| `data.quicknode_chains` | every chain and network slug, for validating configuration at plan time |
+
+A security mechanism is enabled on the endpoint and the entries it applies to
+are separate resources, so an entry added outside Terraform is left alone rather
+than deleted on the next apply.
+
 ## Endpoint URLs
 
-The Admin API returns endpoint URLs with the auth token embedded. Endpoints
-expose both forms:
+The Admin API returns endpoint URLs with the auth token embedded in the path.
+Endpoints expose both forms:
 
 | Attribute | Sensitive | Use it for |
 |---|---|---|
 | `http_url_with_token`, `wss_url_with_token` | yes | anything that makes RPC calls |
-| `http_url`, `wss_url` | no | logging, display, anything that must not hold a credential |
+| `safe_http_url`, `safe_wss_url` | no | logging, display, anything that must not hold a credential |
 
-Do not rebuild a URL by joining `http_url` to a token. The token is not always
-the last path segment — some chains append a suffix, as in
-`https://<host>/<token>/evm` — so a hand-assembled URL works on Ethereum and
-breaks elsewhere.
+The safe form carries the literal `TOKEN` where the credential belongs:
+
+```
+https://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm
+```
+
+It keeps the real URL's shape, so substituting a token reproduces a working
+address on every chain:
+
+```hcl
+replace(quicknode_endpoint.api.safe_http_url, "TOKEN", var.token)
+```
+
+Do not assemble a URL from parts instead. The token is not always the last path
+segment — some chains append a suffix after it, as above — so a hand-built URL
+works on Ethereum and breaks elsewhere.
 
 Token values are written to Terraform state. Use
 [encrypted remote state](https://developer.hashicorp.com/terraform/language/state/sensitive-data).

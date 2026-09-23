@@ -49,11 +49,13 @@ type endpointResourceModel struct {
 	Status           types.String `tfsdk:"status"`
 	Multichain       types.Bool   `tfsdk:"multichain"`
 	Tags             types.Set    `tfsdk:"tags"`
-	HTTPURL          types.String `tfsdk:"http_url"`
-	WSSURL           types.String `tfsdk:"wss_url"`
+	SafeHTTPURL      types.String `tfsdk:"safe_http_url"`
+	SafeWSSURL       types.String `tfsdk:"safe_wss_url"`
 	HTTPURLWithToken types.String `tfsdk:"http_url_with_token"`
 	WSSURLWithToken  types.String `tfsdk:"wss_url_with_token"`
 	Tokens           types.List   `tfsdk:"tokens"`
+	SecurityOptions  types.Object `tfsdk:"security_options"`
+	IPCustomHeader   types.String `tfsdk:"ip_custom_header"`
 }
 
 func NewEndpointResource() resource.Resource {
@@ -68,8 +70,8 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "A Quicknode RPC endpoint on a chain and network.\n\n" +
 			"Pass `http_url_with_token` to anything that needs to make RPC calls. " +
-			"`http_url` and `wss_url` have the credential removed and are safe to log or expose, but they are not usable endpoints: " +
-			"the token does not sit at the end of the path on every chain, so rebuilding a URL by joining them to a token produces a broken address on chains that append a suffix.",
+			"`safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display " +
+			"while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -108,14 +110,14 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				ElementType:         types.StringType,
 				MarkdownDescription: "Tag labels applied to the endpoint. Omitting the attribute removes every tag the provider finds on the endpoint.",
 			},
-			"http_url": schema.StringAttribute{
+			"safe_http_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "HTTPS URL with the auth token removed. Safe to expose, but not a working endpoint.",
+				MarkdownDescription: "The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. Substitute a real token to make it usable: `replace(self.safe_http_url, \"TOKEN\", self.tokens[0].token)`.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"wss_url": schema.StringAttribute{
+			"safe_wss_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "WebSocket URL with the auth token removed, or null on chains without WebSocket support.",
+				MarkdownDescription: "The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"http_url_with_token": schema.StringAttribute{
@@ -129,6 +131,12 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Sensitive:           true,
 				MarkdownDescription: "The working WebSocket endpoint, or null on chains without WebSocket support.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			"security_options": securityOptionsSchema(),
+			"ip_custom_header": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions match the original caller rather than the proxy.",
+				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"tokens": schema.ListNestedAttribute{
 				Computed:            true,
@@ -231,6 +239,11 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 
+	resp.Diagnostics.Append(r.applySecurity(ctx, created.ID, plan.SecurityOptions, plan.IPCustomHeader, types.StringNull())...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	wanted, diags := tagLabels(ctx, plan.Tags)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -306,6 +319,13 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 	}
 
+	if !plan.SecurityOptions.Equal(state.SecurityOptions) || !plan.IPCustomHeader.Equal(state.IPCustomHeader) {
+		resp.Diagnostics.Append(r.applySecurity(ctx, id, plan.SecurityOptions, plan.IPCustomHeader, state.IPCustomHeader)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	if !plan.Tags.Equal(state.Tags) {
 		resp.Diagnostics.Append(r.reconcileTags(ctx, id, plan.Tags)...)
 		if resp.Diagnostics.HasError() {
@@ -351,6 +371,36 @@ func (r *endpointResource) readInto(ctx context.Context, id string, model *endpo
 	tokens, tokenDiags := tokenList(endpoint.Tokens)
 	diags.Append(tokenDiags...)
 	model.Tokens = tokens
+
+	options, optionDiags := securityOptionsObject(endpoint.Security)
+	diags.Append(optionDiags...)
+	model.SecurityOptions = options
+}
+
+// applySecurity writes the settable toggles and the custom IP header. The
+// previous header is needed because clearing the attribute has to become a
+// delete rather than an empty write.
+func (r *endpointResource) applySecurity(ctx context.Context, id string, options types.Object, header, previousHeader types.String) diag.Diagnostics {
+	patch, diags := securityOptionsPatch(ctx, options)
+	if diags.HasError() {
+		return diags
+	}
+	if err := r.client.SetSecurityOptions(ctx, id, patch); err != nil {
+		diags.AddError("Could not update the endpoint security options", err.Error())
+		return diags
+	}
+
+	switch {
+	case !header.IsNull() && !header.IsUnknown():
+		if err := r.client.SetIPCustomHeader(ctx, id, header.ValueString()); err != nil {
+			diags.AddError("Could not set the endpoint's custom IP header", err.Error())
+		}
+	case !previousHeader.IsNull():
+		if err := r.client.DeleteIPCustomHeader(ctx, id); err != nil {
+			diags.AddError("Could not clear the endpoint's custom IP header", err.Error())
+		}
+	}
+	return diags
 }
 
 func applyEndpoint(endpoint *client.Endpoint, state *endpointResourceModel) diag.Diagnostics {
@@ -366,6 +416,11 @@ func applyEndpoint(endpoint *client.Endpoint, state *endpointResourceModel) diag
 	tokens, tokenDiags := tokenList(endpoint.Tokens)
 	diags.Append(tokenDiags...)
 	state.Tokens = tokens
+
+	options, optionDiags := securityOptionsObject(endpoint.Security)
+	diags.Append(optionDiags...)
+	state.SecurityOptions = options
+	state.IPCustomHeader = stringOrNull(endpoint.Security.IPCustomHeader)
 
 	if endpoint.Label == "" {
 		state.Label = types.StringNull()
@@ -387,10 +442,10 @@ func applyEndpoint(endpoint *client.Endpoint, state *endpointResourceModel) diag
 }
 
 // applyEndpointURLs maps empty URLs to null so that a chain without WebSocket
-// support reports wss_url as absent rather than as an empty string.
+// support reports safe_wss_url as absent rather than as an empty string.
 func applyEndpointURLs(endpoint *client.Endpoint, model *endpointResourceModel) {
-	model.HTTPURL = stringOrNull(endpoint.HTTPURL)
-	model.WSSURL = stringOrNull(endpoint.WSSURL)
+	model.SafeHTTPURL = stringOrNull(endpoint.SafeHTTPURL)
+	model.SafeWSSURL = stringOrNull(endpoint.SafeWSSURL)
 	model.HTTPURLWithToken = stringOrNull(endpoint.HTTPURLWithToken)
 	model.WSSURLWithToken = stringOrNull(endpoint.WSSURLWithToken)
 }

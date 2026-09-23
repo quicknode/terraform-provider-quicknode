@@ -1,55 +1,74 @@
 package client
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
-func TestSplitEndpointURL(t *testing.T) {
+func TestRedactEndpointURL(t *testing.T) {
 	cases := []struct {
-		name      string
-		raw       string
-		wantBase  string
-		wantToken string
+		name string
+		raw  string
+		want string
 	}{
 		{
-			name:      "token followed by a chain suffix",
-			raw:       "https://polished-damp-grass.hype-testnet.quiknode.pro/abc123/evm",
-			wantBase:  "https://polished-damp-grass.hype-testnet.quiknode.pro/evm",
-			wantToken: "abc123",
+			name: "token followed by a chain suffix",
+			raw:  "https://polished-damp-grass.hype-testnet.quiknode.pro/abc123/evm",
+			want: "https://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm",
 		},
 		{
-			name:      "token with no suffix",
-			raw:       "https://example-name.quiknode.pro/abc123",
-			wantBase:  "https://example-name.quiknode.pro",
-			wantToken: "abc123",
+			name: "token with no suffix",
+			raw:  "https://example-name.quiknode.pro/abc123",
+			want: "https://example-name.quiknode.pro/TOKEN",
 		},
 		{
-			name:      "websocket scheme",
-			raw:       "wss://example-name.quiknode.pro/abc123/evm",
-			wantBase:  "wss://example-name.quiknode.pro/evm",
-			wantToken: "abc123",
+			name: "trailing slash after the token",
+			raw:  "https://frosty-capable-pallet.btc.quiknode.pro/abc123/",
+			want: "https://frosty-capable-pallet.btc.quiknode.pro/TOKEN/",
 		},
 		{
-			name:      "no path at all",
-			raw:       "https://example-name.quiknode.pro",
-			wantBase:  "https://example-name.quiknode.pro",
-			wantToken: "",
+			name: "websocket scheme",
+			raw:  "wss://example-name.quiknode.pro/abc123/evm",
+			want: "wss://example-name.quiknode.pro/TOKEN/evm",
 		},
 		{
-			name:      "empty",
-			raw:       "",
-			wantBase:  "",
-			wantToken: "",
+			name: "no path at all",
+			raw:  "https://example-name.quiknode.pro",
+			want: "https://example-name.quiknode.pro",
+		},
+		{
+			name: "empty",
+			raw:  "",
+			want: "",
 		},
 	}
 
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
-			base, token := splitEndpointURL(testCase.raw)
-			if base != testCase.wantBase {
-				t.Errorf("base = %q, want %q", base, testCase.wantBase)
-			}
-			if token != testCase.wantToken {
-				t.Errorf("token = %q, want %q", token, testCase.wantToken)
+			if got := RedactEndpointURL(testCase.raw); got != testCase.want {
+				t.Errorf("RedactEndpointURL(%q) = %q, want %q", testCase.raw, got, testCase.want)
 			}
 		})
+	}
+}
+
+// TestRedactedURLKeepsItsShape is the point of the placeholder: substituting a
+// token has to reproduce the original URL exactly, including a suffix the
+// chain appends after the token.
+func TestRedactedURLKeepsItsShape(t *testing.T) {
+	for _, raw := range []string{
+		"https://polished-damp-grass.hype-testnet.quiknode.pro/abc123/evm",
+		"https://frosty-capable-pallet.btc.quiknode.pro/abc123/",
+		"wss://example-name.quiknode.pro/abc123",
+	} {
+		redacted := RedactEndpointURL(raw)
+		if redacted == raw {
+			t.Errorf("RedactEndpointURL(%q) left the credential in place", raw)
+			continue
+		}
+		restored := strings.Replace(redacted, URLTokenPlaceholder, "abc123", 1)
+		if restored != raw {
+			t.Errorf("substituting the token gave %q, want %q", restored, raw)
+		}
 	}
 }

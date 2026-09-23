@@ -52,15 +52,15 @@ func (p *quicknodeProvider) Schema(_ context.Context, _ provider.SchemaRequest, 
 			"api_key": schema.StringAttribute{
 				Optional:            true,
 				Sensitive:           true,
-				MarkdownDescription: "Quicknode Admin API key. Defaults to the `" + apiKeyEnvVar + "` environment variable. Prefer the environment variable so the key stays out of configuration and state.",
+				MarkdownDescription: "Quicknode API key. Defaults to the `" + apiKeyEnvVar + "` environment variable. Prefer the environment variable so the key stays out of configuration and state.",
 			},
 			"base_url": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Admin API base URL. Defaults to `" + client.DefaultBaseURL + "`.",
+				MarkdownDescription: "Quicknode API base URL. Defaults to `" + client.DefaultBaseURL + "`.",
 			},
 			"requests_per_second": schema.Int64Attribute{
 				Optional:            true,
-				MarkdownDescription: "Throttle applied to Admin API calls. A large workspace bursts many calls during one apply, so the provider paces itself.",
+				MarkdownDescription: "Throttle applied to Quicknode API calls. A large workspace bursts many calls during one apply, so the provider paces itself.",
 				Validators:          []validator.Int64{int64validator.AtLeast(1)},
 			},
 		},
@@ -77,7 +77,7 @@ func (p *quicknodeProvider) Configure(ctx context.Context, req provider.Configur
 	if config.APIKey.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_key"),
-			"Admin API key is not known at plan time",
+			"API key is not known at plan time",
 			"The api_key value comes from another resource that has not been applied yet. Set it from a variable or from the "+apiKeyEnvVar+" environment variable instead.",
 		)
 		return
@@ -96,8 +96,8 @@ func (p *quicknodeProvider) Configure(ctx context.Context, req provider.Configur
 	if apiKey == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_key"),
-			"Missing Admin API key",
-			"Set the "+apiKeyEnvVar+" environment variable, or set api_key on the provider block. Admin API access requires a paid Quicknode plan.",
+			"Missing Quicknode API key",
+			"Set the "+apiKeyEnvVar+" environment variable, or set api_key on the provider block. API access requires a paid Quicknode plan.",
 		)
 		return
 	}
@@ -115,12 +115,12 @@ func (p *quicknodeProvider) Configure(ctx context.Context, req provider.Configur
 	if err != nil {
 		if client.IsUnauthorized(err) {
 			resp.Diagnostics.AddError(
-				"Quicknode rejected the Admin API key",
-				"Check that the key is valid and that the account is on a paid plan, which Admin API access requires. "+err.Error(),
+				"Quicknode rejected the API key",
+				"Check that the key is valid and that the account is on a paid plan, which API access requires. "+err.Error(),
 			)
 			return
 		}
-		resp.Diagnostics.AddError("Could not reach the Quicknode Admin API", err.Error())
+		resp.Diagnostics.AddError("Could not reach the Quicknode API", err.Error())
 		return
 	}
 
@@ -130,13 +130,21 @@ func (p *quicknodeProvider) Configure(ctx context.Context, req provider.Configur
 }
 
 func (p *quicknodeProvider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
+	resources := []func() resource.Resource{
 		NewEndpointResource,
+		NewEndpointTokenResource,
+		NewJWTResource,
+		NewRequestFilterResource,
+		NewRateLimitsResource,
+		NewMethodRateLimitResource,
 	}
+	return append(resources, securityEntryResources()...)
 }
 
 func (p *quicknodeProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewChainsDataSource,
+		NewEndpointDataSource,
+		NewEndpointsDataSource,
 	}
 }

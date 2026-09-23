@@ -4,14 +4,14 @@ page_title: "quicknode_endpoint Resource - quicknode"
 subcategory: ""
 description: |-
   A Quicknode RPC endpoint on a chain and network.
-  Pass http_url_with_token to anything that needs to make RPC calls. http_url and wss_url have the credential removed and are safe to log or expose, but they are not usable endpoints: the token does not sit at the end of the path on every chain, so rebuilding a URL by joining them to a token produces a broken address on chains that append a suffix.
+  Pass http_url_with_token to anything that needs to make RPC calls. safe_http_url and safe_wss_url carry the literal TOKEN where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.
 ---
 
 # quicknode_endpoint (Resource)
 
 A Quicknode RPC endpoint on a chain and network.
 
-Pass `http_url_with_token` to anything that needs to make RPC calls. `http_url` and `wss_url` have the credential removed and are safe to log or expose, but they are not usable endpoints: the token does not sit at the end of the path on every chain, so rebuilding a URL by joining them to a token produces a broken address on chains that append a suffix.
+Pass `http_url_with_token` to anything that needs to make RPC calls. `safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.
 
 ## Example Usage
 
@@ -22,6 +22,19 @@ resource "quicknode_endpoint" "payments" {
   label   = "payments-prod"
   status  = "active"
   tags    = ["prod", "payments"]
+
+  # Each toggle decides whether a mechanism is enforced. The entries it applies
+  # to are separate resources, such as quicknode_endpoint_ip. A toggle left out
+  # keeps whatever value the endpoint already has.
+  security_options = {
+    tokens = true
+    ips    = true
+    cors   = false
+  }
+
+  # Read the caller's address from this header when calls arrive through a
+  # proxy, so IP restrictions match the original caller.
+  ip_custom_header = "X-Real-IP"
 }
 
 # Pass the credentialed URL to whatever makes RPC calls.
@@ -30,9 +43,11 @@ output "payments_rpc_url" {
   sensitive = true
 }
 
-# The same endpoint without the credential, safe to log or display.
-output "payments_rpc_host" {
-  value = quicknode_endpoint.payments.http_url
+# The same URL with the credential replaced by the literal TOKEN. Safe to log
+# or display, and it keeps the real URL's shape, so substituting a token
+# reproduces a working address on every chain.
+output "payments_rpc_url_redacted" {
+  value = quicknode_endpoint.payments.safe_http_url
 }
 ```
 
@@ -46,19 +61,40 @@ output "payments_rpc_host" {
 
 ### Optional
 
+- `ip_custom_header` (String) Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions match the original caller rather than the proxy.
 - `label` (String) Descriptive label for the endpoint. Labels are not unique and are not used to identify the endpoint.
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
+- `security_options` (Attributes) Which security mechanisms the endpoint enforces. Each toggle only decides whether a mechanism is applied; the entries it applies to are separate resources, such as `quicknode_endpoint_ip`. A toggle left out of the configuration keeps whatever value the endpoint already has. (see [below for nested schema](#nestedatt--security_options))
 - `status` (String) `active` or `paused`.
 - `tags` (Set of String) Tag labels applied to the endpoint. Omitting the attribute removes every tag the provider finds on the endpoint.
 
 ### Read-Only
 
-- `http_url` (String) HTTPS URL with the auth token removed. Safe to expose, but not a working endpoint.
 - `http_url_with_token` (String, Sensitive) The working HTTPS endpoint, exactly as the Admin API returns it. Pass this to whatever makes RPC calls.
 - `id` (String) Endpoint id.
+- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. Substitute a real token to make it usable: `replace(self.safe_http_url, "TOKEN", self.tokens[0].token)`.
+- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.
 - `tokens` (Attributes List) Auth tokens for the endpoint. An endpoint can carry several. Token values are stored in Terraform state, so keep state encrypted and remote. (see [below for nested schema](#nestedatt--tokens))
-- `wss_url` (String) WebSocket URL with the auth token removed, or null on chains without WebSocket support.
 - `wss_url_with_token` (String, Sensitive) The working WebSocket endpoint, or null on chains without WebSocket support.
+
+<a id="nestedatt--security_options"></a>
+### Nested Schema for `security_options`
+
+Optional:
+
+- `cors` (Boolean) Apply Cross-Origin Resource Sharing policy. New endpoints have this enabled.
+- `domain_masks` (Boolean) Serve the endpoint from an approved custom domain. Add them with `quicknode_endpoint_domain_mask`.
+- `hsts` (Boolean) Send the HTTP Strict Transport Security header.
+- `ips` (Boolean) Restrict calls to the approved IP addresses. Add them with `quicknode_endpoint_ip`.
+- `jwts` (Boolean) Require a signed JWT. Register signing keys with `quicknode_endpoint_jwt`.
+- `referrers` (Boolean) Restrict calls to the approved referrers. Add them with `quicknode_endpoint_referrer`.
+- `tokens` (Boolean) Require one of the endpoint's auth tokens. New endpoints have this enabled.
+
+Read-Only:
+
+- `request_filters` (Boolean) Whether RPC method filtering is applied. Read-only: the Admin API turns this on when a `quicknode_endpoint_request_filter` exists and off when the last one is removed.
+- `response_logging` (Boolean) Whether responses are logged for the endpoint. Read-only: it is set by the account's plan rather than per endpoint.
+
 
 <a id="nestedatt--tokens"></a>
 ### Nested Schema for `tokens`

@@ -169,5 +169,167 @@
         }
       }
     }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/ips/items",
+    "value": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/domain_masks/items",
+    "value": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "domain_mask": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/referrers/items",
+    "value": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "referrer": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/jwts/items",
+    "value": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kid": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/request_filters/items/properties/method/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security~1request_filters~1{request_filter_id}/put/requestBody/content/application~1json/schema/properties/method/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1method-rate-limits/get/responses/200/content/application~1json/schema/properties/data/properties/rate_limiters/items/properties/methods/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1method-rate-limits~1{method_rate_limit_id}/patch/requestBody/content/application~1json/schema/properties/methods/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1method-rate-limits/post/responses/200/content/application~1json/schema/properties/data/properties/methods/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1method-rate-limits~1{method_rate_limit_id}/patch/responses/200/content/application~1json/schema/properties/data/properties/methods/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints/get/parameters/5/schema/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints/get/parameters/6/schema/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints/get/parameters/7/schema/items",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints/post/responses/200/content/application~1json/schema/properties/data/properties/security/properties/options/properties/ipCustomHeader",
+    "value": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security_options/patch/responses/200/content/application~1json/schema/properties/data",
+    "value": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "option": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      }
+    }
   }
 ]

@@ -34,13 +34,13 @@ type GetV0EndpointsParams struct {
 	SortDirection *string `form:"sort_direction,omitempty" json:"sort_direction,omitempty"`
 
 	// Networks Filter by network name(s)
-	Networks *[]interface{} `form:"networks,omitempty" json:"networks,omitempty"`
+	Networks *[]string `form:"networks,omitempty" json:"networks,omitempty"`
 
 	// Statuses Filter by endpoint status. Accepted values: active, paused
-	Statuses *[]interface{} `form:"statuses,omitempty" json:"statuses,omitempty"`
+	Statuses *[]string `form:"statuses,omitempty" json:"statuses,omitempty"`
 
 	// Labels Filter by endpoint label(s)
-	Labels *[]interface{} `form:"labels,omitempty" json:"labels,omitempty"`
+	Labels *[]string `form:"labels,omitempty" json:"labels,omitempty"`
 
 	// Dedicated Filter for dedicated endpoints only
 	Dedicated *bool `form:"dedicated,omitempty" json:"dedicated,omitempty"`
@@ -148,7 +148,7 @@ type PostV0EndpointsByIdMethodRateLimitsJSONBody struct {
 // PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdJSONBody defines parameters for PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId.
 type PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdJSONBody struct {
 	// Methods An array of method names to which the rate limiter applies
-	Methods []interface{} `json:"methods"`
+	Methods []string `json:"methods"`
 
 	// Rate  Specifies the maximum number of requests allowed for the specified methods within the defined interval
 	Rate int `json:"rate"`
@@ -223,7 +223,7 @@ type PostV0EndpointsByIdSecurityRequestFiltersJSONBody struct {
 // PutV0EndpointsByIdSecurityRequestFiltersByRequestFilterIdJSONBody defines parameters for PutV0EndpointsByIdSecurityRequestFiltersByRequestFilterId.
 type PutV0EndpointsByIdSecurityRequestFiltersByRequestFilterIdJSONBody struct {
 	// Method An array of method names to whitelist
-	Method *[]interface{} `json:"method,omitempty"`
+	Method *[]string `json:"method,omitempty"`
 }
 
 // PatchV0EndpointsByIdSecurityOptionsJSONBody defines parameters for PatchV0EndpointsByIdSecurityOptions.
@@ -7176,10 +7176,10 @@ type PostV0EndpointsResponse struct {
 					Hosts *bool `json:"hosts,omitempty"`
 
 					// Hsts Indicates whether HTTP Strict Transport Security (HSTS) is enforced
-					Hsts *bool `json:"hsts,omitempty"`
-
-					// IpCustomHeader Indicates whether a custom IP header is applied
-					IpCustomHeader *bool `json:"ipCustomHeader,omitempty"`
+					Hsts           *bool `json:"hsts,omitempty"`
+					IpCustomHeader *struct {
+						Value *string `json:"value,omitempty"`
+					} `json:"ipCustomHeader,omitempty"`
 
 					// Ips Indicates whether IP-based security is enabled
 					Ips *bool `json:"ips,omitempty"`
@@ -7318,10 +7318,10 @@ func (r PostV0EndpointsResponse) GetJSON200() *struct {
 				Hosts *bool `json:"hosts,omitempty"`
 
 				// Hsts Indicates whether HTTP Strict Transport Security (HSTS) is enforced
-				Hsts *bool `json:"hsts,omitempty"`
-
-				// IpCustomHeader Indicates whether a custom IP header is applied
-				IpCustomHeader *bool `json:"ipCustomHeader,omitempty"`
+				Hsts           *bool `json:"hsts,omitempty"`
+				IpCustomHeader *struct {
+					Value *string `json:"value,omitempty"`
+				} `json:"ipCustomHeader,omitempty"`
 
 				// Ips Indicates whether IP-based security is enabled
 				Ips *bool `json:"ips,omitempty"`
@@ -8648,7 +8648,7 @@ type GetV0EndpointsByIdMethodRateLimitsResponse struct {
 				Interval *string `json:"interval,omitempty"`
 
 				// Methods A list of method names to which the rate limiter applies
-				Methods *[]interface{} `json:"methods,omitempty"`
+				Methods *[]string `json:"methods,omitempty"`
 
 				// Rate The number of allowed requests within the specified interval
 				Rate *int `json:"rate,omitempty"`
@@ -8679,7 +8679,7 @@ func (r GetV0EndpointsByIdMethodRateLimitsResponse) GetJSON200() *struct {
 			Interval *string `json:"interval,omitempty"`
 
 			// Methods A list of method names to which the rate limiter applies
-			Methods *[]interface{} `json:"methods,omitempty"`
+			Methods *[]string `json:"methods,omitempty"`
 
 			// Rate The number of allowed requests within the specified interval
 			Rate *int `json:"rate,omitempty"`
@@ -8741,7 +8741,7 @@ type PostV0EndpointsByIdMethodRateLimitsResponse struct {
 			Interval *string `json:"interval,omitempty"`
 
 			// Methods A list of methods the rate limiter applies to
-			Methods *[]interface{} `json:"methods,omitempty"`
+			Methods *[]string `json:"methods,omitempty"`
 
 			// Rate The maximum number of requests allowed within the specified interval
 			Rate *int `json:"rate,omitempty"`
@@ -8769,7 +8769,7 @@ func (r PostV0EndpointsByIdMethodRateLimitsResponse) GetJSON200() *struct {
 		Interval *string `json:"interval,omitempty"`
 
 		// Methods A list of methods the rate limiter applies to
-		Methods *[]interface{} `json:"methods,omitempty"`
+		Methods *[]string `json:"methods,omitempty"`
 
 		// Rate The maximum number of requests allowed within the specified interval
 		Rate *int `json:"rate,omitempty"`
@@ -8883,7 +8883,7 @@ type PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse struct {
 			Interval *string `json:"interval,omitempty"`
 
 			// Methods A list of methods the rate limiter applies to
-			Methods *[]interface{} `json:"methods,omitempty"`
+			Methods *[]string `json:"methods,omitempty"`
 
 			// Rate The maximum number of requests allowed within the specified interval
 			Rate *int `json:"rate,omitempty"`
@@ -8911,7 +8911,7 @@ func (r PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse) GetJSON
 		Interval *string `json:"interval,omitempty"`
 
 		// Methods A list of methods the rate limiter applies to
-		Methods *[]interface{} `json:"methods,omitempty"`
+		Methods *[]string `json:"methods,omitempty"`
 
 		// Rate The maximum number of requests allowed within the specified interval
 		Rate *int `json:"rate,omitempty"`
@@ -9247,13 +9247,24 @@ type GetV0EndpointsByIdSecurityResponse struct {
 		// Data Contains the security state of the endpoint
 		Data *struct {
 			// DomainMasks An array of domain mask entries; null if none configured
-			DomainMasks *[]interface{} `json:"domain_masks,omitempty"`
+			DomainMasks *[]struct {
+				DomainMask *string `json:"domain_mask,omitempty"`
+				Id         *string `json:"id,omitempty"`
+			} `json:"domain_masks,omitempty"`
 
 			// Ips An array of allowed IP entries; null if none configured
-			Ips *[]interface{} `json:"ips,omitempty"`
+			Ips *[]struct {
+				Id *string `json:"id,omitempty"`
+				Ip *string `json:"ip,omitempty"`
+			} `json:"ips,omitempty"`
 
 			// Jwts An array of JWT configuration objects; null if none configured
-			Jwts *[]interface{} `json:"jwts,omitempty"`
+			Jwts *[]struct {
+				Id        *string `json:"id,omitempty"`
+				Kid       *string `json:"kid,omitempty"`
+				Name      *string `json:"name,omitempty"`
+				PublicKey *string `json:"public_key,omitempty"`
+			} `json:"jwts,omitempty"`
 
 			// Options Security feature toggles for the endpoint
 			Options *struct {
@@ -9292,7 +9303,10 @@ type GetV0EndpointsByIdSecurityResponse struct {
 			} `json:"options,omitempty"`
 
 			// Referrers An array of allowed referrer entries; null if none configured
-			Referrers *[]interface{} `json:"referrers,omitempty"`
+			Referrers *[]struct {
+				Id       *string `json:"id,omitempty"`
+				Referrer *string `json:"referrer,omitempty"`
+			} `json:"referrers,omitempty"`
 
 			// RequestFilters An array of request filter objects; null if none configured
 			RequestFilters *[]struct {
@@ -9300,7 +9314,7 @@ type GetV0EndpointsByIdSecurityResponse struct {
 				Id *string `json:"id,omitempty"`
 
 				// Method An array of whitelisted method names
-				Method *[]interface{} `json:"method,omitempty"`
+				Method *[]string `json:"method,omitempty"`
 
 				// Params Parameter constraints for the filter
 				Params *map[string]interface{} `json:"params,omitempty"`
@@ -9326,13 +9340,24 @@ func (r GetV0EndpointsByIdSecurityResponse) GetJSON200() *struct {
 	// Data Contains the security state of the endpoint
 	Data *struct {
 		// DomainMasks An array of domain mask entries; null if none configured
-		DomainMasks *[]interface{} `json:"domain_masks,omitempty"`
+		DomainMasks *[]struct {
+			DomainMask *string `json:"domain_mask,omitempty"`
+			Id         *string `json:"id,omitempty"`
+		} `json:"domain_masks,omitempty"`
 
 		// Ips An array of allowed IP entries; null if none configured
-		Ips *[]interface{} `json:"ips,omitempty"`
+		Ips *[]struct {
+			Id *string `json:"id,omitempty"`
+			Ip *string `json:"ip,omitempty"`
+		} `json:"ips,omitempty"`
 
 		// Jwts An array of JWT configuration objects; null if none configured
-		Jwts *[]interface{} `json:"jwts,omitempty"`
+		Jwts *[]struct {
+			Id        *string `json:"id,omitempty"`
+			Kid       *string `json:"kid,omitempty"`
+			Name      *string `json:"name,omitempty"`
+			PublicKey *string `json:"public_key,omitempty"`
+		} `json:"jwts,omitempty"`
 
 		// Options Security feature toggles for the endpoint
 		Options *struct {
@@ -9371,7 +9396,10 @@ func (r GetV0EndpointsByIdSecurityResponse) GetJSON200() *struct {
 		} `json:"options,omitempty"`
 
 		// Referrers An array of allowed referrer entries; null if none configured
-		Referrers *[]interface{} `json:"referrers,omitempty"`
+		Referrers *[]struct {
+			Id       *string `json:"id,omitempty"`
+			Referrer *string `json:"referrer,omitempty"`
+		} `json:"referrers,omitempty"`
 
 		// RequestFilters An array of request filter objects; null if none configured
 		RequestFilters *[]struct {
@@ -9379,7 +9407,7 @@ func (r GetV0EndpointsByIdSecurityResponse) GetJSON200() *struct {
 			Id *string `json:"id,omitempty"`
 
 			// Method An array of whitelisted method names
-			Method *[]interface{} `json:"method,omitempty"`
+			Method *[]string `json:"method,omitempty"`
 
 			// Params Parameter constraints for the filter
 			Params *map[string]interface{} `json:"params,omitempty"`
@@ -10229,12 +10257,8 @@ type PatchV0EndpointsByIdSecurityOptionsResponse struct {
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *struct {
-		// Data The data object which contains the following fields:
-		Data *struct {
-			// Option Represents the security options
+		Data *[]struct {
 			Option *string `json:"option,omitempty"`
-
-			// Status Indicates the status of the option. Possible values: enabled, disabled
 			Status *string `json:"status,omitempty"`
 		} `json:"data,omitempty"`
 
@@ -10245,12 +10269,8 @@ type PatchV0EndpointsByIdSecurityOptionsResponse struct {
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r PatchV0EndpointsByIdSecurityOptionsResponse) GetJSON200() *struct {
-	// Data The data object which contains the following fields:
-	Data *struct {
-		// Option Represents the security options
+	Data *[]struct {
 		Option *string `json:"option,omitempty"`
-
-		// Status Indicates the status of the option. Possible values: enabled, disabled
 		Status *string `json:"status,omitempty"`
 	} `json:"data,omitempty"`
 
@@ -13984,10 +14004,10 @@ func ParsePostV0EndpointsResponse(rsp *http.Response) (*PostV0EndpointsResponse,
 						Hosts *bool `json:"hosts,omitempty"`
 
 						// Hsts Indicates whether HTTP Strict Transport Security (HSTS) is enforced
-						Hsts *bool `json:"hsts,omitempty"`
-
-						// IpCustomHeader Indicates whether a custom IP header is applied
-						IpCustomHeader *bool `json:"ipCustomHeader,omitempty"`
+						Hsts           *bool `json:"hsts,omitempty"`
+						IpCustomHeader *struct {
+							Value *string `json:"value,omitempty"`
+						} `json:"ipCustomHeader,omitempty"`
 
 						// Ips Indicates whether IP-based security is enabled
 						Ips *bool `json:"ips,omitempty"`
@@ -14771,7 +14791,7 @@ func ParseGetV0EndpointsByIdMethodRateLimitsResponse(rsp *http.Response) (*GetV0
 					Interval *string `json:"interval,omitempty"`
 
 					// Methods A list of method names to which the rate limiter applies
-					Methods *[]interface{} `json:"methods,omitempty"`
+					Methods *[]string `json:"methods,omitempty"`
 
 					// Rate The number of allowed requests within the specified interval
 					Rate *int `json:"rate,omitempty"`
@@ -14822,7 +14842,7 @@ func ParsePostV0EndpointsByIdMethodRateLimitsResponse(rsp *http.Response) (*Post
 				Interval *string `json:"interval,omitempty"`
 
 				// Methods A list of methods the rate limiter applies to
-				Methods *[]interface{} `json:"methods,omitempty"`
+				Methods *[]string `json:"methods,omitempty"`
 
 				// Rate The maximum number of requests allowed within the specified interval
 				Rate *int `json:"rate,omitempty"`
@@ -14904,7 +14924,7 @@ func ParsePatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse(rsp *h
 				Interval *string `json:"interval,omitempty"`
 
 				// Methods A list of methods the rate limiter applies to
-				Methods *[]interface{} `json:"methods,omitempty"`
+				Methods *[]string `json:"methods,omitempty"`
 
 				// Rate The maximum number of requests allowed within the specified interval
 				Rate *int `json:"rate,omitempty"`
@@ -15109,13 +15129,24 @@ func ParseGetV0EndpointsByIdSecurityResponse(rsp *http.Response) (*GetV0Endpoint
 			// Data Contains the security state of the endpoint
 			Data *struct {
 				// DomainMasks An array of domain mask entries; null if none configured
-				DomainMasks *[]interface{} `json:"domain_masks,omitempty"`
+				DomainMasks *[]struct {
+					DomainMask *string `json:"domain_mask,omitempty"`
+					Id         *string `json:"id,omitempty"`
+				} `json:"domain_masks,omitempty"`
 
 				// Ips An array of allowed IP entries; null if none configured
-				Ips *[]interface{} `json:"ips,omitempty"`
+				Ips *[]struct {
+					Id *string `json:"id,omitempty"`
+					Ip *string `json:"ip,omitempty"`
+				} `json:"ips,omitempty"`
 
 				// Jwts An array of JWT configuration objects; null if none configured
-				Jwts *[]interface{} `json:"jwts,omitempty"`
+				Jwts *[]struct {
+					Id        *string `json:"id,omitempty"`
+					Kid       *string `json:"kid,omitempty"`
+					Name      *string `json:"name,omitempty"`
+					PublicKey *string `json:"public_key,omitempty"`
+				} `json:"jwts,omitempty"`
 
 				// Options Security feature toggles for the endpoint
 				Options *struct {
@@ -15154,7 +15185,10 @@ func ParseGetV0EndpointsByIdSecurityResponse(rsp *http.Response) (*GetV0Endpoint
 				} `json:"options,omitempty"`
 
 				// Referrers An array of allowed referrer entries; null if none configured
-				Referrers *[]interface{} `json:"referrers,omitempty"`
+				Referrers *[]struct {
+					Id       *string `json:"id,omitempty"`
+					Referrer *string `json:"referrer,omitempty"`
+				} `json:"referrers,omitempty"`
 
 				// RequestFilters An array of request filter objects; null if none configured
 				RequestFilters *[]struct {
@@ -15162,7 +15196,7 @@ func ParseGetV0EndpointsByIdSecurityResponse(rsp *http.Response) (*GetV0Endpoint
 					Id *string `json:"id,omitempty"`
 
 					// Method An array of whitelisted method names
-					Method *[]interface{} `json:"method,omitempty"`
+					Method *[]string `json:"method,omitempty"`
 
 					// Params Parameter constraints for the filter
 					Params *map[string]interface{} `json:"params,omitempty"`
@@ -15668,12 +15702,8 @@ func ParsePatchV0EndpointsByIdSecurityOptionsResponse(rsp *http.Response) (*Patc
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// Data The data object which contains the following fields:
-			Data *struct {
-				// Option Represents the security options
+			Data *[]struct {
 				Option *string `json:"option,omitempty"`
-
-				// Status Indicates the status of the option. Possible values: enabled, disabled
 				Status *string `json:"status,omitempty"`
 			} `json:"data,omitempty"`
 

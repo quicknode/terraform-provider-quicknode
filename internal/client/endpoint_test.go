@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -58,14 +59,19 @@ func TestGetEndpointWithPathSuffix(t *testing.T) {
 	if endpoint.WSSURLWithToken != "wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm" {
 		t.Errorf("WSSURLWithToken = %q", endpoint.WSSURLWithToken)
 	}
-
-	// The token-free URL is not a working address on this chain, which is the
-	// reason HTTPURLWithToken exists.
-	if endpoint.HTTPURL == wantWorking {
-		t.Error("HTTPURL still carries the token")
+	if endpoint.SafeWSSURL != "wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm" {
+		t.Errorf("SafeWSSURL = %q", endpoint.SafeWSSURL)
 	}
-	if endpoint.HTTPURL+"/TOKENVALUE" == wantWorking {
-		t.Error("joining HTTPURL to the token happens to work here; the test no longer guards the bug it was written for")
+
+	// The redacted URL keeps the real one's shape, so substituting a token
+	// reproduces it exactly. That is what the placeholder buys over cutting
+	// the token out: this chain puts a suffix after it.
+	const wantRedacted = "https://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm"
+	if endpoint.SafeHTTPURL != wantRedacted {
+		t.Errorf("SafeHTTPURL = %q, want %q", endpoint.SafeHTTPURL, wantRedacted)
+	}
+	if strings.Contains(endpoint.SafeHTTPURL, "TOKENVALUE") {
+		t.Error("SafeHTTPURL still carries the token")
 	}
 
 	if len(endpoint.Tokens) != 1 || endpoint.Tokens[0].Value != "TOKENVALUE" {
@@ -85,14 +91,14 @@ func TestGetEndpointWithoutWebsocket(t *testing.T) {
 		t.Fatalf("GetEndpoint: %v", err)
 	}
 
-	if endpoint.WSSURL != "" || endpoint.WSSURLWithToken != "" {
-		t.Errorf("WSSURL = %q, WSSURLWithToken = %q, want both empty", endpoint.WSSURL, endpoint.WSSURLWithToken)
+	if endpoint.SafeWSSURL != "" || endpoint.WSSURLWithToken != "" {
+		t.Errorf("SafeWSSURL = %q, WSSURLWithToken = %q, want both empty", endpoint.SafeWSSURL, endpoint.WSSURLWithToken)
 	}
 	if endpoint.HTTPURLWithToken != "https://frosty-capable-pallet.btc.quiknode.pro/TOKENVALUE/" {
 		t.Errorf("HTTPURLWithToken = %q", endpoint.HTTPURLWithToken)
 	}
-	if endpoint.HTTPURL != "https://frosty-capable-pallet.btc.quiknode.pro" {
-		t.Errorf("HTTPURL = %q", endpoint.HTTPURL)
+	if endpoint.SafeHTTPURL != "https://frosty-capable-pallet.btc.quiknode.pro/TOKEN/" {
+		t.Errorf("SafeHTTPURL = %q", endpoint.SafeHTTPURL)
 	}
 	if endpoint.Status != "paused" || endpoint.Label != "ledger" {
 		t.Errorf("Status = %q, Label = %q", endpoint.Status, endpoint.Label)
@@ -104,5 +110,29 @@ func TestGetEndpointRejectsEnvelopeError(t *testing.T) {
 
 	if _, err := quicknode.GetEndpoint(context.Background(), "1"); err == nil {
 		t.Fatal("expected an error from a 200 response carrying an error field")
+	}
+}
+
+// liveEndpointBody is a verbatim GET /v0/endpoints/{id} response with the token
+// replaced. It carries ipCustomHeader and responseLogging, which the published
+// spec either mistypes or omits.
+const liveEndpointBody = `{"data":{"id":"652052","label":null,"chain":"hype","network":"hype-testnet",` +
+	`"http_url":"https://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm",` +
+	`"wss_url":"wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm",` +
+	`"security":{"options":{"tokens":true,"referrers":false,"jwts":false,"ips":false,` +
+	`"domainMasks":false,"hsts":false,"cors":true,"responseLogging":true,` +
+	`"requestFilters":false,"ipCustomHeader":{"value":null}},` +
+	`"tokens":[{"id":"d3312bd2-c1a2-4d89-865f-11c99fa3863a","token":"TOKENVALUE"}],` +
+	`"jwts":null,"referrers":null,"domain_masks":null,"ips":null,"request_filters":null},` +
+	`"status":"active","rate_limits":{"rate_limit_by_ip":false,"account":-1,"rps":-1,"rpd":-1,"rpm":-1},` +
+	`"tags":[],"is_multichain":false}}`
+
+func TestGetEndpointDecodesLiveBody(t *testing.T) {
+	endpoint, err := newTestClient(t, liveEndpointBody).GetEndpoint(context.Background(), "652052")
+	if err != nil {
+		t.Fatalf("GetEndpoint on a verbatim live body: %v", err)
+	}
+	if len(endpoint.Tokens) != 1 {
+		t.Errorf("Tokens = %+v", endpoint.Tokens)
 	}
 }
