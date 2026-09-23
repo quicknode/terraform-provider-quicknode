@@ -170,7 +170,7 @@ func (r *methodRateLimitResource) Read(ctx context.Context, req resource.ReadReq
 		if limiter.ID != state.ID.ValueString() {
 			continue
 		}
-		methods, diags := methodSet(limiter.Methods)
+		methods, diags := methodSet(methodsPreservingCase(ctx, limiter.Methods, state.Methods))
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -266,4 +266,33 @@ func (r *methodRateLimitResource) ImportState(ctx context.Context, req resource.
 		return
 	}
 	resp.Diagnostics.AddError("No matching method rate limit", fmt.Sprintf("Endpoint %s has no method rate limit with the id %q.", endpointID, limiterID))
+}
+
+// methodsPreservingCase keeps the casing the configuration wrote. This route
+// lowercases the method names it stores, so reading them back verbatim would
+// leave a diff that applying never settles. A method the prior state does not
+// hold is kept as the API returned it, so a real change is still detected.
+func methodsPreservingCase(ctx context.Context, fromAPI []string, prior types.Set) []string {
+	if prior.IsNull() || prior.IsUnknown() {
+		return fromAPI
+	}
+	priorNames, diags := methodNames(ctx, prior)
+	if diags.HasError() {
+		return fromAPI
+	}
+
+	configured := make(map[string]string, len(priorNames))
+	for _, name := range priorNames {
+		configured[strings.ToLower(name)] = name
+	}
+
+	preserved := make([]string, 0, len(fromAPI))
+	for _, name := range fromAPI {
+		if original, ok := configured[strings.ToLower(name)]; ok {
+			preserved = append(preserved, original)
+			continue
+		}
+		preserved = append(preserved, name)
+	}
+	return preserved
 }
