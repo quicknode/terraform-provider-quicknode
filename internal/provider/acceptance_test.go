@@ -111,7 +111,7 @@ func TestAccEndpoint_lifecycle(t *testing.T) {
 
 // TestAccEndpoint_securityOptions checks the boolean-read, string-write
 // asymmetry end to end, and that a toggle the configuration does not manage
-// keeps its value rather than being reset.
+// keeps its value.
 func TestAccEndpoint_securityOptions(t *testing.T) {
 	withOptions := func(cors bool) string {
 		return fmt.Sprintf(`
@@ -137,7 +137,7 @@ resource "quicknode_endpoint" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "security_options.cors", "false"),
 					// tokens is unmanaged here, so it has to keep the value a
-					// new endpoint is created with rather than being turned off.
+					// new endpoint is created with.
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "security_options.tokens", "true"),
 				),
 			},
@@ -233,7 +233,7 @@ resource "quicknode_endpoint_request_filter" "test" {
 
 // TestAccRateLimits_dropReturnsPlanDefault covers the behaviour the patch route
 // cannot express: removing a bucket from the configuration has to delete the
-// override rather than leave it in place.
+// override.
 func TestAccRateLimits_dropReturnsPlanDefault(t *testing.T) {
 	withBuckets := func(buckets string) string {
 		return fmt.Sprintf(`
@@ -362,6 +362,310 @@ func TestAccChainsDataSource(t *testing.T) {
 			{
 				Config: `data "quicknode_chains" "all" {}`,
 				Check:  resource.TestCheckResourceAttrSet("data.quicknode_chains.all", "chains.#"),
+			},
+		},
+	})
+}
+
+// jwtAcceptancePublicKey is a throwaway RSA public key, generated for these
+// tests and used nowhere else. The matching private key was discarded.
+const jwtAcceptancePublicKey = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvxK0qszzlluhCeocaEdM
+RRoXn+2tmIyi/ToD8YmXQd9KhqHJLs2zT6WAEctEr3AetcJmWpwyXEaMzSn6aoIn
+SBmic1PeGCyecISo2wt/RkbdoWYJe48T4BOAwH/ljOztYjldfiVKINNTR8975K1Z
+uo6QOo//grLrZOzqU7BTG8r7MqyX8eAh/W3MEthhpFEIlLCOyxL0HMwOsfbTYG9/
+EvmvmBTqnXfU653cFnAWjtHBVO3YOcp/CmaU+4pqF+Pu+prGajLIekzZnjIx0W6j
+mY6xngVlYGHdIj1qCcvETrSRaz6JemJpBseFNaOUe7AYDl2Ne5UPnkdgDTZUOuj5
+/QIDAQAB
+-----END PUBLIC KEY-----
+`
+
+// endpointIDForImport addresses a child resource by the endpoint it belongs to,
+// which is how every one of them is imported.
+func endpointIDForImport(suffix func(*terraform.State) (string, error)) func(*terraform.State) (string, error) {
+	return func(state *terraform.State) (string, error) {
+		endpoint := state.RootModule().Resources["quicknode_endpoint.test"]
+		if endpoint == nil {
+			return "", fmt.Errorf("the endpoint is not in state")
+		}
+		tail, err := suffix(state)
+		if err != nil {
+			return "", err
+		}
+		return endpoint.Primary.ID + "/" + tail, nil
+	}
+}
+
+// TestAccEndpoint_labelSurvivesRemoval covers the one attribute Quicknode has
+// no route to clear. Dropping it from the configuration has to leave the
+// endpoint's label alone and settle into an empty plan.
+func TestAccEndpoint_labelSurvivesRemoval(t *testing.T) {
+	unlabelled := fmt.Sprintf(`
+resource "quicknode_endpoint" "test" {
+  chain   = %q
+  network = %q
+}
+`, acceptanceChain, acceptanceNetwork)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: endpointConfig("tfacc-label"),
+				Check:  resource.TestCheckResourceAttr("quicknode_endpoint.test", "label", "tfacc-label"),
+			},
+			{
+				Config: unlabelled,
+				Check:  resource.TestCheckResourceAttr("quicknode_endpoint.test", "label", "tfacc-label"),
+			},
+		},
+	})
+}
+
+// TestAccEndpoint_tagsStatusAndHeader exercises the attributes that reconcile
+// against the API on update: tags are added and removed one at a time, the
+// status is paused and resumed, and clearing the custom IP header is a delete
+// call of its own.
+func TestAccEndpoint_tagsStatusAndHeader(t *testing.T) {
+	withAttributes := func(body string) string {
+		return fmt.Sprintf(`
+resource "quicknode_endpoint" "test" {
+  chain   = %q
+  network = %q
+  label   = "tfacc-attributes"
+%s
+}
+`, acceptanceChain, acceptanceNetwork, body)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: withAttributes(`  tags             = ["tfacc-one", "tfacc-two"]
+  status           = "paused"
+  ip_custom_header = "X-Real-IP"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "tags.#", "2"),
+					resource.TestCheckTypeSetElemAttr("quicknode_endpoint.test", "tags.*", "tfacc-one"),
+					resource.TestCheckTypeSetElemAttr("quicknode_endpoint.test", "tags.*", "tfacc-two"),
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "status", "paused"),
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "ip_custom_header", "X-Real-IP"),
+				),
+			},
+			{
+				// One tag stays, one goes and one arrives, so the reconcile has
+				// to issue both an add and a remove in the same apply.
+				Config: withAttributes(`  tags             = ["tfacc-two", "tfacc-three"]
+  status           = "active"
+  ip_custom_header = "X-Forwarded-For"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "tags.#", "2"),
+					resource.TestCheckTypeSetElemAttr("quicknode_endpoint.test", "tags.*", "tfacc-three"),
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "status", "active"),
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "ip_custom_header", "X-Forwarded-For"),
+				),
+			},
+			{
+				Config: withAttributes(""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "tags.#", "0"),
+					resource.TestCheckNoResourceAttr("quicknode_endpoint.test", "ip_custom_header"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEndpointToken_lifecycle(t *testing.T) {
+	config := fmt.Sprintf(`
+resource "quicknode_endpoint" "test" {
+  chain   = %q
+  network = %q
+  label   = "tfacc-token"
+}
+
+resource "quicknode_endpoint_token" "test" {
+  endpoint_id = quicknode_endpoint.test.id
+}
+`, acceptanceChain, acceptanceNetwork)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("quicknode_endpoint_token.test", "id"),
+					resource.TestCheckResourceAttrSet("quicknode_endpoint_token.test", "token"),
+				),
+			},
+			{
+				// The endpoint is created carrying one token and is not read
+				// again during the apply that adds the second, so the count on
+				// the endpoint only settles on the next refresh.
+				Config: config,
+				Check:  resource.TestCheckResourceAttr("quicknode_endpoint.test", "tokens.#", "2"),
+			},
+			{
+				ResourceName: "quicknode_endpoint_token.test",
+				ImportState:  true,
+				ImportStateIdFunc: endpointIDForImport(func(state *terraform.State) (string, error) {
+					return state.RootModule().Resources["quicknode_endpoint_token.test"].Primary.ID, nil
+				}),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEndpointJWT_importByName(t *testing.T) {
+	config := fmt.Sprintf(`
+resource "quicknode_endpoint" "test" {
+  chain   = %q
+  network = %q
+  label   = "tfacc-jwt"
+
+  security_options = {
+    jwts = true
+  }
+}
+
+resource "quicknode_endpoint_jwt" "test" {
+  endpoint_id = quicknode_endpoint.test.id
+  name        = "tfacc-signer"
+  kid         = "tfacc-kid"
+  public_key  = <<-EOT
+%s
+EOT
+}
+`, acceptanceChain, acceptanceNetwork, jwtAcceptancePublicKey)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("quicknode_endpoint_jwt.test", "id"),
+					resource.TestCheckResourceAttr("quicknode_endpoint_jwt.test", "kid", "tfacc-kid"),
+					resource.TestCheckResourceAttr("quicknode_endpoint_jwt.test", "name", "tfacc-signer"),
+				),
+			},
+			{
+				ResourceName: "quicknode_endpoint_jwt.test",
+				ImportState:  true,
+				ImportStateIdFunc: endpointIDForImport(func(*terraform.State) (string, error) {
+					return "tfacc-signer", nil
+				}),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccSecurityEntries_importByValue covers the two allowlists the IP test
+// does not, on one endpoint, since each kind shares an implementation and
+// differs only in its routes.
+func TestAccSecurityEntries_importByValue(t *testing.T) {
+	config := fmt.Sprintf(`
+resource "quicknode_endpoint" "test" {
+  chain   = %q
+  network = %q
+  label   = "tfacc-entries"
+
+  security_options = {
+    domain_masks = true
+    referrers    = true
+  }
+}
+
+resource "quicknode_endpoint_domain_mask" "test" {
+  endpoint_id = quicknode_endpoint.test.id
+  domain      = "tfacc.example.com"
+}
+
+resource "quicknode_endpoint_referrer" "test" {
+  endpoint_id = quicknode_endpoint.test.id
+  referrer    = "https://tfacc.example.com"
+}
+`, acceptanceChain, acceptanceNetwork)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("quicknode_endpoint_domain_mask.test", "domain", "tfacc.example.com"),
+					resource.TestCheckResourceAttr("quicknode_endpoint_referrer.test", "referrer", "https://tfacc.example.com"),
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "security_options.domain_masks", "true"),
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "security_options.referrers", "true"),
+				),
+			},
+			{
+				ResourceName: "quicknode_endpoint_domain_mask.test",
+				ImportState:  true,
+				ImportStateIdFunc: endpointIDForImport(func(*terraform.State) (string, error) {
+					return "tfacc.example.com", nil
+				}),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName: "quicknode_endpoint_referrer.test",
+				ImportState:  true,
+				ImportStateIdFunc: endpointIDForImport(func(*terraform.State) (string, error) {
+					return "https://tfacc.example.com", nil
+				}),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccSecurityEntry_survivesDisabledToggle covers the read hazard behind the
+// order the documentation recommends. The security route omits a list entirely
+// while its toggle is disabled, so an entry added before the toggle is turned
+// on has to stay in state and leave the plan empty.
+func TestAccSecurityEntry_survivesDisabledToggle(t *testing.T) {
+	config := fmt.Sprintf(`
+resource "quicknode_endpoint" "test" {
+  chain   = %q
+  network = %q
+  label   = "tfacc-disabled-toggle"
+
+  security_options = {
+    ips = false
+  }
+}
+
+resource "quicknode_endpoint_ip" "test" {
+  endpoint_id = quicknode_endpoint.test.id
+  ip          = "203.0.113.9"
+}
+`, acceptanceChain, acceptanceNetwork)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("quicknode_endpoint_ip.test", "ip", "203.0.113.9"),
+					resource.TestCheckResourceAttr("quicknode_endpoint.test", "security_options.ips", "false"),
+				),
 			},
 		},
 	})
