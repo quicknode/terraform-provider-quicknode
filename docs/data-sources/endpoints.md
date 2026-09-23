@@ -60,12 +60,12 @@ Read-Only:
 - `chain` (String) Chain slug.
 - `dedicated` (Boolean) Whether the endpoint runs on dedicated infrastructure.
 - `flat_rate` (Boolean) Whether the endpoint is billed at a flat rate.
-- `http_url` (String) HTTPS URL with the auth token removed. Safe to expose, but not a working endpoint. Read `data.quicknode_endpoint` for a usable URL.
 - `id` (String) Endpoint id.
 - `label` (String) Descriptive label, or null if the endpoint has none.
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
 - `name` (String) Endpoint subdomain.
 - `network` (String) Network slug.
+- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. The list route carries no usable token, so read `data.quicknode_endpoint` for a working URL.
+- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.
 - `status` (String) `active` or `paused`.
 - `tags` (List of String) Tag labels applied to the endpoint.
-- `wss_url` (String) WebSocket URL with the auth token removed, or null on chains without WebSocket support.

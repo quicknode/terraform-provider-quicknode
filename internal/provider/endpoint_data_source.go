@@ -29,8 +29,8 @@ type endpointDataSourceModel struct {
 	Status           types.String   `tfsdk:"status"`
 	Multichain       types.Bool     `tfsdk:"multichain"`
 	Tags             []types.String `tfsdk:"tags"`
-	HTTPURL          types.String   `tfsdk:"http_url"`
-	WSSURL           types.String   `tfsdk:"wss_url"`
+	SafeHTTPURL      types.String   `tfsdk:"safe_http_url"`
+	SafeWSSURL       types.String   `tfsdk:"safe_wss_url"`
 	HTTPURLWithToken types.String   `tfsdk:"http_url_with_token"`
 	WSSURLWithToken  types.String   `tfsdk:"wss_url_with_token"`
 	Tokens           []tokenModel   `tfsdk:"tokens"`
@@ -84,13 +84,13 @@ func (d *endpointDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 				ElementType:         types.StringType,
 				MarkdownDescription: "Tag labels applied to the endpoint.",
 			},
-			"http_url": schema.StringAttribute{
+			"safe_http_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "HTTPS URL with the auth token removed. Safe to expose, but not a working endpoint.",
+				MarkdownDescription: "The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display.",
 			},
-			"wss_url": schema.StringAttribute{
+			"safe_wss_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "WebSocket URL with the auth token removed, or null on chains without WebSocket support.",
+				MarkdownDescription: "The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.",
 			},
 			"http_url_with_token": schema.StringAttribute{
 				Computed:            true,
@@ -176,8 +176,8 @@ func (d *endpointDataSource) Read(ctx context.Context, req datasource.ReadReques
 	config.Network = types.StringValue(endpoint.Network)
 	config.Status = types.StringValue(endpoint.Status)
 	config.Multichain = types.BoolValue(endpoint.Multichain)
-	config.HTTPURL = stringOrNull(endpoint.HTTPURL)
-	config.WSSURL = stringOrNull(endpoint.WSSURL)
+	config.SafeHTTPURL = stringOrNull(endpoint.SafeHTTPURL)
+	config.SafeWSSURL = stringOrNull(endpoint.SafeWSSURL)
 	config.HTTPURLWithToken = stringOrNull(endpoint.HTTPURLWithToken)
 	config.WSSURLWithToken = stringOrNull(endpoint.WSSURLWithToken)
 	config.IPCustomHeader = stringOrNull(endpoint.Security.IPCustomHeader)

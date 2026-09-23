@@ -54,18 +54,30 @@ than deleted on the next apply.
 
 ## Endpoint URLs
 
-The Admin API returns endpoint URLs with the auth token embedded. Endpoints
-expose both forms:
+The Admin API returns endpoint URLs with the auth token embedded in the path.
+Endpoints expose both forms:
 
 | Attribute | Sensitive | Use it for |
 |---|---|---|
 | `http_url_with_token`, `wss_url_with_token` | yes | anything that makes RPC calls |
-| `http_url`, `wss_url` | no | logging, display, anything that must not hold a credential |
+| `safe_http_url`, `safe_wss_url` | no | logging, display, anything that must not hold a credential |
 
-Do not rebuild a URL by joining `http_url` to a token. The token is not always
-the last path segment — some chains append a suffix, as in
-`https://<host>/<token>/evm` — so a hand-assembled URL works on Ethereum and
-breaks elsewhere.
+The safe form carries the literal `TOKEN` where the credential belongs:
+
+```
+https://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm
+```
+
+It keeps the real URL's shape, so substituting a token reproduces a working
+address on every chain:
+
+```hcl
+replace(quicknode_endpoint.api.safe_http_url, "TOKEN", var.token)
+```
+
+Do not assemble a URL from parts instead. The token is not always the last path
+segment — some chains append a suffix after it, as above — so a hand-built URL
+works on Ethereum and breaks elsewhere.
 
 Token values are written to Terraform state. Use
 [encrypted remote state](https://developer.hashicorp.com/terraform/language/state/sensitive-data).

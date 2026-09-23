@@ -44,16 +44,16 @@ resource "quicknode_endpoint_ip" "office" {
 ### Read-Only
 
 - `chain` (String) Chain slug.
-- `http_url` (String) HTTPS URL with the auth token removed. Safe to expose, but not a working endpoint.
 - `http_url_with_token` (String, Sensitive) The working HTTPS endpoint, exactly as the Admin API returns it.
 - `ip_custom_header` (String) Header the endpoint reads the caller's IP address from, or null if none is set.
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
 - `network` (String) Network slug.
+- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display.
+- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.
 - `security_options` (Attributes) Which security mechanisms the endpoint enforces. (see [below for nested schema](#nestedatt--security_options))
 - `status` (String) `active` or `paused`.
 - `tags` (List of String) Tag labels applied to the endpoint.
 - `tokens` (Attributes List) Auth tokens for the endpoint. Values land in Terraform state, so keep state encrypted and remote. (see [below for nested schema](#nestedatt--tokens))
-- `wss_url` (String) WebSocket URL with the auth token removed, or null on chains without WebSocket support.
 - `wss_url_with_token` (String, Sensitive) The working WebSocket endpoint, or null on chains without WebSocket support.
 
 <a id="nestedatt--security_options"></a>

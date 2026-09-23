@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -58,14 +59,19 @@ func TestGetEndpointWithPathSuffix(t *testing.T) {
 	if endpoint.WSSURLWithToken != "wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKENVALUE/evm" {
 		t.Errorf("WSSURLWithToken = %q", endpoint.WSSURLWithToken)
 	}
-
-	// The token-free URL is not a working address on this chain, which is the
-	// reason HTTPURLWithToken exists.
-	if endpoint.HTTPURL == wantWorking {
-		t.Error("HTTPURL still carries the token")
+	if endpoint.SafeWSSURL != "wss://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm" {
+		t.Errorf("SafeWSSURL = %q", endpoint.SafeWSSURL)
 	}
-	if endpoint.HTTPURL+"/TOKENVALUE" == wantWorking {
-		t.Error("joining HTTPURL to the token happens to work here; the test no longer guards the bug it was written for")
+
+	// The redacted URL keeps the real one's shape, so substituting a token
+	// reproduces it exactly. That is what the placeholder buys over cutting
+	// the token out: this chain puts a suffix after it.
+	const wantRedacted = "https://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm"
+	if endpoint.SafeHTTPURL != wantRedacted {
+		t.Errorf("SafeHTTPURL = %q, want %q", endpoint.SafeHTTPURL, wantRedacted)
+	}
+	if strings.Contains(endpoint.SafeHTTPURL, "TOKENVALUE") {
+		t.Error("SafeHTTPURL still carries the token")
 	}
 
 	if len(endpoint.Tokens) != 1 || endpoint.Tokens[0].Value != "TOKENVALUE" {
@@ -85,14 +91,14 @@ func TestGetEndpointWithoutWebsocket(t *testing.T) {
 		t.Fatalf("GetEndpoint: %v", err)
 	}
 
-	if endpoint.WSSURL != "" || endpoint.WSSURLWithToken != "" {
-		t.Errorf("WSSURL = %q, WSSURLWithToken = %q, want both empty", endpoint.WSSURL, endpoint.WSSURLWithToken)
+	if endpoint.SafeWSSURL != "" || endpoint.WSSURLWithToken != "" {
+		t.Errorf("SafeWSSURL = %q, WSSURLWithToken = %q, want both empty", endpoint.SafeWSSURL, endpoint.WSSURLWithToken)
 	}
 	if endpoint.HTTPURLWithToken != "https://frosty-capable-pallet.btc.quiknode.pro/TOKENVALUE/" {
 		t.Errorf("HTTPURLWithToken = %q", endpoint.HTTPURLWithToken)
 	}
-	if endpoint.HTTPURL != "https://frosty-capable-pallet.btc.quiknode.pro" {
-		t.Errorf("HTTPURL = %q", endpoint.HTTPURL)
+	if endpoint.SafeHTTPURL != "https://frosty-capable-pallet.btc.quiknode.pro/TOKEN/" {
+		t.Errorf("SafeHTTPURL = %q", endpoint.SafeHTTPURL)
 	}
 	if endpoint.Status != "paused" || endpoint.Label != "ledger" {
 		t.Errorf("Status = %q, Label = %q", endpoint.Status, endpoint.Label)

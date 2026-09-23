@@ -19,6 +19,12 @@ FEATURES:
 
 NOTES:
 
+* Endpoint URLs with the credential removed are named `safe_http_url` and
+  `safe_wss_url`, and carry the literal `TOKEN` where the credential belongs
+  rather than having it cut out. The real URL's shape survives, including any
+  path suffix the chain appends after the token, so
+  `replace(..., "TOKEN", token)` reproduces a working address on every chain.
+
 * `quicknode_endpoint` gains `security_options`, which decides what the endpoint
   enforces, and `ip_custom_header` for endpoints behind a proxy. A toggle left
   out of the configuration keeps whatever value the endpoint already has.

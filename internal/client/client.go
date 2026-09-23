@@ -14,6 +14,12 @@ import (
 
 const DefaultBaseURL = "https://api.quicknode.com"
 
+// URLTokenPlaceholder stands in for the auth token in SafeHTTPURL and
+// SafeWSSURL. It keeps the shape of the real URL, including any path suffix the
+// chain appends, so the token's position stays visible and a caller can
+// substitute one rather than guess where it goes.
+const URLTokenPlaceholder = "TOKEN"
+
 type Client struct {
 	api *admin.ClientWithResponses
 }
@@ -106,14 +112,11 @@ type Endpoint struct {
 	Label   string
 	Status  string
 
-	// HTTPURL and WSSURL have the auth token removed. HTTPURLWithToken and
-	// WSSURLWithToken are what the API returned, credential included. The
-	// token does not sit at a fixed position in the path — some chains append
-	// a suffix after it, as in https://<host>/<token>/evm — so a caller that
-	// needs a working URL must use the WithToken form rather than rebuilding
-	// one from the parts.
-	HTTPURL          string
-	WSSURL           string
+	// SafeHTTPURL and SafeWSSURL carry URLTokenPlaceholder where the token
+	// belongs, so they can be logged or displayed. HTTPURLWithToken and
+	// WSSURLWithToken are what the API returned, credential included.
+	SafeHTTPURL      string
+	SafeWSSURL       string
 	HTTPURLWithToken string
 	WSSURLWithToken  string
 
@@ -387,32 +390,34 @@ func (c *Client) RemoveEndpointTag(ctx context.Context, id string, tagID int64) 
 func (e *Endpoint) setURLs(httpURL, wssURL string) {
 	e.HTTPURLWithToken = httpURL
 	e.WSSURLWithToken = wssURL
-	e.HTTPURL, _ = splitEndpointURL(httpURL)
-	e.WSSURL, _ = splitEndpointURL(wssURL)
+	e.SafeHTTPURL = RedactEndpointURL(httpURL)
+	e.SafeWSSURL = RedactEndpointURL(wssURL)
 }
 
-// splitEndpointURL separates the credential from an endpoint URL. The Admin API
-// returns URLs shaped https://<subdomain>.quiknode.pro/<token>[/<suffix>], and
-// the provider keeps the token-free prefix and suffix apart from the token so a
-// configuration can avoid writing the credential to Terraform state.
-func splitEndpointURL(raw string) (base, token string) {
+// RedactEndpointURL replaces the credential in an endpoint URL with
+// URLTokenPlaceholder. The Admin API returns URLs shaped
+// https://<subdomain>.quiknode.pro/<token>[/<suffix>], and the suffix differs by
+// chain, so the placeholder is substituted in position rather than the token
+// being cut out. The result keeps the real URL's shape and is safe to log.
+func RedactEndpointURL(raw string) string {
 	if raw == "" {
-		return "", ""
+		return ""
 	}
 	scheme, rest, found := strings.Cut(raw, "://")
 	if !found {
-		return raw, ""
+		return raw
 	}
 	host, path, found := strings.Cut(rest, "/")
 	if !found || path == "" {
-		return raw, ""
+		return raw
 	}
-	token, suffix, _ := strings.Cut(path, "/")
-	base = scheme + "://" + host
-	if suffix != "" {
-		base += "/" + suffix
+
+	_, suffix, hadSuffix := strings.Cut(path, "/")
+	redacted := scheme + "://" + host + "/" + URLTokenPlaceholder
+	if hadSuffix {
+		redacted += "/" + suffix
 	}
-	return base, token
+	return redacted
 }
 
 func deref[T any](value *T) T {

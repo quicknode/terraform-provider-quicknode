@@ -29,18 +29,18 @@ type endpointsDataSourceModel struct {
 }
 
 type endpointSummaryModel struct {
-	ID         types.String   `tfsdk:"id"`
-	Name       types.String   `tfsdk:"name"`
-	Label      types.String   `tfsdk:"label"`
-	Chain      types.String   `tfsdk:"chain"`
-	Network    types.String   `tfsdk:"network"`
-	Status     types.String   `tfsdk:"status"`
-	HTTPURL    types.String   `tfsdk:"http_url"`
-	WSSURL     types.String   `tfsdk:"wss_url"`
-	Dedicated  types.Bool     `tfsdk:"dedicated"`
-	FlatRate   types.Bool     `tfsdk:"flat_rate"`
-	Multichain types.Bool     `tfsdk:"multichain"`
-	Tags       []types.String `tfsdk:"tags"`
+	ID          types.String   `tfsdk:"id"`
+	Name        types.String   `tfsdk:"name"`
+	Label       types.String   `tfsdk:"label"`
+	Chain       types.String   `tfsdk:"chain"`
+	Network     types.String   `tfsdk:"network"`
+	Status      types.String   `tfsdk:"status"`
+	SafeHTTPURL types.String   `tfsdk:"safe_http_url"`
+	SafeWSSURL  types.String   `tfsdk:"safe_wss_url"`
+	Dedicated   types.Bool     `tfsdk:"dedicated"`
+	FlatRate    types.Bool     `tfsdk:"flat_rate"`
+	Multichain  types.Bool     `tfsdk:"multichain"`
+	Tags        []types.String `tfsdk:"tags"`
 }
 
 func NewEndpointsDataSource() datasource.DataSource {
@@ -88,13 +88,13 @@ func (d *endpointsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 						"chain":   schema.StringAttribute{Computed: true, MarkdownDescription: "Chain slug."},
 						"network": schema.StringAttribute{Computed: true, MarkdownDescription: "Network slug."},
 						"status":  schema.StringAttribute{Computed: true, MarkdownDescription: "`active` or `paused`."},
-						"http_url": schema.StringAttribute{
+						"safe_http_url": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "HTTPS URL with the auth token removed. Safe to expose, but not a working endpoint. Read `data.quicknode_endpoint` for a usable URL.",
+							MarkdownDescription: "The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. The list route carries no usable token, so read `data.quicknode_endpoint` for a working URL.",
 						},
-						"wss_url": schema.StringAttribute{
+						"safe_wss_url": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "WebSocket URL with the auth token removed, or null on chains without WebSocket support.",
+							MarkdownDescription: "The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.",
 						},
 						"dedicated":  schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the endpoint runs on dedicated infrastructure."},
 						"flat_rate":  schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the endpoint is billed at a flat rate."},
@@ -150,18 +150,18 @@ func (d *endpointsDataSource) Read(ctx context.Context, req datasource.ReadReque
 			tags = append(tags, types.StringValue(tag.Label))
 		}
 		config.Endpoints = append(config.Endpoints, endpointSummaryModel{
-			ID:         types.StringValue(endpoint.ID),
-			Name:       types.StringValue(endpoint.Name),
-			Label:      stringOrNull(endpoint.Label),
-			Chain:      types.StringValue(endpoint.Chain),
-			Network:    types.StringValue(endpoint.Network),
-			Status:     types.StringValue(endpoint.Status),
-			HTTPURL:    stringOrNull(endpoint.HTTPURL),
-			WSSURL:     stringOrNull(endpoint.WSSURL),
-			Dedicated:  types.BoolValue(endpoint.Dedicated),
-			FlatRate:   types.BoolValue(endpoint.FlatRate),
-			Multichain: types.BoolValue(endpoint.Multichain),
-			Tags:       tags,
+			ID:          types.StringValue(endpoint.ID),
+			Name:        types.StringValue(endpoint.Name),
+			Label:       stringOrNull(endpoint.Label),
+			Chain:       types.StringValue(endpoint.Chain),
+			Network:     types.StringValue(endpoint.Network),
+			Status:      types.StringValue(endpoint.Status),
+			SafeHTTPURL: stringOrNull(endpoint.SafeHTTPURL),
+			SafeWSSURL:  stringOrNull(endpoint.SafeWSSURL),
+			Dedicated:   types.BoolValue(endpoint.Dedicated),
+			FlatRate:    types.BoolValue(endpoint.FlatRate),
+			Multichain:  types.BoolValue(endpoint.Multichain),
+			Tags:        tags,
 		})
 		config.IDs = append(config.IDs, types.StringValue(endpoint.ID))
 	}

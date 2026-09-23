@@ -4,14 +4,14 @@ page_title: "quicknode_endpoint Resource - quicknode"
 subcategory: ""
 description: |-
   A Quicknode RPC endpoint on a chain and network.
-  Pass http_url_with_token to anything that needs to make RPC calls. http_url and wss_url have the credential removed and are safe to log or expose, but they are not usable endpoints: the token does not sit at the end of the path on every chain, so rebuilding a URL by joining them to a token produces a broken address on chains that append a suffix.
+  Pass http_url_with_token to anything that needs to make RPC calls. safe_http_url and safe_wss_url carry the literal TOKEN where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.
 ---
 
 # quicknode_endpoint (Resource)
 
 A Quicknode RPC endpoint on a chain and network.
 
-Pass `http_url_with_token` to anything that needs to make RPC calls. `http_url` and `wss_url` have the credential removed and are safe to log or expose, but they are not usable endpoints: the token does not sit at the end of the path on every chain, so rebuilding a URL by joining them to a token produces a broken address on chains that append a suffix.
+Pass `http_url_with_token` to anything that needs to make RPC calls. `safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.
 
 ## Example Usage
 
@@ -43,9 +43,11 @@ output "payments_rpc_url" {
   sensitive = true
 }
 
-# The same endpoint without the credential, safe to log or display.
-output "payments_rpc_host" {
-  value = quicknode_endpoint.payments.http_url
+# The same URL with the credential replaced by the literal TOKEN. Safe to log
+# or display, and it keeps the real URL's shape, so substituting a token
+# reproduces a working address on every chain.
+output "payments_rpc_url_redacted" {
+  value = quicknode_endpoint.payments.safe_http_url
 }
 ```
 
@@ -68,11 +70,11 @@ output "payments_rpc_host" {
 
 ### Read-Only
 
-- `http_url` (String) HTTPS URL with the auth token removed. Safe to expose, but not a working endpoint.
 - `http_url_with_token` (String, Sensitive) The working HTTPS endpoint, exactly as the Admin API returns it. Pass this to whatever makes RPC calls.
 - `id` (String) Endpoint id.
+- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. Substitute a real token to make it usable: `replace(self.safe_http_url, "TOKEN", self.tokens[0].token)`.
+- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.
 - `tokens` (Attributes List) Auth tokens for the endpoint. An endpoint can carry several. Token values are stored in Terraform state, so keep state encrypted and remote. (see [below for nested schema](#nestedatt--tokens))
-- `wss_url` (String) WebSocket URL with the auth token removed, or null on chains without WebSocket support.
 - `wss_url_with_token` (String, Sensitive) The working WebSocket endpoint, or null on chains without WebSocket support.
 
 <a id="nestedatt--security_options"></a>

@@ -22,20 +22,22 @@ type EndpointFilter struct {
 }
 
 // EndpointSummary is one row of the list route. It carries less than a full
-// endpoint read: no tokens, no security and no rate limits.
+// endpoint read: no tokens, no security and no rate limits. The list route
+// returns credentialed URLs, so the URLs here are redacted on the way in and the
+// working form is only available from a full endpoint read.
 type EndpointSummary struct {
-	ID         string
-	Name       string
-	Label      string
-	Chain      string
-	Network    string
-	Status     string
-	HTTPURL    string
-	WSSURL     string
-	Dedicated  bool
-	FlatRate   bool
-	Multichain bool
-	Tags       []Tag
+	ID          string
+	Name        string
+	Label       string
+	Chain       string
+	Network     string
+	Status      string
+	SafeHTTPURL string
+	SafeWSSURL  string
+	Dedicated   bool
+	FlatRate    bool
+	Multichain  bool
+	Tags        []Tag
 }
 
 // ListEndpoints walks every page, so a caller gets the whole account rather
@@ -82,17 +84,17 @@ func (c *Client) ListEndpoints(ctx context.Context, filter EndpointFilter) ([]En
 		page := *resp.JSON200.Data
 		for _, raw := range page {
 			endpoint := EndpointSummary{
-				ID:         deref(raw.Id),
-				Name:       deref(raw.Name),
-				Label:      deref(raw.Label),
-				Chain:      deref(raw.Chain),
-				Network:    deref(raw.Network),
-				Status:     deref(raw.Status),
-				HTTPURL:    deref(raw.HttpUrl),
-				WSSURL:     deref(raw.WssUrl),
-				Dedicated:  deref(raw.IsDedicated),
-				FlatRate:   deref(raw.IsFlatRate),
-				Multichain: deref(raw.IsMultichain),
+				ID:          deref(raw.Id),
+				Name:        deref(raw.Name),
+				Label:       deref(raw.Label),
+				Chain:       deref(raw.Chain),
+				Network:     deref(raw.Network),
+				Status:      deref(raw.Status),
+				SafeHTTPURL: RedactEndpointURL(deref(raw.HttpUrl)),
+				SafeWSSURL:  RedactEndpointURL(deref(raw.WssUrl)),
+				Dedicated:   deref(raw.IsDedicated),
+				FlatRate:    deref(raw.IsFlatRate),
+				Multichain:  deref(raw.IsMultichain),
 			}
 			if raw.Tags != nil {
 				for _, rawTag := range *raw.Tags {
