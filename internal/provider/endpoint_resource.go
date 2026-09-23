@@ -89,8 +89,11 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"label": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Descriptive label for the endpoint. Labels are not unique and are not used to identify the endpoint.",
+				Optional: true,
+				Computed: true,
+				MarkdownDescription: "Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. " +
+					"Quicknode has no route for clearing a label once set, so removing the attribute leaves the current label in place and Terraform stops tracking it.",
+				Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"status": schema.StringAttribute{
 				Optional:            true,
@@ -215,8 +218,8 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	if label := plan.Label.ValueString(); label != "" {
-		if err := r.client.SetEndpointLabel(ctx, created.ID, label); err != nil {
+	if !plan.Label.IsUnknown() && !plan.Label.IsNull() {
+		if err := r.client.SetEndpointLabel(ctx, created.ID, plan.Label.ValueString()); err != nil {
 			resp.Diagnostics.AddError(
 				"Created the endpoint but could not set its label",
 				fmt.Sprintf("Endpoint %s exists and is tracked in state. %s", created.ID, err.Error()),
@@ -298,7 +301,7 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 	id := state.ID.ValueString()
 	plan.ID = state.ID
 
-	if !plan.Label.Equal(state.Label) {
+	if !plan.Label.IsUnknown() && !plan.Label.Equal(state.Label) {
 		if err := r.client.SetEndpointLabel(ctx, id, plan.Label.ValueString()); err != nil {
 			resp.Diagnostics.AddError("Could not update the endpoint label", err.Error())
 			return
@@ -366,6 +369,9 @@ func (r *endpointResource) readInto(ctx context.Context, id string, model *endpo
 		return
 	}
 	model.ID = types.StringValue(endpoint.ID)
+	if model.Label.IsUnknown() {
+		model.Label = stringOrNull(endpoint.Label)
+	}
 	applyEndpointURLs(endpoint, model)
 
 	tokens, tokenDiags := tokenList(endpoint.Tokens)
