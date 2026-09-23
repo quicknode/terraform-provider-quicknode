@@ -117,11 +117,16 @@ func (r *endpointTokenResource) Read(ctx context.Context, req resource.ReadReque
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return
 	}
+	// The security route omits a list entirely while its toggle is disabled,
+	// so an entry that cannot be seen has not necessarily been deleted.
+	// Dropping it from state here would have the next apply create a duplicate.
+	if !securityToggleEnabled(security.Options, "tokens") {
+		return
+	}
 	resp.State.RemoveResource(ctx)
 }
 
-// Update exists only to satisfy the interface. The endpoint replaces the
-// resource and the value is generated, so Terraform never calls it.
+// Update never runs: the endpoint replaces the resource and Quicknode generates the value.
 func (r *endpointTokenResource) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 }
 
@@ -137,9 +142,8 @@ func (r *endpointTokenResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-// ImportState takes "<endpoint id>/<token id>". Tokens are addressed by id
-// rather than by value, so importing one does not put the credential on a
-// command line or into a shell history.
+// ImportState takes "<endpoint id>/<token id>". Addressing a token by id keeps
+// the credential off the command line and out of shell history.
 func (r *endpointTokenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	endpointID, tokenID, found := strings.Cut(req.ID, "/")
 	if !found || endpointID == "" || tokenID == "" {

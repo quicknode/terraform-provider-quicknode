@@ -117,7 +117,7 @@ func (c *Client) ListEndpoints(ctx context.Context, filter EndpointFilter) ([]En
 }
 
 // FindEndpointByLabel resolves a label to a single endpoint. Labels are not
-// unique, so more than one match is an error rather than an arbitrary pick.
+// unique, so more than one match is an error.
 func (c *Client) FindEndpointByLabel(ctx context.Context, label string) (*EndpointSummary, error) {
 	const operation = "find endpoint by label"
 

@@ -19,18 +19,16 @@ FEATURES:
 
 NOTES:
 
-* Endpoint URLs with the credential removed are named `safe_http_url` and
-  `safe_wss_url`, and carry the literal `TOKEN` where the credential belongs
-  rather than having it cut out. The real URL's shape survives, including any
-  path suffix the chain appends after the token, so
-  `replace(..., "TOKEN", token)` reproduces a working address on every chain.
-
-* `quicknode_endpoint` gains `security_options`, which decides what the endpoint
-  enforces, and `ip_custom_header` for endpoints behind a proxy. A toggle left
-  out of the configuration keeps whatever value the endpoint already has.
-* Allowlist entries are imported by value rather than by the id the API
-  assigned, so `terraform import quicknode_endpoint_ip.office 652052/203.0.113.7`
-  needs nothing looked up first.
-* Adding an allowlist entry while its toggle is disabled warns rather than
-  fails. Building an allowlist before enabling enforcement is the safe order for
-  an endpoint already serving traffic.
+* `safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential
+  belongs, so `replace(url, "TOKEN", token)` rebuilds a working address on every chain.
+* `quicknode_endpoint.security_options` decides what the endpoint enforces. A toggle
+  left out of the configuration keeps the value the endpoint already has.
+* `quicknode_endpoint.ip_custom_header` names the header an endpoint behind a proxy
+  reads the caller's IP address from.
+* Allowlist entries are imported by value, as `652052/203.0.113.7`.
+* Adding an allowlist entry while its toggle is disabled warns and succeeds, so an
+  allowlist can be built before enforcement is turned on.
+* `quicknode_endpoint.label` cannot be cleared once set, so removing the attribute
+  leaves the endpoint's label in place.
+* `quicknode_endpoint_jwt` takes `kid` as an input. The Admin API requires it when
+  the signing key is registered.

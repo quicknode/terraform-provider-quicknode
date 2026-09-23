@@ -20,7 +20,7 @@ const (
 
 // retryTransport retries throttled and transient responses. A terraform apply
 // over a large workspace bursts many Admin API calls at once, so the provider
-// backs off rather than surfacing a 429 as a resource failure.
+// backs off instead of surfacing a 429 as a resource failure.
 type retryTransport struct {
 	base       http.RoundTripper
 	apiKey     string

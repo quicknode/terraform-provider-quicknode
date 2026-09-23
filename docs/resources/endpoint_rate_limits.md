@@ -4,14 +4,14 @@ page_title: "quicknode_endpoint_rate_limits Resource - quicknode"
 subcategory: ""
 description: |-
   Endpoint-wide request rate limits, one resource per endpoint.
-  Each bucket the Quicknode plan sets is reported under plan_default. A bucket set here overrides the plan default; a bucket left out keeps the plan default, and removing one that was set returns that bucket to the plan default rather than leaving the override in place.
+  Each bucket the Quicknode plan sets is reported under plan_default. A bucket set here overrides the plan default; a bucket left out keeps the plan default, and removing one that was set clears the override, returning that bucket to the plan default.
 ---
 
 # quicknode_endpoint_rate_limits (Resource)
 
 Endpoint-wide request rate limits, one resource per endpoint.
 
-Each bucket the Quicknode plan sets is reported under `plan_default`. A bucket set here overrides the plan default; a bucket left out keeps the plan default, and removing one that was set returns that bucket to the plan default rather than leaving the override in place.
+Each bucket the Quicknode plan sets is reported under `plan_default`. A bucket set here overrides the plan default; a bucket left out keeps the plan default, and removing one that was set clears the override, returning that bucket to the plan default.
 
 ## Example Usage
 
@@ -50,7 +50,7 @@ output "plan_allows_per_second" {
 
 ### Read-Only
 
-- `id` (String) Same as `endpoint_id`. Rate limits are a property of the endpoint rather than a separate object.
+- `id` (String) Same as `endpoint_id`. Rate limits are a property of the endpoint, not a separate object.
 - `plan_default` (Attributes) What the account's Quicknode plan allows, before any override set here. A bucket the plan does not limit is reported as `-1`. (see [below for nested schema](#nestedatt--plan_default))
 
 <a id="nestedatt--plan_default"></a>

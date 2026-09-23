@@ -4,14 +4,14 @@ page_title: "quicknode_endpoint Data Source - quicknode"
 subcategory: ""
 description: |-
   One endpoint that already exists on the account, looked up by id or by label. Use it to wire a Terraform configuration into an endpoint created elsewhere without importing it.
-  Labels are not unique, so a label matching more than one endpoint is an error rather than an arbitrary pick.
+  Labels are not unique, so a label that matches more than one endpoint is an error.
 ---
 
 # quicknode_endpoint (Data Source)
 
 One endpoint that already exists on the account, looked up by `id` or by `label`. Use it to wire a Terraform configuration into an endpoint created elsewhere without importing it.
 
-Labels are not unique, so a label matching more than one endpoint is an error rather than an arbitrary pick.
+Labels are not unique, so a label that matches more than one endpoint is an error.
 
 ## Example Usage
 

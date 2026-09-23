@@ -11,11 +11,9 @@ resource "quicknode_endpoint" "api" {
 resource "quicknode_endpoint_jwt" "signer" {
   endpoint_id = quicknode_endpoint.api.id
   name        = "signer"
+  kid         = "signer-2026-01"
   public_key  = file("${path.module}/signer.pub.pem")
 }
 
-# Put the generated kid in the header of the tokens signed with the matching
-# private key.
-output "jwt_kid" {
-  value = quicknode_endpoint_jwt.signer.kid
-}
+# Tokens signed with the matching private key carry the same kid in their
+# header, which is how Quicknode picks the key to verify them with.

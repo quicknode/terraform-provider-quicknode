@@ -17,7 +17,7 @@ const DefaultBaseURL = "https://api.quicknode.com"
 // URLTokenPlaceholder stands in for the auth token in SafeHTTPURL and
 // SafeWSSURL. It keeps the shape of the real URL, including any path suffix the
 // chain appends, so the token's position stays visible and a caller can
-// substitute one rather than guess where it goes.
+// substitute one without guessing where it goes.
 const URLTokenPlaceholder = "TOKEN"
 
 type Client struct {
@@ -51,7 +51,7 @@ func WithMaxRetries(maxRetries int) Option {
 
 // WithRequestsPerSecond throttles outbound calls. A terraform apply over a large
 // workspace bursts many Admin API calls at once, so the provider paces itself
-// rather than relying on the API to reject the excess.
+// and does not lean on the API to reject the excess.
 func WithRequestsPerSecond(requestsPerSecond int) Option {
 	return func(o *options) {
 		if requestsPerSecond > 0 {
@@ -127,7 +127,7 @@ type Endpoint struct {
 }
 
 // EndpointToken is one of an endpoint's auth tokens. An endpoint can carry
-// several, which is why this is a list rather than a single value.
+// several, so this is a list.
 type EndpointToken struct {
 	ID    string
 	Value string
@@ -397,8 +397,8 @@ func (e *Endpoint) setURLs(httpURL, wssURL string) {
 // RedactEndpointURL replaces the credential in an endpoint URL with
 // URLTokenPlaceholder. The Admin API returns URLs shaped
 // https://<subdomain>.quiknode.pro/<token>[/<suffix>], and the suffix differs by
-// chain, so the placeholder is substituted in position rather than the token
-// being cut out. The result keeps the real URL's shape and is safe to log.
+// chain, so the placeholder goes in the token's position and nothing is cut
+// out. The result keeps the real URL's shape and is safe to log.
 func RedactEndpointURL(raw string) string {
 	if raw == "" {
 		return ""

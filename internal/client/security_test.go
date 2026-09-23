@@ -17,7 +17,7 @@ const securityBody = `{"data":{
 "hsts":true,"cors":false,"requestFilters":true,"responseLogging":false,
 "ipCustomHeader":{"value":"X-Real-IP"}},
 "ips":[{"id":"ip-1","ip":"203.0.113.7"}],
-"domain_masks":[{"id":"dm-1","domain_mask":"rpc.example.com"}],
+"domain_masks":[{"id":"dm-1","domain":"rpc.example.com"}],
 "referrers":[{"id":"rf-1","referrer":"https://example.com"}],
 "jwts":[{"id":"jwt-1","name":"signer","kid":"kid-1","public_key":"-----BEGIN PUBLIC KEY-----"}],
 "request_filters":[{"id":"filter-1","method":["eth_call","eth_getLogs"]}],
@@ -70,7 +70,7 @@ func TestGetEndpointSecurity(t *testing.T) {
 // TestSetSecurityOptionsSendsStrings guards the asymmetry between the two
 // halves of the API: reads report the toggles as booleans and the write takes
 // the strings "enabled" and "disabled". A toggle the configuration does not
-// manage has to stay out of the body entirely rather than being sent as false.
+// manage has to stay out of the body entirely, since false would turn it off.
 func TestSetSecurityOptionsSendsStrings(t *testing.T) {
 	var captured map[string]any
 

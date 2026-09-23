@@ -60,11 +60,11 @@ func (r *rateLimitsResource) Schema(_ context.Context, _ resource.SchemaRequest,
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Endpoint-wide request rate limits, one resource per endpoint.\n\n" +
 			"Each bucket the Quicknode plan sets is reported under `plan_default`. A bucket set here overrides the plan default; " +
-			"a bucket left out keeps the plan default, and removing one that was set returns that bucket to the plan default rather than leaving the override in place.",
+			"a bucket left out keeps the plan default, and removing one that was set clears the override, returning that bucket to the plan default.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Same as `endpoint_id`. Rate limits are a property of the endpoint rather than a separate object.",
+				MarkdownDescription: "Same as `endpoint_id`. Rate limits are a property of the endpoint, not a separate object.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"endpoint_id": schema.StringAttribute{
@@ -164,9 +164,9 @@ func (r *rateLimitsResource) Update(ctx context.Context, req resource.UpdateRequ
 	endpointID := state.EndpointID.ValueString()
 	plan.ID = state.ID
 
-	// A bucket dropped from the configuration has to lose its override, which
-	// is a delete rather than a write: the patch route has no way to say
-	// "return this bucket to the plan default".
+	// A bucket dropped from the configuration has to lose its override. The
+	// patch route cannot express "return this bucket to the plan default", so
+	// it takes a delete.
 	dropped := map[string]bool{
 		client.BucketRPS: plan.RPS.IsNull() && !state.RPS.IsNull(),
 		client.BucketRPM: plan.RPM.IsNull() && !state.RPM.IsNull(),
@@ -193,8 +193,8 @@ func (r *rateLimitsResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// Delete returns every bucket to the plan default. Nothing is torn down,
-// because the limits belong to the endpoint rather than to a separate object.
+// Delete returns every bucket to the plan default. The limits belong to the
+// endpoint, so nothing is torn down.
 func (r *rateLimitsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state rateLimitsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

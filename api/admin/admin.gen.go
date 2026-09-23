@@ -9248,8 +9248,8 @@ type GetV0EndpointsByIdSecurityResponse struct {
 		Data *struct {
 			// DomainMasks An array of domain mask entries; null if none configured
 			DomainMasks *[]struct {
-				DomainMask *string `json:"domain_mask,omitempty"`
-				Id         *string `json:"id,omitempty"`
+				Domain *string `json:"domain,omitempty"`
+				Id     *string `json:"id,omitempty"`
 			} `json:"domain_masks,omitempty"`
 
 			// Ips An array of allowed IP entries; null if none configured
@@ -9341,8 +9341,8 @@ func (r GetV0EndpointsByIdSecurityResponse) GetJSON200() *struct {
 	Data *struct {
 		// DomainMasks An array of domain mask entries; null if none configured
 		DomainMasks *[]struct {
-			DomainMask *string `json:"domain_mask,omitempty"`
-			Id         *string `json:"id,omitempty"`
+			Domain *string `json:"domain,omitempty"`
+			Id     *string `json:"id,omitempty"`
 		} `json:"domain_masks,omitempty"`
 
 		// Ips An array of allowed IP entries; null if none configured
@@ -15130,8 +15130,8 @@ func ParseGetV0EndpointsByIdSecurityResponse(rsp *http.Response) (*GetV0Endpoint
 			Data *struct {
 				// DomainMasks An array of domain mask entries; null if none configured
 				DomainMasks *[]struct {
-					DomainMask *string `json:"domain_mask,omitempty"`
-					Id         *string `json:"id,omitempty"`
+					Domain *string `json:"domain,omitempty"`
+					Id     *string `json:"id,omitempty"`
 				} `json:"domain_masks,omitempty"`
 
 				// Ips An array of allowed IP entries; null if none configured

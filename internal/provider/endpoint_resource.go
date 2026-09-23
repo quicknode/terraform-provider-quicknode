@@ -71,7 +71,7 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 		MarkdownDescription: "A Quicknode RPC endpoint on a chain and network.\n\n" +
 			"Pass `http_url_with_token` to anything that needs to make RPC calls. " +
 			"`safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display " +
-			"while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.",
+			"while keeping the real URL's shape, including any path suffix the chain appends.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -80,7 +80,7 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			},
 			"chain": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "Chain slug, for example `eth`, `base`, `arb`, `sol`. Slugs are often abbreviations rather than the chain's name; read `data.quicknode_chains` for the full list.",
+				MarkdownDescription: "Chain slug, for example `eth`, `base`, `arb`, `sol`. Slugs are often abbreviations of the chain's name; read `data.quicknode_chains` for the full list.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"network": schema.StringAttribute{
@@ -89,8 +89,11 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"label": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Descriptive label for the endpoint. Labels are not unique and are not used to identify the endpoint.",
+				Optional: true,
+				Computed: true,
+				MarkdownDescription: "Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. " +
+					"Quicknode has no route for clearing a label once set, so removing the attribute leaves the current label in place and Terraform stops tracking it.",
+				Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"status": schema.StringAttribute{
 				Optional:            true,
@@ -135,7 +138,7 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			"security_options": securityOptionsSchema(),
 			"ip_custom_header": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions match the original caller rather than the proxy.",
+				MarkdownDescription: "Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions see the original caller's address and not the proxy's.",
 				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"tokens": schema.ListNestedAttribute{
@@ -173,8 +176,8 @@ func (r *endpointResource) Configure(_ context.Context, req resource.ConfigureRe
 	r.chains = data.Chains
 }
 
-// ModifyPlan rejects an unknown chain or network before anything is created,
-// rather than letting the Admin API reject it partway through an apply.
+// ModifyPlan rejects an unknown chain or network at plan time, before an apply
+// is already partway through creating something.
 func (r *endpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		return
@@ -215,8 +218,8 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	if label := plan.Label.ValueString(); label != "" {
-		if err := r.client.SetEndpointLabel(ctx, created.ID, label); err != nil {
+	if !plan.Label.IsUnknown() && !plan.Label.IsNull() {
+		if err := r.client.SetEndpointLabel(ctx, created.ID, plan.Label.ValueString()); err != nil {
 			resp.Diagnostics.AddError(
 				"Created the endpoint but could not set its label",
 				fmt.Sprintf("Endpoint %s exists and is tracked in state. %s", created.ID, err.Error()),
@@ -298,7 +301,7 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 	id := state.ID.ValueString()
 	plan.ID = state.ID
 
-	if !plan.Label.Equal(state.Label) {
+	if !plan.Label.IsUnknown() && !plan.Label.Equal(state.Label) {
 		if err := r.client.SetEndpointLabel(ctx, id, plan.Label.ValueString()); err != nil {
 			resp.Diagnostics.AddError("Could not update the endpoint label", err.Error())
 			return
@@ -366,6 +369,9 @@ func (r *endpointResource) readInto(ctx context.Context, id string, model *endpo
 		return
 	}
 	model.ID = types.StringValue(endpoint.ID)
+	if model.Label.IsUnknown() {
+		model.Label = stringOrNull(endpoint.Label)
+	}
 	applyEndpointURLs(endpoint, model)
 
 	tokens, tokenDiags := tokenList(endpoint.Tokens)
@@ -378,8 +384,8 @@ func (r *endpointResource) readInto(ctx context.Context, id string, model *endpo
 }
 
 // applySecurity writes the settable toggles and the custom IP header. The
-// previous header is needed because clearing the attribute has to become a
-// delete rather than an empty write.
+// previous header is needed because clearing the attribute becomes a delete
+// call, not an empty write.
 func (r *endpointResource) applySecurity(ctx context.Context, id string, options types.Object, header, previousHeader types.String) diag.Diagnostics {
 	patch, diags := securityOptionsPatch(ctx, options)
 	if diags.HasError() {
@@ -441,8 +447,8 @@ func applyEndpoint(endpoint *client.Endpoint, state *endpointResourceModel) diag
 	return diags
 }
 
-// applyEndpointURLs maps empty URLs to null so that a chain without WebSocket
-// support reports safe_wss_url as absent rather than as an empty string.
+// applyEndpointURLs maps empty URLs to null, so a chain without WebSocket
+// support reports safe_wss_url as absent.
 func applyEndpointURLs(endpoint *client.Endpoint, model *endpointResourceModel) {
 	model.SafeHTTPURL = stringOrNull(endpoint.SafeHTTPURL)
 	model.SafeWSSURL = stringOrNull(endpoint.SafeWSSURL)

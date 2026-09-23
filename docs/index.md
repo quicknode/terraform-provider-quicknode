@@ -12,7 +12,7 @@ rules, and rate limits, through `terraform plan` and `terraform apply`.
 ## Authentication
 
 The provider authenticates with a Quicknode [API key](https://www.quicknode.com/docs/admin-api),
-available on paid plans. Set it in the environment rather than in a
+available on paid plans. Set it in the environment, not in a
 configuration file:
 
 ```sh

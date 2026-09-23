@@ -30,11 +30,11 @@ func TestValidateChainNetwork(t *testing.T) {
 		{name: "exact match on a qualified network", chain: "base", network: "base-sepolia"},
 		{
 			name: "chain case mismatch is rejected", chain: "ETH", network: "mainnet",
-			wantAttr: "chain", wantDetails: `Use "eth" rather than "ETH"`,
+			wantAttr: "chain", wantDetails: `Use "eth", not "ETH"`,
 		},
 		{
 			name: "network case mismatch is rejected", chain: "base", network: "Base-Sepolia",
-			wantAttr: "network", wantDetails: `Use "base-sepolia" rather than "Base-Sepolia"`,
+			wantAttr: "network", wantDetails: `Use "base-sepolia", not "Base-Sepolia"`,
 		},
 		{
 			name: "chain name instead of slug", chain: "ethereum", network: "mainnet",

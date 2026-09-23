@@ -73,7 +73,7 @@ var securityEntryKinds = []securityEntryKind{
 		toggle:      "referrers",
 		noun:        "referrer",
 		subject:     "Referrer filtering",
-		description: "A referrer allowed to call a Quicknode endpoint. Referrer checks suit browser traffic, where the header is set by the browser rather than by the caller.",
+		description: "A referrer allowed to call a Quicknode endpoint. Referrer checks suit browser traffic, where the browser sets the header and the caller cannot.",
 		valueDoc:    "Referrer URL allowed to call the endpoint, for example `https://app.example.com`.",
 		add: func(c *client.Client, ctx context.Context, endpointID, value string) (*client.SecurityEntry, error) {
 			return c.AddReferrer(ctx, endpointID, value)
@@ -191,11 +191,16 @@ func (r *securityEntryResource) Read(ctx context.Context, req resource.ReadReque
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(r.kind.attribute), types.StringValue(entry.Value))...)
 		return
 	}
+	// The security route omits a list entirely while its toggle is disabled,
+	// so an entry that cannot be seen has not necessarily been deleted.
+	// Dropping it from state here would have the next apply create a duplicate.
+	if !securityToggleEnabled(security.Options, r.kind.toggle) {
+		return
+	}
 	resp.State.RemoveResource(ctx)
 }
 
-// Update exists only to satisfy the interface. Every attribute replaces the
-// resource, so Terraform never calls it.
+// Update never runs: every attribute replaces the resource.
 func (r *securityEntryResource) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 }
 
@@ -212,8 +217,8 @@ func (r *securityEntryResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-// ImportState takes "<endpoint id>/<value>", so the address is what the
-// operator already knows rather than an id that only exists in the API.
+// ImportState takes "<endpoint id>/<value>". The address is the value itself,
+// so nothing has to be looked up first.
 func (r *securityEntryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	endpointID, value, found := strings.Cut(req.ID, "/")
 	if !found || endpointID == "" || value == "" {

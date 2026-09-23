@@ -331,5 +331,24 @@
         }
       }
     }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1security/get/responses/200/content/application~1json/schema/properties/data/properties/domain_masks",
+    "value": {
+      "description": "An array of domain mask entries; null if none configured",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          }
+        }
+      }
+    }
   }
 ]
