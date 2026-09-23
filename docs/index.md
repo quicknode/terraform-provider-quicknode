@@ -11,8 +11,8 @@ rules, and rate limits, through `terraform plan` and `terraform apply`.
 
 ## Authentication
 
-The provider authenticates with a Quicknode [Admin API](https://www.quicknode.com/docs/admin-api)
-key, available on paid plans. Set it in the environment rather than in a
+The provider authenticates with a Quicknode [API key](https://www.quicknode.com/docs/admin-api),
+available on paid plans. Set it in the environment rather than in a
 configuration file:
 
 ```sh
@@ -87,6 +87,6 @@ Token values are written to Terraform state. Use
 
 ### Optional
 
-- `api_key` (String, Sensitive) Quicknode Admin API key. Defaults to the `QUICKNODE_API_KEY` environment variable. Prefer the environment variable so the key stays out of configuration and state.
-- `base_url` (String) Admin API base URL. Defaults to `https://api.quicknode.com`.
-- `requests_per_second` (Number) Throttle applied to Admin API calls. A large workspace bursts many calls during one apply, so the provider paces itself.
+- `api_key` (String, Sensitive) Quicknode API key. Defaults to the `QUICKNODE_API_KEY` environment variable. Prefer the environment variable so the key stays out of configuration and state.
+- `base_url` (String) Quicknode API base URL. Defaults to `https://api.quicknode.com`.
+- `requests_per_second` (Number) Throttle applied to Quicknode API calls. A large workspace bursts many calls during one apply, so the provider paces itself.
