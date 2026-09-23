@@ -71,7 +71,7 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 		MarkdownDescription: "A Quicknode RPC endpoint on a chain and network.\n\n" +
 			"Pass `http_url_with_token` to anything that needs to make RPC calls. " +
 			"`safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display " +
-			"while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.",
+			"while keeping the real URL's shape, including any path suffix the chain appends.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -80,7 +80,7 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			},
 			"chain": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "Chain slug, for example `eth`, `base`, `arb`, `sol`. Slugs are often abbreviations rather than the chain's name; read `data.quicknode_chains` for the full list.",
+				MarkdownDescription: "Chain slug, for example `eth`, `base`, `arb`, `sol`. Slugs are often abbreviations of the chain's name; read `data.quicknode_chains` for the full list.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"network": schema.StringAttribute{
@@ -138,7 +138,7 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			"security_options": securityOptionsSchema(),
 			"ip_custom_header": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions match the original caller rather than the proxy.",
+				MarkdownDescription: "Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions see the original caller's address and not the proxy's.",
 				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"tokens": schema.ListNestedAttribute{
@@ -176,8 +176,8 @@ func (r *endpointResource) Configure(_ context.Context, req resource.ConfigureRe
 	r.chains = data.Chains
 }
 
-// ModifyPlan rejects an unknown chain or network before anything is created,
-// rather than letting the Admin API reject it partway through an apply.
+// ModifyPlan rejects an unknown chain or network at plan time, before an apply
+// is already partway through creating something.
 func (r *endpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		return
@@ -384,8 +384,8 @@ func (r *endpointResource) readInto(ctx context.Context, id string, model *endpo
 }
 
 // applySecurity writes the settable toggles and the custom IP header. The
-// previous header is needed because clearing the attribute has to become a
-// delete rather than an empty write.
+// previous header is needed because clearing the attribute becomes a delete
+// call, not an empty write.
 func (r *endpointResource) applySecurity(ctx context.Context, id string, options types.Object, header, previousHeader types.String) diag.Diagnostics {
 	patch, diags := securityOptionsPatch(ctx, options)
 	if diags.HasError() {
@@ -447,8 +447,8 @@ func applyEndpoint(endpoint *client.Endpoint, state *endpointResourceModel) diag
 	return diags
 }
 
-// applyEndpointURLs maps empty URLs to null so that a chain without WebSocket
-// support reports safe_wss_url as absent rather than as an empty string.
+// applyEndpointURLs maps empty URLs to null, so a chain without WebSocket
+// support reports safe_wss_url as absent.
 func applyEndpointURLs(endpoint *client.Endpoint, model *endpointResourceModel) {
 	model.SafeHTTPURL = stringOrNull(endpoint.SafeHTTPURL)
 	model.SafeWSSURL = stringOrNull(endpoint.SafeWSSURL)

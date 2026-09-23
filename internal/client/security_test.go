@@ -70,7 +70,7 @@ func TestGetEndpointSecurity(t *testing.T) {
 // TestSetSecurityOptionsSendsStrings guards the asymmetry between the two
 // halves of the API: reads report the toggles as booleans and the write takes
 // the strings "enabled" and "disabled". A toggle the configuration does not
-// manage has to stay out of the body entirely rather than being sent as false.
+// manage has to stay out of the body entirely, since false would turn it off.
 func TestSetSecurityOptionsSendsStrings(t *testing.T) {
 	var captured map[string]any
 

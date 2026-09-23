@@ -155,8 +155,8 @@ func (c *Client) GetEndpointSecurity(ctx context.Context, endpointID string) (*E
 
 // SetSecurityOptions writes the settable toggles. The read path reports them as
 // booleans and the write path takes the strings "enabled" and "disabled", so
-// the conversion happens here rather than in every caller. A patch that manages
-// nothing is a no-op rather than an empty write.
+// the conversion happens here once, for every caller. A patch that manages
+// nothing sends no request at all.
 func (c *Client) SetSecurityOptions(ctx context.Context, endpointID string, patch SecurityOptionsPatch) error {
 	const operation = "update endpoint security options"
 

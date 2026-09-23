@@ -4,14 +4,14 @@ page_title: "quicknode_endpoint Resource - quicknode"
 subcategory: ""
 description: |-
   A Quicknode RPC endpoint on a chain and network.
-  Pass http_url_with_token to anything that needs to make RPC calls. safe_http_url and safe_wss_url carry the literal TOKEN where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.
+  Pass http_url_with_token to anything that needs to make RPC calls. safe_http_url and safe_wss_url carry the literal TOKEN where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends.
 ---
 
 # quicknode_endpoint (Resource)
 
 A Quicknode RPC endpoint on a chain and network.
 
-Pass `http_url_with_token` to anything that needs to make RPC calls. `safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends. Substitute a token into one rather than assembling a URL from parts.
+Pass `http_url_with_token` to anything that needs to make RPC calls. `safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends.
 
 ## Example Usage
 
@@ -56,13 +56,13 @@ output "payments_rpc_url_redacted" {
 
 ### Required
 
-- `chain` (String) Chain slug, for example `eth`, `base`, `arb`, `sol`. Slugs are often abbreviations rather than the chain's name; read `data.quicknode_chains` for the full list.
+- `chain` (String) Chain slug, for example `eth`, `base`, `arb`, `sol`. Slugs are often abbreviations of the chain's name; read `data.quicknode_chains` for the full list.
 - `network` (String) Network slug, for example `mainnet`, `base-sepolia`, `arbitrum-mainnet`.
 
 ### Optional
 
-- `ip_custom_header` (String) Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions match the original caller rather than the proxy.
-- `label` (String) Descriptive label for the endpoint. Labels are not unique and are not used to identify the endpoint.
+- `ip_custom_header` (String) Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions see the original caller's address and not the proxy's.
+- `label` (String) Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. Quicknode has no route for clearing a label once set, so removing the attribute leaves the current label in place and Terraform stops tracking it.
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
 - `security_options` (Attributes) Which security mechanisms the endpoint enforces. Each toggle only decides whether a mechanism is applied; the entries it applies to are separate resources, such as `quicknode_endpoint_ip`. A toggle left out of the configuration keeps whatever value the endpoint already has. (see [below for nested schema](#nestedatt--security_options))
 - `status` (String) `active` or `paused`.
@@ -93,7 +93,7 @@ Optional:
 Read-Only:
 
 - `request_filters` (Boolean) Whether RPC method filtering is applied. Read-only: the Admin API turns this on when a `quicknode_endpoint_request_filter` exists and off when the last one is removed.
-- `response_logging` (Boolean) Whether responses are logged for the endpoint. Read-only: it is set by the account's plan rather than per endpoint.
+- `response_logging` (Boolean) Whether responses are logged for the endpoint. Read-only: the account's plan sets it and it cannot be changed per endpoint.
 
 
 <a id="nestedatt--tokens"></a>

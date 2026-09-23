@@ -52,9 +52,9 @@ func TestRedactEndpointURL(t *testing.T) {
 	}
 }
 
-// TestRedactedURLKeepsItsShape is the point of the placeholder: substituting a
-// token has to reproduce the original URL exactly, including a suffix the
-// chain appends after the token.
+// TestRedactedURLKeepsItsShape checks what the placeholder exists for:
+// substituting a token has to reproduce the original URL exactly, including a
+// suffix the chain appends after the token.
 func TestRedactedURLKeepsItsShape(t *testing.T) {
 	for _, raw := range []string{
 		"https://polished-damp-grass.hype-testnet.quiknode.pro/abc123/evm",

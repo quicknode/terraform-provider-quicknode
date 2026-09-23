@@ -3,13 +3,13 @@
 page_title: "quicknode_endpoint_referrer Resource - quicknode"
 subcategory: ""
 description: |-
-  A referrer allowed to call a Quicknode endpoint. Referrer checks suit browser traffic, where the header is set by the browser rather than by the caller.
+  A referrer allowed to call a Quicknode endpoint. Referrer checks suit browser traffic, where the browser sets the header and the caller cannot.
   The entry only takes effect once security_options.referrers is enabled on the endpoint. Entries can be added before the toggle is turned on, which is the safe order for an endpoint already serving traffic.
 ---
 
 # quicknode_endpoint_referrer (Resource)
 
-A referrer allowed to call a Quicknode endpoint. Referrer checks suit browser traffic, where the header is set by the browser rather than by the caller.
+A referrer allowed to call a Quicknode endpoint. Referrer checks suit browser traffic, where the browser sets the header and the caller cannot.
 
 The entry only takes effect once `security_options.referrers` is enabled on the endpoint. Entries can be added before the toggle is turned on, which is the safe order for an endpoint already serving traffic.
 

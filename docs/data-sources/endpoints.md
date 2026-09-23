@@ -4,14 +4,14 @@ page_title: "quicknode_endpoints Data Source - quicknode"
 subcategory: ""
 description: |-
   Endpoints on the account, optionally filtered. Several values in one filter match any of them, and several filters must all match.
-  Rows carry what the list route returns, which is less than data.quicknode_endpoint: no tokens, no security settings and no rate limits. Every page is walked, so the result is the whole account rather than the first screen.
+  Rows carry what the list route returns, which is less than data.quicknode_endpoint: no tokens, no security settings and no rate limits. Every page is walked, so the result covers the whole account.
 ---
 
 # quicknode_endpoints (Data Source)
 
 Endpoints on the account, optionally filtered. Several values in one filter match any of them, and several filters must all match.
 
-Rows carry what the list route returns, which is less than `data.quicknode_endpoint`: no tokens, no security settings and no rate limits. Every page is walked, so the result is the whole account rather than the first screen.
+Rows carry what the list route returns, which is less than `data.quicknode_endpoint`: no tokens, no security settings and no rate limits. Every page is walked, so the result covers the whole account.
 
 ## Example Usage
 

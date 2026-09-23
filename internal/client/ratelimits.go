@@ -85,8 +85,8 @@ func (c *Client) GetRateLimits(ctx context.Context, endpointID string) ([]RateLi
 	return limits, nil
 }
 
-// SetRateLimits writes the buckets the caller manages. Managing none is a no-op
-// rather than an empty write.
+// SetRateLimits writes the buckets the caller manages. Managing none sends no
+// request at all.
 func (c *Client) SetRateLimits(ctx context.Context, endpointID string, overrides RateLimitOverrides) error {
 	const operation = "update endpoint rate limits"
 
@@ -211,8 +211,8 @@ func (c *Client) AddMethodRateLimit(ctx context.Context, endpointID string, limi
 }
 
 // UpdateMethodRateLimit edits a limiter in place. The route takes the whole
-// object rather than a delta, and it does not accept interval, so a changed
-// interval has to replace the limiter.
+// object, not a delta, and it does not accept interval, so a changed interval
+// has to replace the limiter.
 func (c *Client) UpdateMethodRateLimit(ctx context.Context, endpointID, limiterID string, limiter MethodRateLimit) error {
 	const operation = "update endpoint method rate limit"
 

@@ -35,8 +35,8 @@ resource "quicknode_endpoint" "payments" {
 ```
 
 Authentication uses a Quicknode [API key](https://www.quicknode.com/docs/admin-api),
-available on paid plans. Set `QUICKNODE_API_KEY` in the environment rather than
-writing it into a configuration file.
+available on paid plans. Set `QUICKNODE_API_KEY` in the environment; do not
+write it into a configuration file.
 
 The provider covers endpoints, the security mechanisms they enforce and who is
 allowed past them, RPC method filtering, and rate limits both endpoint-wide and

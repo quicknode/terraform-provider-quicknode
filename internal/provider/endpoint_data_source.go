@@ -63,7 +63,7 @@ func (d *endpointDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "One endpoint that already exists on the account, looked up by `id` or by `label`. Use it to wire a Terraform configuration into an endpoint created elsewhere without importing it.\n\n" +
-			"Labels are not unique, so a label matching more than one endpoint is an error rather than an arbitrary pick.",
+			"Labels are not unique, so a label that matches more than one endpoint is an error.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Optional:            true,

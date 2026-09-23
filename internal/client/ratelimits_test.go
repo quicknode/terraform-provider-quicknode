@@ -51,7 +51,7 @@ func TestGetRateLimitsKeepsSourceAndID(t *testing.T) {
 
 // TestSetRateLimitsOmitsUnmanagedBuckets guards the same hazard the security
 // toggles have: a bucket the configuration does not set must stay out of the
-// body rather than being sent as a zero.
+// body, since sending a zero would throttle it to nothing.
 func TestSetRateLimitsOmitsUnmanagedBuckets(t *testing.T) {
 	var captured map[string]any
 
@@ -136,8 +136,7 @@ func TestListMethodRateLimits(t *testing.T) {
 }
 
 // TestUpdateMethodRateLimitSendsWholeObject records that the update route
-// replaces the limiter rather than merging a delta, and that it takes no
-// interval.
+// replaces the limiter whole, merges no delta, and takes no interval.
 func TestUpdateMethodRateLimitSendsWholeObject(t *testing.T) {
 	var captured map[string]any
 

@@ -66,7 +66,7 @@ func securityOptionsSchema() schema.SingleNestedAttribute {
 			},
 			"response_logging": schema.BoolAttribute{
 				Computed:            true,
-				MarkdownDescription: "Whether responses are logged for the endpoint. Read-only: it is set by the account's plan rather than per endpoint.",
+				MarkdownDescription: "Whether responses are logged for the endpoint. Read-only: the account's plan sets it and it cannot be changed per endpoint.",
 			},
 		},
 	}
@@ -148,8 +148,8 @@ func securityToggleEnabled(options client.SecurityOptions, name string) bool {
 
 // warnToggleDisabled reports an entry the endpoint is not enforcing. The API
 // accepts it either way, and building an allowlist before enabling the toggle
-// is the safe order for an endpoint already serving traffic, so this is a
-// warning rather than an error.
+// is the safe order for an endpoint already serving traffic, so this warns
+// and does not fail.
 func warnToggleDisabled(ctx context.Context, quicknode *client.Client, endpointID, toggle, subject string) diag.Diagnostics {
 	var diags diag.Diagnostics
 

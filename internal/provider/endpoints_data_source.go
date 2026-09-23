@@ -62,7 +62,7 @@ func (d *endpointsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Endpoints on the account, optionally filtered. Several values in one filter match any of them, and several filters must all match.\n\n" +
 			"Rows carry what the list route returns, which is less than `data.quicknode_endpoint`: no tokens, no security settings and no rate limits. " +
-			"Every page is walked, so the result is the whole account rather than the first screen.",
+			"Every page is walked, so the result covers the whole account.",
 		Attributes: map[string]schema.Attribute{
 			"search": schema.StringAttribute{
 				Optional:            true,

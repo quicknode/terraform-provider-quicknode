@@ -16,7 +16,7 @@ type slugProblem struct {
 	Detail    string
 }
 
-// validateChainNetwork matches slugs exactly rather than case-insensitively.
+// validateChainNetwork matches slugs exactly, casing included.
 // The Admin API echoes back its own casing, and chain and network force
 // replacement, so accepting "ETH" for "eth" would let Read overwrite the
 // configured value on the next refresh and leave every subsequent plan
@@ -42,7 +42,7 @@ func validateChainNetwork(chains []client.Chain, wantChain, wantNetwork string) 
 				return &slugProblem{
 					Attribute: "network",
 					Summary:   "Network slug differs in case",
-					Detail:    fmt.Sprintf("Use %q rather than %q. Quicknode reports its own casing back, and network forces replacement, so a mismatch would make every plan propose a replacement.", network.Slug, wantNetwork),
+					Detail:    fmt.Sprintf("Use %q, not %q. Quicknode reports its own casing back, and network forces replacement, so a mismatch would make every plan propose a replacement.", network.Slug, wantNetwork),
 				}
 			}
 		}
@@ -60,7 +60,7 @@ func validateChainNetwork(chains []client.Chain, wantChain, wantNetwork string) 
 			return &slugProblem{
 				Attribute: "chain",
 				Summary:   "Chain slug differs in case",
-				Detail:    fmt.Sprintf("Use %q rather than %q. Quicknode reports its own casing back, and chain forces replacement, so a mismatch would make every plan propose a replacement.", chain.Slug, wantChain),
+				Detail:    fmt.Sprintf("Use %q, not %q. Quicknode reports its own casing back, and chain forces replacement, so a mismatch would make every plan propose a replacement.", chain.Slug, wantChain),
 			}
 		}
 		chainSlugs = append(chainSlugs, chain.Slug)
