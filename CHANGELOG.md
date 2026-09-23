@@ -28,7 +28,7 @@ NOTES:
 * Allowlist entries are imported by value, as `123456/203.0.113.7`.
 * Adding an allowlist entry while its toggle is disabled warns and succeeds, so an
   allowlist can be built before enforcement is turned on.
-* `quicknode_endpoint.label` cannot be cleared once set, so removing the attribute
+* `quicknode_endpoint.label` cannot be cleared once set. Removing the attribute
   leaves the endpoint's label in place.
-* `quicknode_endpoint_jwt` takes `kid` as an input. The Admin API requires it when
-  the signing key is registered.
+* `quicknode_endpoint_jwt.kid` is required, and matches the `kid` header of the
+  tokens signed with the corresponding private key.
