@@ -224,7 +224,7 @@ func (r *securityEntryResource) ImportState(ctx context.Context, req resource.Im
 	if !found || endpointID == "" || value == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected import address",
-			fmt.Sprintf("Import a %s as \"<endpoint id>/<%s>\", for example \"652052/%s\". Got %q.", r.kind.noun, r.kind.attribute, importExample(r.kind.attribute), req.ID),
+			fmt.Sprintf("Import a %s as \"<endpoint id>/<%s>\", for example \"123456/%s\". Got %q.", r.kind.noun, r.kind.attribute, importExample(r.kind.attribute), req.ID),
 		)
 		return
 	}

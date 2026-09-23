@@ -234,7 +234,7 @@ func (r *methodRateLimitResource) ImportState(ctx context.Context, req resource.
 	if !found || endpointID == "" || limiterID == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected import address",
-			fmt.Sprintf("Import a method rate limit as \"<endpoint id>/<limiter id>\", for example \"652052/a1b2c3d4-...\". Got %q.", req.ID),
+			fmt.Sprintf("Import a method rate limit as \"<endpoint id>/<limiter id>\", for example \"123456/a1b2c3d4-...\". Got %q.", req.ID),
 		)
 		return
 	}

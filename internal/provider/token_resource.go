@@ -149,7 +149,7 @@ func (r *endpointTokenResource) ImportState(ctx context.Context, req resource.Im
 	if !found || endpointID == "" || tokenID == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected import address",
-			fmt.Sprintf("Import an endpoint token as \"<endpoint id>/<token id>\", for example \"652052/d3312bd2-...\". Got %q.", req.ID),
+			fmt.Sprintf("Import an endpoint token as \"<endpoint id>/<token id>\", for example \"123456/e5d4c3b2-...\". Got %q.", req.ID),
 		)
 		return
 	}

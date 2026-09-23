@@ -171,7 +171,7 @@ func (r *jwtResource) ImportState(ctx context.Context, req resource.ImportStateR
 	if !found || endpointID == "" || name == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected import address",
-			fmt.Sprintf("Import a JWT signing key as \"<endpoint id>/<name>\", for example \"652052/signer\". Got %q.", req.ID),
+			fmt.Sprintf("Import a JWT signing key as \"<endpoint id>/<name>\", for example \"123456/signer\". Got %q.", req.ID),
 		)
 		return
 	}

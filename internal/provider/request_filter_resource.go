@@ -176,7 +176,7 @@ func (r *requestFilterResource) ImportState(ctx context.Context, req resource.Im
 	if !found || endpointID == "" || filterID == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected import address",
-			fmt.Sprintf("Import a request filter as \"<endpoint id>/<filter id>\", for example \"652052/f1e2d3c4-...\". Got %q.", req.ID),
+			fmt.Sprintf("Import a request filter as \"<endpoint id>/<filter id>\", for example \"123456/f1e2d3c4-...\". Got %q.", req.ID),
 		)
 		return
 	}

@@ -13,8 +13,8 @@ func TestRedactEndpointURL(t *testing.T) {
 	}{
 		{
 			name: "token followed by a chain suffix",
-			raw:  "https://polished-damp-grass.hype-testnet.quiknode.pro/abc123/evm",
-			want: "https://polished-damp-grass.hype-testnet.quiknode.pro/TOKEN/evm",
+			raw:  "https://example-name.hype-testnet.quiknode.pro/abc123/evm",
+			want: "https://example-name.hype-testnet.quiknode.pro/TOKEN/evm",
 		},
 		{
 			name: "token with no suffix",
@@ -23,8 +23,8 @@ func TestRedactEndpointURL(t *testing.T) {
 		},
 		{
 			name: "trailing slash after the token",
-			raw:  "https://frosty-capable-pallet.btc.quiknode.pro/abc123/",
-			want: "https://frosty-capable-pallet.btc.quiknode.pro/TOKEN/",
+			raw:  "https://example-name.btc.quiknode.pro/abc123/",
+			want: "https://example-name.btc.quiknode.pro/TOKEN/",
 		},
 		{
 			name: "websocket scheme",
@@ -57,8 +57,8 @@ func TestRedactEndpointURL(t *testing.T) {
 // suffix the chain appends after the token.
 func TestRedactedURLKeepsItsShape(t *testing.T) {
 	for _, raw := range []string{
-		"https://polished-damp-grass.hype-testnet.quiknode.pro/abc123/evm",
-		"https://frosty-capable-pallet.btc.quiknode.pro/abc123/",
+		"https://example-name.hype-testnet.quiknode.pro/abc123/evm",
+		"https://example-name.btc.quiknode.pro/abc123/",
 		"wss://example-name.quiknode.pro/abc123",
 	} {
 		redacted := RedactEndpointURL(raw)

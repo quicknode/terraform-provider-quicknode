@@ -25,10 +25,10 @@ NOTES:
   left out of the configuration keeps the value the endpoint already has.
 * `quicknode_endpoint.ip_custom_header` names the header an endpoint behind a proxy
   reads the caller's IP address from.
-* Allowlist entries are imported by value, as `652052/203.0.113.7`.
+* Allowlist entries are imported by value, as `123456/203.0.113.7`.
 * Adding an allowlist entry while its toggle is disabled warns and succeeds, so an
   allowlist can be built before enforcement is turned on.
-* `quicknode_endpoint.label` cannot be cleared once set, so removing the attribute
+* `quicknode_endpoint.label` cannot be cleared once set. Removing the attribute
   leaves the endpoint's label in place.
-* `quicknode_endpoint_jwt` takes `kid` as an input. The Admin API requires it when
-  the signing key is registered.
+* `quicknode_endpoint_jwt.kid` is required, and matches the `kid` header of the
+  tokens signed with the corresponding private key.
