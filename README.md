@@ -1,8 +1,8 @@
 # Terraform Provider for Quicknode
 
-The official [Terraform](https://developer.hashicorp.com/terraform) provider for
-[Quicknode](https://www.quicknode.com). Manage RPC endpoints, security rules and
-rate limits with `terraform plan` and `terraform apply`.
+The official [Terraform](https://developer.hashicorp.com/terraform)-compatible
+provider for [Quicknode](https://www.quicknode.com). Manage RPC endpoints,
+security rules and rate limits with `terraform plan` and `terraform apply`.
 
 - [Provider documentation](./docs) — also published to the Terraform Registry
 - [Contributing](./CONTRIBUTING.md)
@@ -34,9 +34,9 @@ resource "quicknode_endpoint" "payments" {
 }
 ```
 
-Authentication uses a Quicknode [Admin API](https://www.quicknode.com/docs/admin-api)
-key, available on paid plans. Set `QUICKNODE_API_KEY` in the environment rather
-than writing it into a configuration file.
+Authentication uses a Quicknode [API key](https://www.quicknode.com/docs/admin-api),
+available on paid plans. Set `QUICKNODE_API_KEY` in the environment rather than
+writing it into a configuration file.
 
 The provider covers endpoints, the security mechanisms they enforce and who is
 allowed past them, RPC method filtering, and rate limits both endpoint-wide and
