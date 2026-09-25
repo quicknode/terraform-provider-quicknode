@@ -17,8 +17,10 @@ The key only takes effect once `security_options.jwts` is enabled on the endpoin
 
 ```terraform
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 
   security_options = {
     jwts   = true

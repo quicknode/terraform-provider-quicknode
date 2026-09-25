@@ -1,6 +1,8 @@
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 }
 
 # A bucket set here overrides the plan default. A bucket left out keeps it, and

@@ -17,8 +17,10 @@ The entry only takes effect once `security_options.referrers` is enabled on the 
 
 ```terraform
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 
   security_options = {
     referrers = true

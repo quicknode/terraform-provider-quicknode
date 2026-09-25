@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // Error carries an Admin API failure. The Admin API can report a failure either
@@ -25,6 +26,11 @@ func (e *Error) Error() string {
 func IsNotFound(err error) bool {
 	var apiErr *Error
 	return errors.As(err, &apiErr) && apiErr.Status == http.StatusNotFound
+}
+
+func IsAlreadyExists(err error) bool {
+	var apiErr *Error
+	return errors.As(err, &apiErr) && strings.Contains(apiErr.Message, "ALREADY_EXISTS")
 }
 
 // IsUnauthorized reports the two ways the Admin API rejects a key: an invalid

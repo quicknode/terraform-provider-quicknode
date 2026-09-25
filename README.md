@@ -20,7 +20,7 @@ terraform {
   required_providers {
     quicknode = {
       source  = "quicknode/quicknode"
-      version = "~> 0.1"
+      version = "~> 0.3.0"
     }
   }
 }
@@ -28,9 +28,11 @@ terraform {
 provider "quicknode" {}
 
 resource "quicknode_endpoint" "payments" {
-  chain   = "eth"
-  network = "mainnet"
-  label   = "payments-prod"
+  chain      = "eth"
+  network    = "mainnet"
+  label      = "payments-prod"
+  status     = "active"
+  multichain = false
 }
 ```
 

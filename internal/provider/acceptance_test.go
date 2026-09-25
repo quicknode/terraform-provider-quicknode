@@ -70,9 +70,11 @@ func testAccCheckEndpointsDestroyed(state *terraform.State) error {
 func endpointConfig(label string) string {
 	return fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = %q
+  chain      = %q
+  network    = %q
+  label      = %q
+  multichain = false
+  status     = "active"
 }
 `, acceptanceChain, acceptanceNetwork, label)
 }
@@ -116,9 +118,11 @@ func TestAccEndpoint_securityOptions(t *testing.T) {
 	withOptions := func(cors bool) string {
 		return fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-security-options"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-security-options"
+  multichain = false
+  status     = "active"
 
   security_options = {
     cors = %t
@@ -152,9 +156,11 @@ resource "quicknode_endpoint" "test" {
 func TestAccEndpointIP_importByValue(t *testing.T) {
 	const config = `
 resource "quicknode_endpoint" "test" {
-  chain   = "eth"
-  network = "ethereum-sepolia"
-  label   = "tfacc-ip"
+  chain      = "eth"
+  network    = "ethereum-sepolia"
+  label      = "tfacc-ip"
+  multichain = false
+  status     = "active"
 
   security_options = {
     ips = true
@@ -200,9 +206,11 @@ func TestAccRequestFilter_updatesInPlace(t *testing.T) {
 	withMethods := func(methods string) string {
 		return fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-request-filter"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-request-filter"
+  multichain = false
+  status     = "active"
 }
 
 resource "quicknode_endpoint_request_filter" "test" {
@@ -241,9 +249,11 @@ func TestAccRateLimits_dropReturnsPlanDefault(t *testing.T) {
 	withBuckets := func(buckets string) string {
 		return fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-rate-limits"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-rate-limits"
+  multichain = false
+  status     = "active"
 }
 
 resource "quicknode_endpoint_rate_limits" "test" {
@@ -281,9 +291,11 @@ func TestAccMethodRateLimit_lifecycle(t *testing.T) {
 	withRate := func(rate int, enabled bool) string {
 		return fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-method-rate-limit"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-method-rate-limit"
+  multichain = false
+  status     = "active"
 }
 
 resource "quicknode_endpoint_method_rate_limit" "test" {
@@ -322,9 +334,11 @@ resource "quicknode_endpoint_method_rate_limit" "test" {
 func TestAccEndpointDataSource_byLabel(t *testing.T) {
 	const config = `
 resource "quicknode_endpoint" "test" {
-  chain   = "eth"
-  network = "ethereum-sepolia"
-  label   = "tfacc-data-source"
+  chain      = "eth"
+  network    = "ethereum-sepolia"
+  label      = "tfacc-data-source"
+  multichain = false
+  status     = "active"
 }
 
 data "quicknode_endpoint" "test" {
@@ -404,8 +418,10 @@ func endpointIDForImport(suffix func(*terraform.State) (string, error)) func(*te
 func TestAccEndpoint_labelClearedByRemoval(t *testing.T) {
 	unlabelled := fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
+  chain      = %q
+  network    = %q
+  multichain = false
+  status     = "active"
 }
 `, acceptanceChain, acceptanceNetwork)
 
@@ -434,9 +450,10 @@ func TestAccEndpoint_tagsStatusAndHeader(t *testing.T) {
 	withAttributes := func(body string) string {
 		return fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-attributes"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-attributes"
+  multichain = false
 %s
 }
 `, acceptanceChain, acceptanceNetwork, body)
@@ -473,7 +490,7 @@ resource "quicknode_endpoint" "test" {
 				),
 			},
 			{
-				Config: withAttributes(""),
+				Config: withAttributes(`  status = "active"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "tags.#", "0"),
 					resource.TestCheckNoResourceAttr("quicknode_endpoint.test", "ip_custom_header"),
@@ -486,9 +503,11 @@ resource "quicknode_endpoint" "test" {
 func TestAccEndpointToken_lifecycle(t *testing.T) {
 	config := fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-token"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-token"
+  multichain = false
+  status     = "active"
 }
 
 resource "quicknode_endpoint_token" "test" {
@@ -529,9 +548,11 @@ resource "quicknode_endpoint_token" "test" {
 func TestAccEndpointJWT_importByName(t *testing.T) {
 	config := fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-jwt"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-jwt"
+  multichain = false
+  status     = "active"
 
   security_options = {
     jwts = true
@@ -579,9 +600,11 @@ EOT
 func TestAccSecurityEntries_importByValue(t *testing.T) {
 	config := fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-entries"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-entries"
+  multichain = false
+  status     = "active"
 
   security_options = {
     domain_masks = true
@@ -641,9 +664,11 @@ resource "quicknode_endpoint_referrer" "test" {
 func TestAccSecurityEntry_survivesDisabledToggle(t *testing.T) {
 	config := fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
-  chain   = %q
-  network = %q
-  label   = "tfacc-disabled-toggle"
+  chain      = %q
+  network    = %q
+  label      = "tfacc-disabled-toggle"
+  multichain = false
+  status     = "active"
 
   security_options = {
     ips = false
@@ -668,6 +693,14 @@ resource "quicknode_endpoint_ip" "test" {
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "security_options.ips", "false"),
 				),
 			},
+			{
+				ResourceName: "quicknode_endpoint_ip.test",
+				ImportState:  true,
+				ImportStateIdFunc: endpointIDForImport(func(*terraform.State) (string, error) {
+					return "203.0.113.9", nil
+				}),
+				ExpectError: regexp.MustCompile(`IP address filtering is disabled on the endpoint`),
+			},
 		},
 	})
 }
@@ -683,6 +716,7 @@ resource "quicknode_endpoint" "test" {
   network    = %q
   label      = "tfacc-urls"
   multichain = %t
+  status     = "active"
 }
 
 data "quicknode_endpoint_urls" "test" {

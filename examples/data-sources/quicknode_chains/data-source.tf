@@ -7,6 +7,8 @@ locals {
 }
 
 resource "quicknode_endpoint" "primary" {
-  chain   = local.ethereum.slug
-  network = one([for network in local.ethereum.networks : network.slug if network.chain_id == 1])
+  chain      = local.ethereum.slug
+  network    = one([for network in local.ethereum.networks : network.slug if network.chain_id == 1])
+  multichain = false
+  status     = "active"
 }

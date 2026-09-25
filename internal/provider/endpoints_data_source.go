@@ -52,8 +52,8 @@ func (d *endpointsDataSource) Metadata(_ context.Context, req datasource.Metadat
 }
 
 func (d *endpointsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	filter := func(description string) schema.ListAttribute {
-		return schema.ListAttribute{
+	filter := func(description string) schema.SetAttribute {
+		return schema.SetAttribute{
 			Optional:            true,
 			ElementType:         types.StringType,
 			MarkdownDescription: description,
@@ -99,7 +99,7 @@ func (d *endpointsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 						"dedicated":  schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the endpoint runs on dedicated infrastructure."},
 						"flat_rate":  schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the endpoint is billed at a flat rate."},
 						"multichain": schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the endpoint serves more than one network."},
-						"tags": schema.ListAttribute{
+						"tags": schema.SetAttribute{
 							Computed:            true,
 							ElementType:         types.StringType,
 							MarkdownDescription: "Tag labels applied to the endpoint.",

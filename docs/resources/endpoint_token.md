@@ -17,8 +17,10 @@ Quicknode generates the value, so the resource takes no input beyond the endpoin
 
 ```terraform
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 
   security_options = {
     tokens = true

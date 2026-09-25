@@ -17,8 +17,10 @@ Use it to keep a handful of expensive calls, such as `eth_getLogs` over wide blo
 
 ```terraform
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 }
 
 # Keep a few expensive calls from consuming the endpoint's whole budget.

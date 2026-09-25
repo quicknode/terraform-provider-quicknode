@@ -79,7 +79,7 @@ func (d *endpointDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 			"network":    schema.StringAttribute{Computed: true, MarkdownDescription: "Network slug."},
 			"status":     schema.StringAttribute{Computed: true, MarkdownDescription: "`active` or `paused`."},
 			"multichain": computedBool("Whether the endpoint serves more than one network."),
-			"tags": schema.ListAttribute{
+			"tags": schema.SetAttribute{
 				Computed:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "Tag labels applied to the endpoint.",
