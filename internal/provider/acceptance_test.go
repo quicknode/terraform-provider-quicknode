@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -88,10 +90,8 @@ func TestAccEndpoint_lifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "chain", acceptanceChain),
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "label", "tfacc-endpoint"),
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "status", "active"),
-					// The credentialed URL is the one that works; the stripped
-					// URL must not carry the token.
-					resource.TestCheckResourceAttrSet("quicknode_endpoint.test", "http_url_with_token"),
-					resource.TestCheckResourceAttrSet("quicknode_endpoint.test", "tokens.0.token"),
+					resource.TestMatchResourceAttr("quicknode_endpoint.test", "safe_http_url", regexp.MustCompile(`/REPLACE_WITH_TOKEN/`)),
+					resource.TestCheckNoResourceAttr("quicknode_endpoint.test", "tokens"),
 					resource.TestCheckResourceAttrSet("quicknode_endpoint.test", "security_options.tokens"),
 				),
 			},
@@ -219,7 +219,10 @@ resource "quicknode_endpoint_request_filter" "test" {
 		Steps: []resource.TestStep{
 			{
 				Config: withMethods(`["eth_call"]`),
-				Check:  resource.TestCheckResourceAttr("quicknode_endpoint_request_filter.test", "methods.#", "1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("quicknode_endpoint_request_filter.test", "methods.#", "1"),
+					resource.TestCheckNoResourceAttr("quicknode_endpoint.test", "security_options.request_filters"),
+				),
 			},
 			{
 				// A real PUT route backs this, so the filter must update rather
@@ -396,10 +399,9 @@ func endpointIDForImport(suffix func(*terraform.State) (string, error)) func(*te
 	}
 }
 
-// TestAccEndpoint_labelSurvivesRemoval covers the one attribute Quicknode has
-// no route to clear. Dropping it from the configuration has to leave the
-// endpoint's label alone and settle into an empty plan.
-func TestAccEndpoint_labelSurvivesRemoval(t *testing.T) {
+// TestAccEndpoint_labelClearedByRemoval checks that dropping the label from the
+// configuration writes an empty label and settles into an empty plan.
+func TestAccEndpoint_labelClearedByRemoval(t *testing.T) {
 	unlabelled := fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
   chain   = %q
@@ -418,7 +420,7 @@ resource "quicknode_endpoint" "test" {
 			},
 			{
 				Config: unlabelled,
-				Check:  resource.TestCheckResourceAttr("quicknode_endpoint.test", "label", "tfacc-label"),
+				Check:  resource.TestCheckNoResourceAttr("quicknode_endpoint.test", "label"),
 			},
 		},
 	})
@@ -504,14 +506,13 @@ resource "quicknode_endpoint_token" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("quicknode_endpoint_token.test", "id"),
 					resource.TestCheckResourceAttrSet("quicknode_endpoint_token.test", "token"),
+					resource.TestCheckResourceAttrWith("quicknode_endpoint_token.test", "http_url_with_token", func(value string) error {
+						if strings.Contains(value, "REPLACE_WITH_TOKEN") {
+							return fmt.Errorf("http_url_with_token still carries the placeholder: %s", client.RedactEndpointURL(value))
+						}
+						return nil
+					}),
 				),
-			},
-			{
-				// The endpoint is created carrying one token and is not read
-				// again during the apply that adds the second, so the count on
-				// the endpoint only settles on the next refresh.
-				Config: config,
-				Check:  resource.TestCheckResourceAttr("quicknode_endpoint.test", "tokens.#", "2"),
 			},
 			{
 				ResourceName: "quicknode_endpoint_token.test",
@@ -665,6 +666,50 @@ resource "quicknode_endpoint_ip" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("quicknode_endpoint_ip.test", "ip", "203.0.113.9"),
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "security_options.ips", "false"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccEndpointURLsDataSource_multichain reads the URLs route before and
+// after multichain is enabled, so both the empty maps and the populated ones
+// are covered.
+func TestAccEndpointURLsDataSource_multichain(t *testing.T) {
+	withMultichain := func(enabled bool) string {
+		return fmt.Sprintf(`
+resource "quicknode_endpoint" "test" {
+  chain      = %q
+  network    = %q
+  label      = "tfacc-urls"
+  multichain = %t
+}
+
+data "quicknode_endpoint_urls" "test" {
+  endpoint_id = quicknode_endpoint.test.id
+  depends_on  = [quicknode_endpoint.test]
+}
+`, acceptanceChain, acceptanceNetwork, enabled)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: withMultichain(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.quicknode_endpoint_urls.test", "safe_http_url", "quicknode_endpoint.test", "safe_http_url"),
+					resource.TestCheckResourceAttrSet("data.quicknode_endpoint_urls.test", "http_url_with_token"),
+					resource.TestCheckResourceAttr("data.quicknode_endpoint_urls.test", "safe_multichain_urls.%", "0"),
+				),
+			},
+			{
+				Config: withMultichain(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("data.quicknode_endpoint_urls.test", "safe_multichain_urls.base-sepolia.http_url", regexp.MustCompile(`/REPLACE_WITH_TOKEN/`)),
+					resource.TestCheckResourceAttrSet("data.quicknode_endpoint_urls.test", "multichain_urls_with_token.base-sepolia.http_url"),
 				),
 			},
 		},

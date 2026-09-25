@@ -4,14 +4,17 @@ page_title: "quicknode_endpoint Resource - quicknode"
 subcategory: ""
 description: |-
   A Quicknode RPC endpoint on a chain and network.
-  Pass http_url_with_token to anything that needs to make RPC calls. safe_http_url and safe_wss_url carry the literal TOKEN where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends.
+  safe_http_url and safe_wss_url carry the literal REPLACE_WITH_TOKEN where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends.
+  The resource does not track the endpoint's tokens or the URLs that carry them, because adding or removing a token changes both. Read a working URL from data.quicknode_endpoint_urls, or from the quicknode_endpoint_token that issued the credential.
 ---
 
 # quicknode_endpoint (Resource)
 
 A Quicknode RPC endpoint on a chain and network.
 
-Pass `http_url_with_token` to anything that needs to make RPC calls. `safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends.
+`safe_http_url` and `safe_wss_url` carry the literal `REPLACE_WITH_TOKEN` where the credential belongs, so they are safe to log or display while keeping the real URL's shape, including any path suffix the chain appends.
+
+The resource does not track the endpoint's tokens or the URLs that carry them, because adding or removing a token changes both. Read a working URL from `data.quicknode_endpoint_urls`, or from the `quicknode_endpoint_token` that issued the credential.
 
 ## Example Usage
 
@@ -37,17 +40,22 @@ resource "quicknode_endpoint" "payments" {
   ip_custom_header = "X-Real-IP"
 }
 
-# Pass the credentialed URL to whatever makes RPC calls.
-output "payments_rpc_url" {
-  value     = quicknode_endpoint.payments.http_url_with_token
-  sensitive = true
-}
-
-# The same URL with the credential replaced by the literal TOKEN. Safe to log
-# or display, and it keeps the real URL's shape, so substituting a token
+# The URL with the credential replaced by the literal REPLACE_WITH_TOKEN. Safe
+# to log or display, and it keeps the real URL's shape, so substituting a token
 # reproduces a working address on every chain.
 output "payments_rpc_url_redacted" {
   value = quicknode_endpoint.payments.safe_http_url
+}
+
+# The credentialed URL is read from data.quicknode_endpoint_urls, because it
+# changes whenever the endpoint's tokens do.
+data "quicknode_endpoint_urls" "payments" {
+  endpoint_id = quicknode_endpoint.payments.id
+}
+
+output "payments_rpc_url" {
+  value     = data.quicknode_endpoint_urls.payments.http_url_with_token
+  sensitive = true
 }
 ```
 
@@ -62,7 +70,7 @@ output "payments_rpc_url_redacted" {
 ### Optional
 
 - `ip_custom_header` (String) Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions see the original caller's address and not the proxy's.
-- `label` (String) Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. Quicknode has no route for clearing a label once set, so removing the attribute leaves the current label in place and Terraform stops tracking it.
+- `label` (String) Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. Removing the attribute clears the label.
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
 - `security_options` (Attributes) Which security mechanisms the endpoint enforces. Each toggle only decides whether a mechanism is applied; the entries it applies to are separate resources, such as `quicknode_endpoint_ip`. A toggle left out of the configuration keeps whatever value the endpoint already has. (see [below for nested schema](#nestedatt--security_options))
 - `status` (String) `active` or `paused`.
@@ -70,12 +78,9 @@ output "payments_rpc_url_redacted" {
 
 ### Read-Only
 
-- `http_url_with_token` (String, Sensitive) The working HTTPS endpoint, exactly as the Admin API returns it. Pass this to whatever makes RPC calls.
 - `id` (String) Endpoint id.
-- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. Substitute a real token to make it usable: `replace(self.safe_http_url, "TOKEN", self.tokens[0].token)`.
-- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.
-- `tokens` (Attributes List) Auth tokens for the endpoint. An endpoint can carry several. Token values are stored in Terraform state, so keep state encrypted and remote. (see [below for nested schema](#nestedatt--tokens))
-- `wss_url_with_token` (String, Sensitive) The working WebSocket endpoint, or null on chains without WebSocket support.
+- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `REPLACE_WITH_TOKEN`. Safe to log or display.
+- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `REPLACE_WITH_TOKEN`, or null on chains without WebSocket support.
 
 <a id="nestedatt--security_options"></a>
 ### Nested Schema for `security_options`
@@ -92,17 +97,7 @@ Optional:
 
 Read-Only:
 
-- `request_filters` (Boolean) Whether RPC method filtering is applied. Read-only: the Admin API turns this on when a `quicknode_endpoint_request_filter` exists and off when the last one is removed.
 - `response_logging` (Boolean) Whether responses are logged for the endpoint. Read-only: the account's plan sets it and it cannot be changed per endpoint.
-
-
-<a id="nestedatt--tokens"></a>
-### Nested Schema for `tokens`
-
-Read-Only:
-
-- `id` (String) Token id.
-- `token` (String, Sensitive) Token value.
 
 ## Import
 

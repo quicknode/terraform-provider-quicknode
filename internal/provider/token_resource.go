@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -23,9 +24,11 @@ type endpointTokenResource struct {
 }
 
 type endpointTokenResourceModel struct {
-	ID         types.String `tfsdk:"id"`
-	EndpointID types.String `tfsdk:"endpoint_id"`
-	Token      types.String `tfsdk:"token"`
+	ID               types.String `tfsdk:"id"`
+	EndpointID       types.String `tfsdk:"endpoint_id"`
+	Token            types.String `tfsdk:"token"`
+	HTTPURLWithToken types.String `tfsdk:"http_url_with_token"`
+	WSSURLWithToken  types.String `tfsdk:"wss_url_with_token"`
 }
 
 func NewEndpointTokenResource() resource.Resource {
@@ -55,6 +58,18 @@ func (r *endpointTokenResource) Schema(_ context.Context, _ resource.SchemaReque
 				Computed:            true,
 				Sensitive:           true,
 				MarkdownDescription: "The token value. It is stored in Terraform state, so keep state encrypted and remote.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			"http_url_with_token": schema.StringAttribute{
+				Computed:            true,
+				Sensitive:           true,
+				MarkdownDescription: "The endpoint's HTTPS URL carrying this token. Pass it to the consumer the token was issued for.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			"wss_url_with_token": schema.StringAttribute{
+				Computed:            true,
+				Sensitive:           true,
+				MarkdownDescription: "The endpoint's WebSocket URL carrying this token, or null on chains without WebSocket support.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 		},
@@ -88,6 +103,7 @@ func (r *endpointTokenResource) Create(ctx context.Context, req resource.CreateR
 
 	plan.ID = types.StringValue(created.ID)
 	plan.Token = types.StringValue(created.Value)
+	resp.Diagnostics.Append(r.applyURLs(ctx, &plan)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	resp.Diagnostics.Append(warnToggleDisabled(ctx, r.client, plan.EndpointID.ValueString(), "tokens", "Token authentication")...)
 }
@@ -114,6 +130,9 @@ func (r *endpointTokenResource) Read(ctx context.Context, req resource.ReadReque
 			continue
 		}
 		state.Token = types.StringValue(token.Value)
+		if state.HTTPURLWithToken.IsNull() {
+			resp.Diagnostics.Append(r.applyURLs(ctx, &state)...)
+		}
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return
 	}
@@ -169,8 +188,25 @@ func (r *endpointTokenResource) ImportState(ctx context.Context, req resource.Im
 			EndpointID: types.StringValue(endpointID),
 			Token:      types.StringValue(token.Value),
 		}
+		resp.Diagnostics.Append(r.applyURLs(ctx, &state)...)
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return
 	}
 	resp.Diagnostics.AddError("No matching token", fmt.Sprintf("Endpoint %s has no token with the id %q.", endpointID, tokenID))
+}
+
+// applyURLs builds the token's URLs from the endpoint's redacted ones, so they
+// carry this token whichever one the Admin API embeds in its own URLs.
+func (r *endpointTokenResource) applyURLs(ctx context.Context, model *endpointTokenResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	endpoint, err := r.client.GetEndpoint(ctx, model.EndpointID.ValueString())
+	if err != nil {
+		diags.AddError("Could not read the endpoint's URLs", err.Error())
+		return diags
+	}
+	token := model.Token.ValueString()
+	model.HTTPURLWithToken = stringOrNull(client.EndpointURLWithToken(endpoint.SafeHTTPURL, token))
+	model.WSSURLWithToken = stringOrNull(client.EndpointURLWithToken(endpoint.SafeWSSURL, token))
+	return diags
 }

@@ -1,6 +1,27 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* `safe_http_url` and `safe_wss_url` carry `REPLACE_WITH_TOKEN` in place of `TOKEN`.
+* `quicknode_endpoint` no longer has `tokens`, `http_url_with_token` or
+  `wss_url_with_token`. Adding or removing a token changed them, so they went stale
+  after every apply that touched a `quicknode_endpoint_token`. Read working URLs from
+  `data.quicknode_endpoint_urls` or `quicknode_endpoint_token.http_url_with_token`.
+* `quicknode_endpoint.security_options` no longer has `request_filters`. The Admin API
+  sets it when a filter exists, so it went stale after every apply that created one.
+  `data.quicknode_endpoint` still reports it.
+* Removing `label` from a `quicknode_endpoint` clears the endpoint's label.
+
+FEATURES:
+
+* **New Data Source:** `quicknode_endpoint_urls`, with `safe_multichain_urls` and
+  `multichain_urls_with_token` for every network a multichain endpoint serves.
+* `quicknode_endpoint_token` has `http_url_with_token` and `wss_url_with_token`,
+  carrying that token.
+
+## 0.1.0
 
 FEATURES:
 

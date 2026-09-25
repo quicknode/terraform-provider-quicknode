@@ -21,9 +21,19 @@ var securityOptionsAttrTypes = map[string]attr.Type{
 	"domain_masks":     types.BoolType,
 	"hsts":             types.BoolType,
 	"cors":             types.BoolType,
-	"request_filters":  types.BoolType,
 	"response_logging": types.BoolType,
 }
+
+// securityReportAttrTypes adds request_filters, which only the data sources
+// report. The Admin API sets it when a quicknode_endpoint_request_filter
+// exists, so on the endpoint resource it would go stale whenever one is created.
+var securityReportAttrTypes = func() map[string]attr.Type {
+	attrTypes := map[string]attr.Type{"request_filters": types.BoolType}
+	for name, attrType := range securityOptionsAttrTypes {
+		attrTypes[name] = attrType
+	}
+	return attrTypes
+}()
 
 type securityOptionsModel struct {
 	Tokens      types.Bool `tfsdk:"tokens"`
@@ -34,7 +44,6 @@ type securityOptionsModel struct {
 	HSTS        types.Bool `tfsdk:"hsts"`
 	Cors        types.Bool `tfsdk:"cors"`
 
-	RequestFilters  types.Bool `tfsdk:"request_filters"`
 	ResponseLogging types.Bool `tfsdk:"response_logging"`
 }
 
@@ -60,10 +69,6 @@ func securityOptionsSchema() schema.SingleNestedAttribute {
 			"domain_masks": settable("Serve the endpoint from an approved custom domain. Add them with `quicknode_endpoint_domain_mask`."),
 			"hsts":         settable("Send the HTTP Strict Transport Security header."),
 			"cors":         settable("Apply Cross-Origin Resource Sharing policy. New endpoints have this enabled."),
-			"request_filters": schema.BoolAttribute{
-				Computed:            true,
-				MarkdownDescription: "Whether RPC method filtering is applied. Read-only: the Admin API turns this on when a `quicknode_endpoint_request_filter` exists and off when the last one is removed.",
-			},
 			"response_logging": schema.BoolAttribute{
 				Computed:            true,
 				MarkdownDescription: "Whether responses are logged for the endpoint. Read-only: the account's plan sets it and it cannot be changed per endpoint.",
@@ -72,10 +77,21 @@ func securityOptionsSchema() schema.SingleNestedAttribute {
 	}
 }
 
-// securityOptionsObject renders what the API reports. Every toggle is known
-// after a read, including the two the provider cannot write.
+// securityOptionsObject renders what the API reports for the endpoint
+// resource. Every toggle is known after a read, including response_logging,
+// which the provider cannot write.
 func securityOptionsObject(options client.SecurityOptions) (types.Object, diag.Diagnostics) {
-	return types.ObjectValue(securityOptionsAttrTypes, map[string]attr.Value{
+	return types.ObjectValue(securityOptionsAttrTypes, securityOptionValues(options))
+}
+
+func securityReportObject(options client.SecurityOptions) (types.Object, diag.Diagnostics) {
+	values := securityOptionValues(options)
+	values["request_filters"] = types.BoolValue(options.RequestFilters)
+	return types.ObjectValue(securityReportAttrTypes, values)
+}
+
+func securityOptionValues(options client.SecurityOptions) map[string]attr.Value {
+	return map[string]attr.Value{
 		"tokens":           types.BoolValue(options.Tokens),
 		"referrers":        types.BoolValue(options.Referrers),
 		"jwts":             types.BoolValue(options.JWTs),
@@ -83,9 +99,8 @@ func securityOptionsObject(options client.SecurityOptions) (types.Object, diag.D
 		"domain_masks":     types.BoolValue(options.DomainMasks),
 		"hsts":             types.BoolValue(options.HSTS),
 		"cors":             types.BoolValue(options.Cors),
-		"request_filters":  types.BoolValue(options.RequestFilters),
 		"response_logging": types.BoolValue(options.ResponseLogging),
-	})
+	}
 }
 
 // securityOptionsPatch collects the toggles worth writing. An unknown value is

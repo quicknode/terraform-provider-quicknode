@@ -146,5 +146,6 @@ func (p *quicknodeProvider) DataSources(_ context.Context) []func() datasource.D
 		NewChainsDataSource,
 		NewEndpointDataSource,
 		NewEndpointsDataSource,
+		NewEndpointURLsDataSource,
 	}
 }

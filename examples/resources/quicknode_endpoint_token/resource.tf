@@ -13,7 +13,8 @@ resource "quicknode_endpoint_token" "indexer" {
   endpoint_id = quicknode_endpoint.api.id
 }
 
-output "indexer_token" {
-  value     = quicknode_endpoint_token.indexer.token
+# The endpoint's URL carrying this token, for the consumer it was issued to.
+output "indexer_rpc_url" {
+  value     = quicknode_endpoint_token.indexer.http_url_with_token
   sensitive = true
 }

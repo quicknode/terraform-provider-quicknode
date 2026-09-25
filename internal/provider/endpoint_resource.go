@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -26,11 +25,6 @@ const (
 	statusPaused = "paused"
 )
 
-var endpointTokenAttrTypes = map[string]attr.Type{
-	"id":    types.StringType,
-	"token": types.StringType,
-}
-
 var _ resource.Resource = (*endpointResource)(nil)
 var _ resource.ResourceWithConfigure = (*endpointResource)(nil)
 var _ resource.ResourceWithImportState = (*endpointResource)(nil)
@@ -42,20 +36,17 @@ type endpointResource struct {
 }
 
 type endpointResourceModel struct {
-	ID               types.String `tfsdk:"id"`
-	Chain            types.String `tfsdk:"chain"`
-	Network          types.String `tfsdk:"network"`
-	Label            types.String `tfsdk:"label"`
-	Status           types.String `tfsdk:"status"`
-	Multichain       types.Bool   `tfsdk:"multichain"`
-	Tags             types.Set    `tfsdk:"tags"`
-	SafeHTTPURL      types.String `tfsdk:"safe_http_url"`
-	SafeWSSURL       types.String `tfsdk:"safe_wss_url"`
-	HTTPURLWithToken types.String `tfsdk:"http_url_with_token"`
-	WSSURLWithToken  types.String `tfsdk:"wss_url_with_token"`
-	Tokens           types.List   `tfsdk:"tokens"`
-	SecurityOptions  types.Object `tfsdk:"security_options"`
-	IPCustomHeader   types.String `tfsdk:"ip_custom_header"`
+	ID              types.String `tfsdk:"id"`
+	Chain           types.String `tfsdk:"chain"`
+	Network         types.String `tfsdk:"network"`
+	Label           types.String `tfsdk:"label"`
+	Status          types.String `tfsdk:"status"`
+	Multichain      types.Bool   `tfsdk:"multichain"`
+	Tags            types.Set    `tfsdk:"tags"`
+	SafeHTTPURL     types.String `tfsdk:"safe_http_url"`
+	SafeWSSURL      types.String `tfsdk:"safe_wss_url"`
+	SecurityOptions types.Object `tfsdk:"security_options"`
+	IPCustomHeader  types.String `tfsdk:"ip_custom_header"`
 }
 
 func NewEndpointResource() resource.Resource {
@@ -69,9 +60,10 @@ func (r *endpointResource) Metadata(_ context.Context, req resource.MetadataRequ
 func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "A Quicknode RPC endpoint on a chain and network.\n\n" +
-			"Pass `http_url_with_token` to anything that needs to make RPC calls. " +
-			"`safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display " +
-			"while keeping the real URL's shape, including any path suffix the chain appends.",
+			"`safe_http_url` and `safe_wss_url` carry the literal `REPLACE_WITH_TOKEN` where the credential belongs, so they are safe to log or display " +
+			"while keeping the real URL's shape, including any path suffix the chain appends.\n\n" +
+			"The resource does not track the endpoint's tokens or the URLs that carry them, because adding or removing a token changes both. " +
+			"Read a working URL from `data.quicknode_endpoint_urls`, or from the `quicknode_endpoint_token` that issued the credential.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -89,11 +81,9 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"label": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				MarkdownDescription: "Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. " +
-					"Quicknode has no route for clearing a label once set, so removing the attribute leaves the current label in place and Terraform stops tracking it.",
-				Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
+				Optional:            true,
+				MarkdownDescription: "Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. Removing the attribute clears the label.",
+				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"status": schema.StringAttribute{
 				Optional:            true,
@@ -115,24 +105,12 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			},
 			"safe_http_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. Substitute a real token to make it usable: `replace(self.safe_http_url, \"TOKEN\", self.tokens[0].token)`.",
+				MarkdownDescription: "The HTTPS URL with the auth token replaced by `REPLACE_WITH_TOKEN`. Safe to log or display.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"safe_wss_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"http_url_with_token": schema.StringAttribute{
-				Computed:            true,
-				Sensitive:           true,
-				MarkdownDescription: "The working HTTPS endpoint, exactly as the Admin API returns it. Pass this to whatever makes RPC calls.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"wss_url_with_token": schema.StringAttribute{
-				Computed:            true,
-				Sensitive:           true,
-				MarkdownDescription: "The working WebSocket endpoint, or null on chains without WebSocket support.",
+				MarkdownDescription: "The WebSocket URL with the auth token replaced by `REPLACE_WITH_TOKEN`, or null on chains without WebSocket support.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"security_options": securityOptionsSchema(),
@@ -140,24 +118,6 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Optional:            true,
 				MarkdownDescription: "Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions see the original caller's address and not the proxy's.",
 				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
-			},
-			"tokens": schema.ListNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "Auth tokens for the endpoint. An endpoint can carry several. Token values are stored in Terraform state, so keep state encrypted and remote.",
-				PlanModifiers:       []planmodifier.List{listplanmodifier.UseStateForUnknown()},
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "Token id.",
-						},
-						"token": schema.StringAttribute{
-							Computed:            true,
-							Sensitive:           true,
-							MarkdownDescription: "Token value.",
-						},
-					},
-				},
 			},
 		},
 	}
@@ -218,7 +178,7 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	if !plan.Label.IsUnknown() && !plan.Label.IsNull() {
+	if !plan.Label.IsNull() || created.Label != "" {
 		if err := r.client.SetEndpointLabel(ctx, created.ID, plan.Label.ValueString()); err != nil {
 			resp.Diagnostics.AddError(
 				"Created the endpoint but could not set its label",
@@ -301,7 +261,7 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 	id := state.ID.ValueString()
 	plan.ID = state.ID
 
-	if !plan.Label.IsUnknown() && !plan.Label.Equal(state.Label) {
+	if !plan.Label.Equal(state.Label) {
 		if err := r.client.SetEndpointLabel(ctx, id, plan.Label.ValueString()); err != nil {
 			resp.Diagnostics.AddError("Could not update the endpoint label", err.Error())
 			return
@@ -369,14 +329,7 @@ func (r *endpointResource) readInto(ctx context.Context, id string, model *endpo
 		return
 	}
 	model.ID = types.StringValue(endpoint.ID)
-	if model.Label.IsUnknown() {
-		model.Label = stringOrNull(endpoint.Label)
-	}
 	applyEndpointURLs(endpoint, model)
-
-	tokens, tokenDiags := tokenList(endpoint.Tokens)
-	diags.Append(tokenDiags...)
-	model.Tokens = tokens
 
 	options, optionDiags := securityOptionsObject(endpoint.Security)
 	diags.Append(optionDiags...)
@@ -419,20 +372,11 @@ func applyEndpoint(endpoint *client.Endpoint, state *endpointResourceModel) diag
 	state.Multichain = types.BoolValue(endpoint.Multichain)
 	applyEndpointURLs(endpoint, state)
 
-	tokens, tokenDiags := tokenList(endpoint.Tokens)
-	diags.Append(tokenDiags...)
-	state.Tokens = tokens
-
 	options, optionDiags := securityOptionsObject(endpoint.Security)
 	diags.Append(optionDiags...)
 	state.SecurityOptions = options
 	state.IPCustomHeader = stringOrNull(endpoint.Security.IPCustomHeader)
-
-	if endpoint.Label == "" {
-		state.Label = types.StringNull()
-	} else {
-		state.Label = types.StringValue(endpoint.Label)
-	}
+	state.Label = stringOrNull(endpoint.Label)
 
 	if len(endpoint.Tags) == 0 && state.Tags.IsNull() {
 		return diags
@@ -452,8 +396,6 @@ func applyEndpoint(endpoint *client.Endpoint, state *endpointResourceModel) diag
 func applyEndpointURLs(endpoint *client.Endpoint, model *endpointResourceModel) {
 	model.SafeHTTPURL = stringOrNull(endpoint.SafeHTTPURL)
 	model.SafeWSSURL = stringOrNull(endpoint.SafeWSSURL)
-	model.HTTPURLWithToken = stringOrNull(endpoint.HTTPURLWithToken)
-	model.WSSURLWithToken = stringOrNull(endpoint.WSSURLWithToken)
 }
 
 func stringOrNull(value string) types.String {
@@ -461,28 +403,6 @@ func stringOrNull(value string) types.String {
 		return types.StringNull()
 	}
 	return types.StringValue(value)
-}
-
-func tokenList(tokens []client.EndpointToken) (types.List, diag.Diagnostics) {
-	elementType := types.ObjectType{AttrTypes: endpointTokenAttrTypes}
-	values := make([]attr.Value, 0, len(tokens))
-	var diags diag.Diagnostics
-
-	for _, token := range tokens {
-		value, objectDiags := types.ObjectValue(endpointTokenAttrTypes, map[string]attr.Value{
-			"id":    types.StringValue(token.ID),
-			"token": types.StringValue(token.Value),
-		})
-		diags.Append(objectDiags...)
-		values = append(values, value)
-	}
-	if diags.HasError() {
-		return types.ListNull(elementType), diags
-	}
-
-	list, listDiags := types.ListValue(elementType, values)
-	diags.Append(listDiags...)
-	return list, diags
 }
 
 func (r *endpointResource) reconcileTags(ctx context.Context, id string, planned types.Set) diag.Diagnostics {

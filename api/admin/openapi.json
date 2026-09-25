@@ -4389,23 +4389,21 @@
                           "type": "string"
                         },
                         "multichain_urls": {
-                          "description": "Only present for multichain endpoints. An object keyed by network identifier (e.g. `avalanche-mainnet`), where each value contains the HTTP and WebSocket URLs for that network.",
-                          "properties": {
-                            "{network}": {
-                              "description": "Per-network URL entry. The key is the network identifier (e.g. `avalanche-mainnet`).",
-                              "properties": {
-                                "http_url": {
-                                  "description": "The HTTP URL to access the endpoint on this network",
-                                  "type": "string"
-                                },
-                                "wss_url": {
-                                  "description": "The WebSocket URL to access the endpoint on this network",
-                                  "type": "string"
-                                }
+                          "additionalProperties": {
+                            "properties": {
+                              "http_url": {
+                                "type": "string"
                               },
-                              "type": "object"
-                            }
+                              "wss_url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "type": "object"
                           },
+                          "description": "Only present for multichain endpoints. Keyed by network slug, each value holds the network's HTTP and WebSocket URLs.",
                           "type": "object"
                         },
                         "wss_url": {

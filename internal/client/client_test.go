@@ -14,22 +14,22 @@ func TestRedactEndpointURL(t *testing.T) {
 		{
 			name: "token followed by a chain suffix",
 			raw:  "https://example-name.hype-testnet.quiknode.pro/abc123/evm",
-			want: "https://example-name.hype-testnet.quiknode.pro/TOKEN/evm",
+			want: "https://example-name.hype-testnet.quiknode.pro/REPLACE_WITH_TOKEN/evm",
 		},
 		{
 			name: "token with no suffix",
 			raw:  "https://example-name.quiknode.pro/abc123",
-			want: "https://example-name.quiknode.pro/TOKEN",
+			want: "https://example-name.quiknode.pro/REPLACE_WITH_TOKEN",
 		},
 		{
 			name: "trailing slash after the token",
 			raw:  "https://example-name.btc.quiknode.pro/abc123/",
-			want: "https://example-name.btc.quiknode.pro/TOKEN/",
+			want: "https://example-name.btc.quiknode.pro/REPLACE_WITH_TOKEN/",
 		},
 		{
 			name: "websocket scheme",
 			raw:  "wss://example-name.quiknode.pro/abc123/evm",
-			want: "wss://example-name.quiknode.pro/TOKEN/evm",
+			want: "wss://example-name.quiknode.pro/REPLACE_WITH_TOKEN/evm",
 		},
 		{
 			name: "no path at all",
@@ -70,5 +70,16 @@ func TestRedactedURLKeepsItsShape(t *testing.T) {
 		if restored != raw {
 			t.Errorf("substituting the token gave %q, want %q", restored, raw)
 		}
+		if rebuilt := EndpointURLWithToken(redacted, "abc123"); rebuilt != raw {
+			t.Errorf("EndpointURLWithToken(%q) = %q, want %q", redacted, rebuilt, raw)
+		}
+	}
+}
+
+func TestEndpointURLWithTokenSwapsTokens(t *testing.T) {
+	const raw = "https://example-name.avalanche-mainnet.quiknode.pro/first/ext/bc/C/rpc/"
+	const want = "https://example-name.avalanche-mainnet.quiknode.pro/second/ext/bc/C/rpc/"
+	if got := EndpointURLWithToken(raw, "second"); got != want {
+		t.Errorf("EndpointURLWithToken = %q, want %q", got, want)
 	}
 }

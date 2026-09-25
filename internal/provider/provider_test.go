@@ -38,7 +38,7 @@ func TestProviderSchema(t *testing.T) {
 			t.Errorf("%s is missing, got %v", name, keys(schema.ResourceSchemas))
 		}
 	}
-	for _, name := range []string{"quicknode_chains", "quicknode_endpoint", "quicknode_endpoints"} {
+	for _, name := range []string{"quicknode_chains", "quicknode_endpoint", "quicknode_endpoints", "quicknode_endpoint_urls"} {
 		if _, ok := schema.DataSourceSchemas[name]; !ok {
 			t.Errorf("%s is missing, got %v", name, keys(schema.DataSourceSchemas))
 		}

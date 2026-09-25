@@ -59,14 +59,14 @@ func TestGetEndpointWithPathSuffix(t *testing.T) {
 	if endpoint.WSSURLWithToken != "wss://example-name.hype-testnet.quiknode.pro/TOKENVALUE/evm" {
 		t.Errorf("WSSURLWithToken = %q", endpoint.WSSURLWithToken)
 	}
-	if endpoint.SafeWSSURL != "wss://example-name.hype-testnet.quiknode.pro/TOKEN/evm" {
+	if endpoint.SafeWSSURL != "wss://example-name.hype-testnet.quiknode.pro/REPLACE_WITH_TOKEN/evm" {
 		t.Errorf("SafeWSSURL = %q", endpoint.SafeWSSURL)
 	}
 
 	// The redacted URL keeps the real one's shape, so substituting a token
 	// reproduces it exactly. That is what the placeholder buys over cutting
 	// the token out: this chain puts a suffix after it.
-	const wantRedacted = "https://example-name.hype-testnet.quiknode.pro/TOKEN/evm"
+	const wantRedacted = "https://example-name.hype-testnet.quiknode.pro/REPLACE_WITH_TOKEN/evm"
 	if endpoint.SafeHTTPURL != wantRedacted {
 		t.Errorf("SafeHTTPURL = %q, want %q", endpoint.SafeHTTPURL, wantRedacted)
 	}
@@ -97,7 +97,7 @@ func TestGetEndpointWithoutWebsocket(t *testing.T) {
 	if endpoint.HTTPURLWithToken != "https://example-name.btc.quiknode.pro/TOKENVALUE/" {
 		t.Errorf("HTTPURLWithToken = %q", endpoint.HTTPURLWithToken)
 	}
-	if endpoint.SafeHTTPURL != "https://example-name.btc.quiknode.pro/TOKEN/" {
+	if endpoint.SafeHTTPURL != "https://example-name.btc.quiknode.pro/REPLACE_WITH_TOKEN/" {
 		t.Errorf("SafeHTTPURL = %q", endpoint.SafeHTTPURL)
 	}
 	if endpoint.Status != "paused" || endpoint.Label != "ledger" {
@@ -134,5 +134,54 @@ func TestGetEndpointDecodesLiveBody(t *testing.T) {
 	}
 	if len(endpoint.Tokens) != 1 {
 		t.Errorf("Tokens = %+v", endpoint.Tokens)
+	}
+}
+
+// multichainURLsBody mirrors a live GET /v0/endpoints/{id}/urls response for a
+// multichain endpoint, trimmed to networks that cover a path suffix and a
+// missing WebSocket URL. The token is fabricated.
+const multichainURLsBody = `{"data":{` +
+	`"http_url":"https://example-name.ethereum-sepolia.quiknode.pro/TOKENVALUE/",` +
+	`"wss_url":"wss://example-name.ethereum-sepolia.quiknode.pro/TOKENVALUE/",` +
+	`"multichain_urls":{` +
+	`"avalanche-mainnet":{"http_url":"https://example-name.avalanche-mainnet.quiknode.pro/TOKENVALUE/ext/bc/C/rpc/",` +
+	`"wss_url":"wss://example-name.avalanche-mainnet.quiknode.pro/TOKENVALUE/ext/bc/C/ws/"},` +
+	`"btc":{"http_url":"https://example-name.btc.quiknode.pro/TOKENVALUE/","wss_url":null}}},` +
+	`"error":null}`
+
+func TestGetEndpointURLsDecodesMultichain(t *testing.T) {
+	urls, err := newTestClient(t, multichainURLsBody).GetEndpointURLs(context.Background(), "123456")
+	if err != nil {
+		t.Fatalf("GetEndpointURLs: %v", err)
+	}
+	if urls.SafeHTTPURL != "https://example-name.ethereum-sepolia.quiknode.pro/REPLACE_WITH_TOKEN/" {
+		t.Errorf("SafeHTTPURL = %q", urls.SafeHTTPURL)
+	}
+	if len(urls.Multichain) != 2 {
+		t.Fatalf("Multichain = %+v", urls.Multichain)
+	}
+
+	avalanche := urls.Multichain["avalanche-mainnet"]
+	if avalanche.SafeHTTPURL != "https://example-name.avalanche-mainnet.quiknode.pro/REPLACE_WITH_TOKEN/ext/bc/C/rpc/" {
+		t.Errorf("avalanche SafeHTTPURL = %q", avalanche.SafeHTTPURL)
+	}
+	if avalanche.WSSURLWithToken != "wss://example-name.avalanche-mainnet.quiknode.pro/TOKENVALUE/ext/bc/C/ws/" {
+		t.Errorf("avalanche WSSURLWithToken = %q", avalanche.WSSURLWithToken)
+	}
+
+	bitcoin := urls.Multichain["btc"]
+	if bitcoin.SafeWSSURL != "" || bitcoin.WSSURLWithToken != "" {
+		t.Errorf("btc WebSocket URLs = %q, %q, want empty", bitcoin.SafeWSSURL, bitcoin.WSSURLWithToken)
+	}
+}
+
+func TestGetEndpointURLsWithoutMultichain(t *testing.T) {
+	body := `{"data":{"http_url":"https://example-name.btc.quiknode.pro/TOKENVALUE/","wss_url":null},"error":null}`
+	urls, err := newTestClient(t, body).GetEndpointURLs(context.Background(), "123457")
+	if err != nil {
+		t.Fatalf("GetEndpointURLs: %v", err)
+	}
+	if urls.Multichain == nil || len(urls.Multichain) != 0 {
+		t.Errorf("Multichain = %#v, want an empty map", urls.Multichain)
 	}
 }

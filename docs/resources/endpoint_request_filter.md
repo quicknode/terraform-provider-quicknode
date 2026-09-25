@@ -4,14 +4,14 @@ page_title: "quicknode_endpoint_request_filter Resource - quicknode"
 subcategory: ""
 description: |-
   The set of RPC methods a Quicknode endpoint accepts. Anything outside the set is rejected, which keeps an endpoint handed to a browser or a third party from reaching methods it has no reason to call.
-  security_options.request_filters on the endpoint reports whether filtering is applied. It is read-only: the Admin API turns it on when a filter exists and off when the last one is removed.
+  The Admin API turns filtering on when a filter exists and off when the last one is removed. data.quicknode_endpoint reports it as security_options.request_filters.
 ---
 
 # quicknode_endpoint_request_filter (Resource)
 
 The set of RPC methods a Quicknode endpoint accepts. Anything outside the set is rejected, which keeps an endpoint handed to a browser or a third party from reaching methods it has no reason to call.
 
-`security_options.request_filters` on the endpoint reports whether filtering is applied. It is read-only: the Admin API turns it on when a filter exists and off when the last one is removed.
+The Admin API turns filtering on when a filter exists and off when the last one is removed. `data.quicknode_endpoint` reports it as `security_options.request_filters`.
 
 ## Example Usage
 
@@ -21,8 +21,8 @@ resource "quicknode_endpoint" "api" {
   network = "mainnet"
 }
 
-# Anything outside the set is rejected. security_options.request_filters on the
-# endpoint flips to true on its own once a filter exists.
+# Anything outside the set is rejected. The Admin API turns filtering on once a
+# filter exists.
 resource "quicknode_endpoint_request_filter" "read_only" {
   endpoint_id = quicknode_endpoint.api.id
 

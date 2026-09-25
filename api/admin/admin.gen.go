@@ -10633,16 +10633,10 @@ type GetV0EndpointsByIdUrlsResponse struct {
 			// HttpUrl The HTTP URL to access the endpoint
 			HttpUrl *string `json:"http_url,omitempty"`
 
-			// MultichainUrls Only present for multichain endpoints. An object keyed by network identifier (e.g. `avalanche-mainnet`), where each value contains the HTTP and WebSocket URLs for that network.
-			MultichainUrls *struct {
-				// Network Per-network URL entry. The key is the network identifier (e.g. `avalanche-mainnet`).
-				Network *struct {
-					// HttpUrl The HTTP URL to access the endpoint on this network
-					HttpUrl *string `json:"http_url,omitempty"`
-
-					// WssUrl The WebSocket URL to access the endpoint on this network
-					WssUrl *string `json:"wss_url,omitempty"`
-				} `json:"{network},omitempty"`
+			// MultichainUrls Only present for multichain endpoints. Keyed by network slug, each value holds the network's HTTP and WebSocket URLs.
+			MultichainUrls *map[string]struct {
+				HttpUrl *string `json:"http_url,omitempty"`
+				WssUrl  *string `json:"wss_url,omitempty"`
 			} `json:"multichain_urls,omitempty"`
 
 			// WssUrl The WebSocket URL to access the endpoint
@@ -10661,16 +10655,10 @@ func (r GetV0EndpointsByIdUrlsResponse) GetJSON200() *struct {
 		// HttpUrl The HTTP URL to access the endpoint
 		HttpUrl *string `json:"http_url,omitempty"`
 
-		// MultichainUrls Only present for multichain endpoints. An object keyed by network identifier (e.g. `avalanche-mainnet`), where each value contains the HTTP and WebSocket URLs for that network.
-		MultichainUrls *struct {
-			// Network Per-network URL entry. The key is the network identifier (e.g. `avalanche-mainnet`).
-			Network *struct {
-				// HttpUrl The HTTP URL to access the endpoint on this network
-				HttpUrl *string `json:"http_url,omitempty"`
-
-				// WssUrl The WebSocket URL to access the endpoint on this network
-				WssUrl *string `json:"wss_url,omitempty"`
-			} `json:"{network},omitempty"`
+		// MultichainUrls Only present for multichain endpoints. Keyed by network slug, each value holds the network's HTTP and WebSocket URLs.
+		MultichainUrls *map[string]struct {
+			HttpUrl *string `json:"http_url,omitempty"`
+			WssUrl  *string `json:"wss_url,omitempty"`
 		} `json:"multichain_urls,omitempty"`
 
 		// WssUrl The WebSocket URL to access the endpoint
@@ -15920,16 +15908,10 @@ func ParseGetV0EndpointsByIdUrlsResponse(rsp *http.Response) (*GetV0EndpointsByI
 				// HttpUrl The HTTP URL to access the endpoint
 				HttpUrl *string `json:"http_url,omitempty"`
 
-				// MultichainUrls Only present for multichain endpoints. An object keyed by network identifier (e.g. `avalanche-mainnet`), where each value contains the HTTP and WebSocket URLs for that network.
-				MultichainUrls *struct {
-					// Network Per-network URL entry. The key is the network identifier (e.g. `avalanche-mainnet`).
-					Network *struct {
-						// HttpUrl The HTTP URL to access the endpoint on this network
-						HttpUrl *string `json:"http_url,omitempty"`
-
-						// WssUrl The WebSocket URL to access the endpoint on this network
-						WssUrl *string `json:"wss_url,omitempty"`
-					} `json:"{network},omitempty"`
+				// MultichainUrls Only present for multichain endpoints. Keyed by network slug, each value holds the network's HTTP and WebSocket URLs.
+				MultichainUrls *map[string]struct {
+					HttpUrl *string `json:"http_url,omitempty"`
+					WssUrl  *string `json:"wss_url,omitempty"`
 				} `json:"multichain_urls,omitempty"`
 
 				// WssUrl The WebSocket URL to access the endpoint
