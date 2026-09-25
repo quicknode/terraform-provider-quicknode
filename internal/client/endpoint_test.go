@@ -136,3 +136,52 @@ func TestGetEndpointDecodesLiveBody(t *testing.T) {
 		t.Errorf("Tokens = %+v", endpoint.Tokens)
 	}
 }
+
+// multichainURLsBody mirrors a live GET /v0/endpoints/{id}/urls response for a
+// multichain endpoint, trimmed to networks that cover a path suffix and a
+// missing WebSocket URL. The token is fabricated.
+const multichainURLsBody = `{"data":{` +
+	`"http_url":"https://example-name.ethereum-sepolia.quiknode.pro/TOKENVALUE/",` +
+	`"wss_url":"wss://example-name.ethereum-sepolia.quiknode.pro/TOKENVALUE/",` +
+	`"multichain_urls":{` +
+	`"avalanche-mainnet":{"http_url":"https://example-name.avalanche-mainnet.quiknode.pro/TOKENVALUE/ext/bc/C/rpc/",` +
+	`"wss_url":"wss://example-name.avalanche-mainnet.quiknode.pro/TOKENVALUE/ext/bc/C/ws/"},` +
+	`"btc":{"http_url":"https://example-name.btc.quiknode.pro/TOKENVALUE/","wss_url":null}}},` +
+	`"error":null}`
+
+func TestGetEndpointURLsDecodesMultichain(t *testing.T) {
+	urls, err := newTestClient(t, multichainURLsBody).GetEndpointURLs(context.Background(), "123456")
+	if err != nil {
+		t.Fatalf("GetEndpointURLs: %v", err)
+	}
+	if urls.SafeHTTPURL != "https://example-name.ethereum-sepolia.quiknode.pro/REPLACE_WITH_TOKEN/" {
+		t.Errorf("SafeHTTPURL = %q", urls.SafeHTTPURL)
+	}
+	if len(urls.Multichain) != 2 {
+		t.Fatalf("Multichain = %+v", urls.Multichain)
+	}
+
+	avalanche := urls.Multichain["avalanche-mainnet"]
+	if avalanche.SafeHTTPURL != "https://example-name.avalanche-mainnet.quiknode.pro/REPLACE_WITH_TOKEN/ext/bc/C/rpc/" {
+		t.Errorf("avalanche SafeHTTPURL = %q", avalanche.SafeHTTPURL)
+	}
+	if avalanche.WSSURLWithToken != "wss://example-name.avalanche-mainnet.quiknode.pro/TOKENVALUE/ext/bc/C/ws/" {
+		t.Errorf("avalanche WSSURLWithToken = %q", avalanche.WSSURLWithToken)
+	}
+
+	bitcoin := urls.Multichain["btc"]
+	if bitcoin.SafeWSSURL != "" || bitcoin.WSSURLWithToken != "" {
+		t.Errorf("btc WebSocket URLs = %q, %q, want empty", bitcoin.SafeWSSURL, bitcoin.WSSURLWithToken)
+	}
+}
+
+func TestGetEndpointURLsWithoutMultichain(t *testing.T) {
+	body := `{"data":{"http_url":"https://example-name.btc.quiknode.pro/TOKENVALUE/","wss_url":null},"error":null}`
+	urls, err := newTestClient(t, body).GetEndpointURLs(context.Background(), "123457")
+	if err != nil {
+		t.Fatalf("GetEndpointURLs: %v", err)
+	}
+	if urls.Multichain == nil || len(urls.Multichain) != 0 {
+		t.Errorf("Multichain = %#v, want an empty map", urls.Multichain)
+	}
+}

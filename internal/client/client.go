@@ -280,6 +280,64 @@ func (c *Client) GetEndpoint(ctx context.Context, id string) (*Endpoint, error) 
 	return endpoint, nil
 }
 
+// NetworkURLs is one network's URLs, in the same safe and credentialed forms as
+// Endpoint's.
+type NetworkURLs struct {
+	SafeHTTPURL      string
+	SafeWSSURL       string
+	HTTPURLWithToken string
+	WSSURLWithToken  string
+}
+
+// EndpointURLs is what the URLs route returns: the endpoint's own network, and
+// for a multichain endpoint every network it serves, keyed by network slug.
+type EndpointURLs struct {
+	NetworkURLs
+	Multichain map[string]NetworkURLs
+}
+
+func newNetworkURLs(httpURL, wssURL string) NetworkURLs {
+	return NetworkURLs{
+		SafeHTTPURL:      RedactEndpointURL(httpURL),
+		SafeWSSURL:       RedactEndpointURL(wssURL),
+		HTTPURLWithToken: httpURL,
+		WSSURLWithToken:  wssURL,
+	}
+}
+
+func (c *Client) GetEndpointURLs(ctx context.Context, id string) (*EndpointURLs, error) {
+	const operation = "read endpoint urls"
+
+	resp, err := c.api.GetV0EndpointsByIdUrlsWithResponse(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() == http.StatusNotFound {
+		return nil, &Error{Operation: operation, Status: http.StatusNotFound, Message: "endpoint not found"}
+	}
+	if resp.JSON200 == nil {
+		return nil, statusError(operation, resp.StatusCode(), resp.Body)
+	}
+	if err := envelopeError(operation, resp.StatusCode(), resp.JSON200.Error); err != nil {
+		return nil, err
+	}
+	if resp.JSON200.Data == nil {
+		return nil, &Error{Operation: operation, Status: http.StatusNotFound, Message: "endpoint not found"}
+	}
+
+	data := resp.JSON200.Data
+	urls := &EndpointURLs{
+		NetworkURLs: newNetworkURLs(deref(data.HttpUrl), deref(data.WssUrl)),
+		Multichain:  map[string]NetworkURLs{},
+	}
+	if data.MultichainUrls != nil {
+		for network, raw := range *data.MultichainUrls {
+			urls.Multichain[network] = newNetworkURLs(deref(raw.HttpUrl), deref(raw.WssUrl))
+		}
+	}
+	return urls, nil
+}
+
 func (c *Client) SetEndpointLabel(ctx context.Context, id, label string) error {
 	const operation = "set endpoint label"
 

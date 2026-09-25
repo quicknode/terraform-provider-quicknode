@@ -350,5 +350,27 @@
         }
       }
     }
+  },
+  {
+    "op": "set",
+    "path": "/paths/~1v0~1endpoints~1{id}~1urls/get/responses/200/content/application~1json/schema/properties/data/properties/multichain_urls",
+    "value": {
+      "description": "Only present for multichain endpoints. Keyed by network slug, each value holds the network's HTTP and WebSocket URLs.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "http_url": {
+            "type": "string"
+          },
+          "wss_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
   }
 ]

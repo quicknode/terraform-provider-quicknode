@@ -671,3 +671,47 @@ resource "quicknode_endpoint_ip" "test" {
 		},
 	})
 }
+
+// TestAccEndpointURLsDataSource_multichain reads the URLs route before and
+// after multichain is enabled, so both the empty maps and the populated ones
+// are covered.
+func TestAccEndpointURLsDataSource_multichain(t *testing.T) {
+	withMultichain := func(enabled bool) string {
+		return fmt.Sprintf(`
+resource "quicknode_endpoint" "test" {
+  chain      = %q
+  network    = %q
+  label      = "tfacc-urls"
+  multichain = %t
+}
+
+data "quicknode_endpoint_urls" "test" {
+  endpoint_id = quicknode_endpoint.test.id
+  depends_on  = [quicknode_endpoint.test]
+}
+`, acceptanceChain, acceptanceNetwork, enabled)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointsDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: withMultichain(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.quicknode_endpoint_urls.test", "safe_http_url", "quicknode_endpoint.test", "safe_http_url"),
+					resource.TestCheckResourceAttrSet("data.quicknode_endpoint_urls.test", "http_url_with_token"),
+					resource.TestCheckResourceAttr("data.quicknode_endpoint_urls.test", "safe_multichain_urls.%", "0"),
+				),
+			},
+			{
+				Config: withMultichain(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("data.quicknode_endpoint_urls.test", "safe_multichain_urls.base-sepolia.http_url", regexp.MustCompile(`/REPLACE_WITH_TOKEN/`)),
+					resource.TestCheckResourceAttrSet("data.quicknode_endpoint_urls.test", "multichain_urls_with_token.base-sepolia.http_url"),
+				),
+			},
+		},
+	})
+}
