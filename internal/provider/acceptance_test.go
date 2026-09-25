@@ -396,10 +396,9 @@ func endpointIDForImport(suffix func(*terraform.State) (string, error)) func(*te
 	}
 }
 
-// TestAccEndpoint_labelSurvivesRemoval covers the one attribute Quicknode has
-// no route to clear. Dropping it from the configuration has to leave the
-// endpoint's label alone and settle into an empty plan.
-func TestAccEndpoint_labelSurvivesRemoval(t *testing.T) {
+// TestAccEndpoint_labelClearedByRemoval checks that dropping the label from the
+// configuration writes an empty label and settles into an empty plan.
+func TestAccEndpoint_labelClearedByRemoval(t *testing.T) {
 	unlabelled := fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
   chain   = %q
@@ -418,7 +417,7 @@ resource "quicknode_endpoint" "test" {
 			},
 			{
 				Config: unlabelled,
-				Check:  resource.TestCheckResourceAttr("quicknode_endpoint.test", "label", "tfacc-label"),
+				Check:  resource.TestCheckNoResourceAttr("quicknode_endpoint.test", "label"),
 			},
 		},
 	})

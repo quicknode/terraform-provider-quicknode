@@ -62,7 +62,7 @@ output "payments_rpc_url_redacted" {
 ### Optional
 
 - `ip_custom_header` (String) Name of the header the endpoint reads the caller's IP address from, for example `X-Real-IP`. Set it when calls arrive through a proxy, so IP restrictions see the original caller's address and not the proxy's.
-- `label` (String) Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. Quicknode has no route for clearing a label once set, so removing the attribute leaves the current label in place and Terraform stops tracking it.
+- `label` (String) Descriptive label for the endpoint. Labels are not unique and do not identify the endpoint. Removing the attribute clears the label.
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
 - `security_options` (Attributes) Which security mechanisms the endpoint enforces. Each toggle only decides whether a mechanism is applied; the entries it applies to are separate resources, such as `quicknode_endpoint_ip`. A toggle left out of the configuration keeps whatever value the endpoint already has. (see [below for nested schema](#nestedatt--security_options))
 - `status` (String) `active` or `paused`.
