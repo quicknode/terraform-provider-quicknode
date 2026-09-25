@@ -31,8 +31,9 @@ resource "quicknode_endpoint_token" "indexer" {
   endpoint_id = quicknode_endpoint.api.id
 }
 
-output "indexer_token" {
-  value     = quicknode_endpoint_token.indexer.token
+# The endpoint's URL carrying this token, for the consumer it was issued to.
+output "indexer_rpc_url" {
+  value     = quicknode_endpoint_token.indexer.http_url_with_token
   sensitive = true
 }
 ```
@@ -46,8 +47,10 @@ output "indexer_token" {
 
 ### Read-Only
 
+- `http_url_with_token` (String, Sensitive) The endpoint's HTTPS URL carrying this token. Pass it to the consumer the token was issued for.
 - `id` (String) Token id assigned by Quicknode.
 - `token` (String, Sensitive) The token value. It is stored in Terraform state, so keep state encrypted and remote.
+- `wss_url_with_token` (String, Sensitive) The endpoint's WebSocket URL carrying this token, or null on chains without WebSocket support.
 
 ## Import
 

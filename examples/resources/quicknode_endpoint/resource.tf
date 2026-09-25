@@ -19,15 +19,20 @@ resource "quicknode_endpoint" "payments" {
   ip_custom_header = "X-Real-IP"
 }
 
-# Pass the credentialed URL to whatever makes RPC calls.
-output "payments_rpc_url" {
-  value     = quicknode_endpoint.payments.http_url_with_token
-  sensitive = true
-}
-
-# The same URL with the credential replaced by the literal REPLACE_WITH_TOKEN.
-# Safe to log or display, and it keeps the real URL's shape, so substituting a
-# token reproduces a working address on every chain.
+# The URL with the credential replaced by the literal REPLACE_WITH_TOKEN. Safe
+# to log or display, and it keeps the real URL's shape, so substituting a token
+# reproduces a working address on every chain.
 output "payments_rpc_url_redacted" {
   value = quicknode_endpoint.payments.safe_http_url
+}
+
+# The credentialed URL is read from data.quicknode_endpoint_urls, because it
+# changes whenever the endpoint's tokens do.
+data "quicknode_endpoint_urls" "payments" {
+  endpoint_id = quicknode_endpoint.payments.id
+}
+
+output "payments_rpc_url" {
+  value     = data.quicknode_endpoint_urls.payments.http_url_with_token
+  sensitive = true
 }
