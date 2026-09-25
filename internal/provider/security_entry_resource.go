@@ -156,7 +156,7 @@ func (r *securityEntryResource) Create(ctx context.Context, req resource.CreateR
 
 	entry, err := r.kind.add(r.client, ctx, endpointID.ValueString(), value.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Could not add the "+r.kind.noun, err.Error())
+		resp.Diagnostics.AddError("Could not add the "+r.kind.noun, err.Error()+r.hiddenEntryHint(ctx, err, endpointID.ValueString(), value.ValueString()))
 		return
 	}
 
@@ -164,6 +164,18 @@ func (r *securityEntryResource) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("endpoint_id"), endpointID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(r.kind.attribute), value)...)
 	resp.Diagnostics.Append(warnToggleDisabled(ctx, r.client, endpointID.ValueString(), r.kind.toggle, r.kind.subject)...)
+}
+
+func (r *securityEntryResource) hiddenEntryHint(ctx context.Context, err error, endpointID, value string) string {
+	if !client.IsAlreadyExists(err) {
+		return ""
+	}
+	security, readErr := r.client.GetEndpointSecurity(ctx, endpointID)
+	if readErr != nil || securityToggleEnabled(security.Options, r.kind.toggle) {
+		return ""
+	}
+	return fmt.Sprintf("\n\nThe %s already exists on endpoint %s, but security_options.%s is false, and the Admin API hides its entries while it is off. "+
+		"Enable it, then import the entry with \"terraform import <address> %s/%s\".", r.kind.noun, endpointID, r.kind.toggle, endpointID, value)
 }
 
 func (r *securityEntryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -243,6 +255,13 @@ func (r *securityEntryResource) ImportState(ctx context.Context, req resource.Im
 	}
 	switch len(matches) {
 	case 0:
+		if !securityToggleEnabled(security.Options, r.kind.toggle) {
+			resp.Diagnostics.AddError(
+				r.kind.subject+" is disabled on the endpoint",
+				fmt.Sprintf("Endpoint %s has security_options.%s set to false, and the Admin API hides its %s entries while it is off. Enable it and import again.", endpointID, r.kind.toggle, r.kind.noun),
+			)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"No matching "+r.kind.noun,
 			fmt.Sprintf("Endpoint %s has no %s entry with the value %q.", endpointID, r.kind.noun, value),

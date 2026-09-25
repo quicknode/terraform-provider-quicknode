@@ -23,6 +23,7 @@ resource "quicknode_endpoint" "api" {
   chain      = "eth"
   network    = "mainnet"
   multichain = true
+  status     = "active"
 }
 
 # depends_on defers the read to the apply, so it sees multichain enabled.

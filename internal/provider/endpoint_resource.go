@@ -10,9 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -86,17 +84,13 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"status": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString(statusActive),
-				MarkdownDescription: "`active` or `paused`.",
+				Required:            true,
+				MarkdownDescription: "`active` or `paused`. Required, so importing an endpoint never changes whether it serves traffic.",
 				Validators:          []validator.String{stringvalidator.OneOf(statusActive, statusPaused)},
 			},
 			"multichain": schema.BoolAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             booldefault.StaticBool(false),
-				MarkdownDescription: "Whether the endpoint serves more than one network.",
+				Required:            true,
+				MarkdownDescription: "Whether the endpoint serves more than one network. Required, so importing an endpoint never changes which networks it serves.",
 			},
 			"tags": schema.SetAttribute{
 				Optional:            true,

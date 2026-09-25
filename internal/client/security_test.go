@@ -202,6 +202,19 @@ func TestAddEndpointIPRejectsEnvelopeError(t *testing.T) {
 	}
 }
 
+func TestIsAlreadyExists(t *testing.T) {
+	duplicate := statusError("add endpoint ip", http.StatusBadRequest,
+		[]byte(`{"error":"IP_ADDRESS_ALREADY_EXISTS: Request failed upstream, please check your parameters and try again."}`))
+	if !IsAlreadyExists(duplicate) {
+		t.Error("the live duplicate-IP response has to be recognised")
+	}
+
+	other := statusError("add endpoint ip", http.StatusBadRequest, []byte(`{"error":"INVALID_IP_ADDRESS"}`))
+	if IsAlreadyExists(other) {
+		t.Error("an unrelated 400 must not be treated as a duplicate")
+	}
+}
+
 // TestEmptyWritesAreSkipped covers the configuration that manages none of the
 // toggles or buckets. An empty body is a pointless call at best, so the client
 // makes none at all.

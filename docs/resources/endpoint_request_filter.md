@@ -17,8 +17,10 @@ The Admin API turns filtering on when a filter exists and off when the last one 
 
 ```terraform
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 }
 
 # Anything outside the set is rejected. The Admin API turns filtering on once a

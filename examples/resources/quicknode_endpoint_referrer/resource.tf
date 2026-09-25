@@ -1,6 +1,8 @@
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 
   security_options = {
     referrers = true

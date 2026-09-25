@@ -17,8 +17,10 @@ The entry only takes effect once `security_options.ips` is enabled on the endpoi
 
 ```terraform
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 
   security_options = {
     ips = true

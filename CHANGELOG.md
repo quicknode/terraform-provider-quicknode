@@ -1,6 +1,24 @@
 # Changelog
 
-## 0.2.0 (Unreleased)
+## 0.3.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* `quicknode_endpoint.status` and `quicknode_endpoint.multichain` are required. Their
+  defaults applied on import too, so importing a paused or multichain endpoint without
+  declaring them planned to resume it or turn multichain off.
+* `tags` on `data.quicknode_endpoint` and `data.quicknode_endpoints`, and the
+  `labels`, `networks`, `statuses` and `tag_labels` filters on `data.quicknode_endpoints`,
+  are sets instead of lists.
+
+BUG FIXES:
+
+* Importing an IP address, domain mask or referrer while its security toggle is off
+  reports the disabled toggle. The Admin API hides those entries while it is off.
+* Creating one that already exists while its toggle is off explains that it is hidden
+  and how to import it.
+
+## 0.2.0 (September 25, 2026)
 
 BREAKING CHANGES:
 

@@ -1,6 +1,8 @@
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 }
 
 # Keep a few expensive calls from consuming the endpoint's whole budget.

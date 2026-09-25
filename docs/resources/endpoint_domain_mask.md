@@ -17,8 +17,10 @@ The entry only takes effect once `security_options.domain_masks` is enabled on t
 
 ```terraform
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 
   security_options = {
     domain_masks = true

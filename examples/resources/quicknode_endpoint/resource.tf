@@ -1,9 +1,10 @@
 resource "quicknode_endpoint" "payments" {
-  chain   = "eth"
-  network = "mainnet"
-  label   = "payments-prod"
-  status  = "active"
-  tags    = ["prod", "payments"]
+  chain      = "eth"
+  network    = "mainnet"
+  label      = "payments-prod"
+  status     = "active"
+  multichain = false
+  tags       = ["prod", "payments"]
 
   # Each toggle decides whether a mechanism is enforced. The entries it applies
   # to are separate resources, such as quicknode_endpoint_ip. A toggle left out

@@ -17,8 +17,10 @@ Each bucket the Quicknode plan sets is reported under `plan_default`. A bucket s
 
 ```terraform
 resource "quicknode_endpoint" "api" {
-  chain   = "eth"
-  network = "mainnet"
+  chain      = "eth"
+  network    = "mainnet"
+  multichain = false
+  status     = "active"
 }
 
 # A bucket set here overrides the plan default. A bucket left out keeps it, and
