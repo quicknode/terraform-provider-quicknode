@@ -18,7 +18,7 @@ const DefaultBaseURL = "https://api.quicknode.com"
 // SafeWSSURL. It keeps the shape of the real URL, including any path suffix the
 // chain appends, so the token's position stays visible and a caller can
 // substitute one without guessing where it goes.
-const URLTokenPlaceholder = "TOKEN"
+const URLTokenPlaceholder = "REPLACE_WITH_TOKEN"
 
 type Client struct {
 	api *admin.ClientWithResponses

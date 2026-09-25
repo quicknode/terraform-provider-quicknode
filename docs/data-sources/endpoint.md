@@ -48,8 +48,8 @@ resource "quicknode_endpoint_ip" "office" {
 - `ip_custom_header` (String) Header the endpoint reads the caller's IP address from, or null if none is set.
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
 - `network` (String) Network slug.
-- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display.
-- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.
+- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `REPLACE_WITH_TOKEN`. Safe to log or display.
+- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `REPLACE_WITH_TOKEN`, or null on chains without WebSocket support.
 - `security_options` (Attributes) Which security mechanisms the endpoint enforces. (see [below for nested schema](#nestedatt--security_options))
 - `status` (String) `active` or `paused`.
 - `tags` (List of String) Tag labels applied to the endpoint.

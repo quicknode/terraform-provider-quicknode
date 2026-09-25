@@ -70,7 +70,7 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "A Quicknode RPC endpoint on a chain and network.\n\n" +
 			"Pass `http_url_with_token` to anything that needs to make RPC calls. " +
-			"`safe_http_url` and `safe_wss_url` carry the literal `TOKEN` where the credential belongs, so they are safe to log or display " +
+			"`safe_http_url` and `safe_wss_url` carry the literal `REPLACE_WITH_TOKEN` where the credential belongs, so they are safe to log or display " +
 			"while keeping the real URL's shape, including any path suffix the chain appends.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -115,12 +115,12 @@ func (r *endpointResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			},
 			"safe_http_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. Substitute a real token to make it usable: `replace(self.safe_http_url, \"TOKEN\", self.tokens[0].token)`.",
+				MarkdownDescription: "The HTTPS URL with the auth token replaced by `REPLACE_WITH_TOKEN`. Safe to log or display. Substitute a real token to make it usable: `replace(self.safe_http_url, \"REPLACE_WITH_TOKEN\", self.tokens[0].token)`.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"safe_wss_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.",
+				MarkdownDescription: "The WebSocket URL with the auth token replaced by `REPLACE_WITH_TOKEN`, or null on chains without WebSocket support.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"http_url_with_token": schema.StringAttribute{

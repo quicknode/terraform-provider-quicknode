@@ -90,11 +90,11 @@ func (d *endpointsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 						"status":  schema.StringAttribute{Computed: true, MarkdownDescription: "`active` or `paused`."},
 						"safe_http_url": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. The list route carries no usable token, so read `data.quicknode_endpoint` for a working URL.",
+							MarkdownDescription: "The HTTPS URL with the auth token replaced by `REPLACE_WITH_TOKEN`. Safe to log or display. The list route carries no usable token, so read `data.quicknode_endpoint` for a working URL.",
 						},
 						"safe_wss_url": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.",
+							MarkdownDescription: "The WebSocket URL with the auth token replaced by `REPLACE_WITH_TOKEN`, or null on chains without WebSocket support.",
 						},
 						"dedicated":  schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the endpoint runs on dedicated infrastructure."},
 						"flat_rate":  schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the endpoint is billed at a flat rate."},

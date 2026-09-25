@@ -59,14 +59,14 @@ func TestGetEndpointWithPathSuffix(t *testing.T) {
 	if endpoint.WSSURLWithToken != "wss://example-name.hype-testnet.quiknode.pro/TOKENVALUE/evm" {
 		t.Errorf("WSSURLWithToken = %q", endpoint.WSSURLWithToken)
 	}
-	if endpoint.SafeWSSURL != "wss://example-name.hype-testnet.quiknode.pro/TOKEN/evm" {
+	if endpoint.SafeWSSURL != "wss://example-name.hype-testnet.quiknode.pro/REPLACE_WITH_TOKEN/evm" {
 		t.Errorf("SafeWSSURL = %q", endpoint.SafeWSSURL)
 	}
 
 	// The redacted URL keeps the real one's shape, so substituting a token
 	// reproduces it exactly. That is what the placeholder buys over cutting
 	// the token out: this chain puts a suffix after it.
-	const wantRedacted = "https://example-name.hype-testnet.quiknode.pro/TOKEN/evm"
+	const wantRedacted = "https://example-name.hype-testnet.quiknode.pro/REPLACE_WITH_TOKEN/evm"
 	if endpoint.SafeHTTPURL != wantRedacted {
 		t.Errorf("SafeHTTPURL = %q, want %q", endpoint.SafeHTTPURL, wantRedacted)
 	}
@@ -97,7 +97,7 @@ func TestGetEndpointWithoutWebsocket(t *testing.T) {
 	if endpoint.HTTPURLWithToken != "https://example-name.btc.quiknode.pro/TOKENVALUE/" {
 		t.Errorf("HTTPURLWithToken = %q", endpoint.HTTPURLWithToken)
 	}
-	if endpoint.SafeHTTPURL != "https://example-name.btc.quiknode.pro/TOKEN/" {
+	if endpoint.SafeHTTPURL != "https://example-name.btc.quiknode.pro/REPLACE_WITH_TOKEN/" {
 		t.Errorf("SafeHTTPURL = %q", endpoint.SafeHTTPURL)
 	}
 	if endpoint.Status != "paused" || endpoint.Label != "ledger" {

@@ -14,22 +14,22 @@ func TestRedactEndpointURL(t *testing.T) {
 		{
 			name: "token followed by a chain suffix",
 			raw:  "https://example-name.hype-testnet.quiknode.pro/abc123/evm",
-			want: "https://example-name.hype-testnet.quiknode.pro/TOKEN/evm",
+			want: "https://example-name.hype-testnet.quiknode.pro/REPLACE_WITH_TOKEN/evm",
 		},
 		{
 			name: "token with no suffix",
 			raw:  "https://example-name.quiknode.pro/abc123",
-			want: "https://example-name.quiknode.pro/TOKEN",
+			want: "https://example-name.quiknode.pro/REPLACE_WITH_TOKEN",
 		},
 		{
 			name: "trailing slash after the token",
 			raw:  "https://example-name.btc.quiknode.pro/abc123/",
-			want: "https://example-name.btc.quiknode.pro/TOKEN/",
+			want: "https://example-name.btc.quiknode.pro/REPLACE_WITH_TOKEN/",
 		},
 		{
 			name: "websocket scheme",
 			raw:  "wss://example-name.quiknode.pro/abc123/evm",
-			want: "wss://example-name.quiknode.pro/TOKEN/evm",
+			want: "wss://example-name.quiknode.pro/REPLACE_WITH_TOKEN/evm",
 		},
 		{
 			name: "no path at all",

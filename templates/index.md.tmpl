@@ -50,17 +50,17 @@ Endpoints expose both forms:
 | `http_url_with_token`, `wss_url_with_token` | yes | anything that makes RPC calls |
 | `safe_http_url`, `safe_wss_url` | no | logging, display, anything that must not hold a credential |
 
-The safe form carries the literal `TOKEN` where the credential belongs:
+The safe form carries the literal `REPLACE_WITH_TOKEN` where the credential belongs:
 
 ```
-https://example-name.hype-testnet.quiknode.pro/TOKEN/evm
+https://example-name.hype-testnet.quiknode.pro/REPLACE_WITH_TOKEN/evm
 ```
 
 It keeps the real URL's shape, so substituting a token reproduces a working
 address on every chain:
 
 ```hcl
-replace(quicknode_endpoint.api.safe_http_url, "TOKEN", var.token)
+replace(quicknode_endpoint.api.safe_http_url, "REPLACE_WITH_TOKEN", var.token)
 ```
 
 Do not assemble a URL from parts instead. The token is not always the last path

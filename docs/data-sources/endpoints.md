@@ -65,7 +65,7 @@ Read-Only:
 - `multichain` (Boolean) Whether the endpoint serves more than one network.
 - `name` (String) Endpoint subdomain.
 - `network` (String) Network slug.
-- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display. The list route carries no usable token, so read `data.quicknode_endpoint` for a working URL.
-- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.
+- `safe_http_url` (String) The HTTPS URL with the auth token replaced by `REPLACE_WITH_TOKEN`. Safe to log or display. The list route carries no usable token, so read `data.quicknode_endpoint` for a working URL.
+- `safe_wss_url` (String) The WebSocket URL with the auth token replaced by `REPLACE_WITH_TOKEN`, or null on chains without WebSocket support.
 - `status` (String) `active` or `paused`.
 - `tags` (List of String) Tag labels applied to the endpoint.

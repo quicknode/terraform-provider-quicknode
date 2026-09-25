@@ -86,11 +86,11 @@ func (d *endpointDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 			},
 			"safe_http_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The HTTPS URL with the auth token replaced by `TOKEN`. Safe to log or display.",
+				MarkdownDescription: "The HTTPS URL with the auth token replaced by `REPLACE_WITH_TOKEN`. Safe to log or display.",
 			},
 			"safe_wss_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The WebSocket URL with the auth token replaced by `TOKEN`, or null on chains without WebSocket support.",
+				MarkdownDescription: "The WebSocket URL with the auth token replaced by `REPLACE_WITH_TOKEN`, or null on chains without WebSocket support.",
 			},
 			"http_url_with_token": schema.StringAttribute{
 				Computed:            true,

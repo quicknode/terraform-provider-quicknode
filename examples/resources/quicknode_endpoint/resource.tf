@@ -25,9 +25,9 @@ output "payments_rpc_url" {
   sensitive = true
 }
 
-# The same URL with the credential replaced by the literal TOKEN. Safe to log
-# or display, and it keeps the real URL's shape, so substituting a token
-# reproduces a working address on every chain.
+# The same URL with the credential replaced by the literal REPLACE_WITH_TOKEN.
+# Safe to log or display, and it keeps the real URL's shape, so substituting a
+# token reproduces a working address on every chain.
 output "payments_rpc_url_redacted" {
   value = quicknode_endpoint.payments.safe_http_url
 }
