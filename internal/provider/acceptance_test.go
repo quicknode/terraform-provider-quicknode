@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -88,10 +90,8 @@ func TestAccEndpoint_lifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "chain", acceptanceChain),
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "label", "tfacc-endpoint"),
 					resource.TestCheckResourceAttr("quicknode_endpoint.test", "status", "active"),
-					// The credentialed URL is the one that works; the stripped
-					// URL must not carry the token.
-					resource.TestCheckResourceAttrSet("quicknode_endpoint.test", "http_url_with_token"),
-					resource.TestCheckResourceAttrSet("quicknode_endpoint.test", "tokens.0.token"),
+					resource.TestMatchResourceAttr("quicknode_endpoint.test", "safe_http_url", regexp.MustCompile(`/REPLACE_WITH_TOKEN/`)),
+					resource.TestCheckNoResourceAttr("quicknode_endpoint.test", "tokens"),
 					resource.TestCheckResourceAttrSet("quicknode_endpoint.test", "security_options.tokens"),
 				),
 			},
@@ -503,14 +503,13 @@ resource "quicknode_endpoint_token" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("quicknode_endpoint_token.test", "id"),
 					resource.TestCheckResourceAttrSet("quicknode_endpoint_token.test", "token"),
+					resource.TestCheckResourceAttrWith("quicknode_endpoint_token.test", "http_url_with_token", func(value string) error {
+						if strings.Contains(value, "REPLACE_WITH_TOKEN") {
+							return fmt.Errorf("http_url_with_token still carries the placeholder: %s", client.RedactEndpointURL(value))
+						}
+						return nil
+					}),
 				),
-			},
-			{
-				// The endpoint is created carrying one token and is not read
-				// again during the apply that adds the second, so the count on
-				// the endpoint only settles on the next refresh.
-				Config: config,
-				Check:  resource.TestCheckResourceAttr("quicknode_endpoint.test", "tokens.#", "2"),
 			},
 			{
 				ResourceName: "quicknode_endpoint_token.test",

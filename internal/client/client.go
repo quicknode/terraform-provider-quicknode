@@ -400,6 +400,12 @@ func (e *Endpoint) setURLs(httpURL, wssURL string) {
 // chain, so the placeholder goes in the token's position and nothing is cut
 // out. The result keeps the real URL's shape and is safe to log.
 func RedactEndpointURL(raw string) string {
+	return EndpointURLWithToken(raw, URLTokenPlaceholder)
+}
+
+// EndpointURLWithToken puts token in the credential's position of an endpoint
+// URL, whether that position holds a real token or URLTokenPlaceholder.
+func EndpointURLWithToken(raw, token string) string {
 	if raw == "" {
 		return ""
 	}
@@ -413,11 +419,11 @@ func RedactEndpointURL(raw string) string {
 	}
 
 	_, suffix, hadSuffix := strings.Cut(path, "/")
-	redacted := scheme + "://" + host + "/" + URLTokenPlaceholder
+	rebuilt := scheme + "://" + host + "/" + token
 	if hadSuffix {
-		redacted += "/" + suffix
+		rebuilt += "/" + suffix
 	}
-	return redacted
+	return rebuilt
 }
 
 func deref[T any](value *T) T {

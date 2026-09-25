@@ -70,5 +70,16 @@ func TestRedactedURLKeepsItsShape(t *testing.T) {
 		if restored != raw {
 			t.Errorf("substituting the token gave %q, want %q", restored, raw)
 		}
+		if rebuilt := EndpointURLWithToken(redacted, "abc123"); rebuilt != raw {
+			t.Errorf("EndpointURLWithToken(%q) = %q, want %q", redacted, rebuilt, raw)
+		}
+	}
+}
+
+func TestEndpointURLWithTokenSwapsTokens(t *testing.T) {
+	const raw = "https://example-name.avalanche-mainnet.quiknode.pro/first/ext/bc/C/rpc/"
+	const want = "https://example-name.avalanche-mainnet.quiknode.pro/second/ext/bc/C/rpc/"
+	if got := EndpointURLWithToken(raw, "second"); got != want {
+		t.Errorf("EndpointURLWithToken = %q, want %q", got, want)
 	}
 }
