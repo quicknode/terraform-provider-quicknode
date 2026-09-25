@@ -219,7 +219,10 @@ resource "quicknode_endpoint_request_filter" "test" {
 		Steps: []resource.TestStep{
 			{
 				Config: withMethods(`["eth_call"]`),
-				Check:  resource.TestCheckResourceAttr("quicknode_endpoint_request_filter.test", "methods.#", "1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("quicknode_endpoint_request_filter.test", "methods.#", "1"),
+					resource.TestCheckNoResourceAttr("quicknode_endpoint.test", "security_options.request_filters"),
+				),
 			},
 			{
 				// A real PUT route backs this, so the filter must update rather

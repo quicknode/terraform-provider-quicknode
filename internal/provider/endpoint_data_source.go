@@ -194,7 +194,7 @@ func (d *endpointDataSource) Read(ctx context.Context, req datasource.ReadReques
 		})
 	}
 
-	options, diags := securityOptionsObject(endpoint.Security)
+	options, diags := securityReportObject(endpoint.Security)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
