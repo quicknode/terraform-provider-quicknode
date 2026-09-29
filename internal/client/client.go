@@ -21,7 +21,9 @@ const DefaultBaseURL = "https://api.quicknode.com"
 const URLTokenPlaceholder = "REPLACE_WITH_TOKEN"
 
 type Client struct {
-	api *admin.ClientWithResponses
+	api     *admin.ClientWithResponses
+	http    *http.Client
+	baseURL string
 }
 
 type Option func(*options)
@@ -31,6 +33,7 @@ type options struct {
 	httpClient        *http.Client
 	maxRetries        int
 	requestsPerSecond int
+	userAgent         string
 }
 
 func WithBaseURL(baseURL string) Option {
@@ -43,6 +46,11 @@ func WithBaseURL(baseURL string) Option {
 
 func WithHTTPClient(httpClient *http.Client) Option {
 	return func(o *options) { o.httpClient = httpClient }
+}
+
+// WithUserAgent sets the User-Agent header on every request.
+func WithUserAgent(userAgent string) Option {
+	return func(o *options) { o.userAgent = userAgent }
 }
 
 func WithMaxRetries(maxRetries int) Option {
@@ -77,6 +85,7 @@ func New(apiKey string, opts ...Option) (*Client, error) {
 	httpClient.Transport = &retryTransport{
 		base:       httpClient.Transport,
 		apiKey:     apiKey,
+		userAgent:  settings.userAgent,
 		maxRetries: settings.maxRetries,
 		baseDelay:  defaultBaseDelay,
 		maxDelay:   defaultMaxDelay,
@@ -90,7 +99,7 @@ func New(apiKey string, opts ...Option) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{api: api}, nil
+	return &Client{api: api, http: httpClient, baseURL: strings.TrimSuffix(settings.baseURL, "/")}, nil
 }
 
 type Network struct {

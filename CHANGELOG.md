@@ -1,6 +1,21 @@
 # Changelog
 
-## 0.3.0 (Unreleased)
+## 0.4.0
+
+FEATURES:
+
+* **New Resource:** `quicknode_stream`: webhook, S3, Azure, PostgreSQL and Kafka
+  destinations, extra destinations, and filters as plain source.
+* **New Resource:** `quicknode_kv_list`
+* **New Resource:** `quicknode_kv_list_items`
+* **New Resource:** `quicknode_kv_value`
+* **New Data Source:** `quicknode_stream`
+* **New Data Source:** `quicknode_kv_list`
+* **New Data Source:** `quicknode_kv_value`
+* Requests send a `quicknode-terraform/<version>` User-Agent with the platform and
+  Terraform version.
+
+## 0.3.0 (September 25, 2026)
 
 BREAKING CHANGES:
 

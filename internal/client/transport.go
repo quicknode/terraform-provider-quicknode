@@ -24,6 +24,7 @@ const (
 type retryTransport struct {
 	base       http.RoundTripper
 	apiKey     string
+	userAgent  string
 	maxRetries int
 	baseDelay  time.Duration
 	maxDelay   time.Duration
@@ -67,6 +68,9 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		clone := req.Clone(req.Context())
 		if t.apiKey != "" {
 			clone.Header.Set("x-api-key", t.apiKey)
+		}
+		if t.userAgent != "" {
+			clone.Header.Set("User-Agent", t.userAgent)
 		}
 		if req.GetBody != nil {
 			body, err := req.GetBody()

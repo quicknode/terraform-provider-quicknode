@@ -105,6 +105,7 @@ func (p *quicknodeProvider) Configure(ctx context.Context, req provider.Configur
 	quicknode, err := client.New(apiKey,
 		client.WithBaseURL(config.BaseURL.ValueString()),
 		client.WithRequestsPerSecond(int(config.RequestsPerSecond.ValueInt64())),
+		client.WithUserAgent(userAgent(p.version, req.TerraformVersion)),
 	)
 	if err != nil {
 		resp.Diagnostics.AddError("Could not build the Quicknode API client", err.Error())
@@ -137,6 +138,10 @@ func (p *quicknodeProvider) Resources(_ context.Context) []func() resource.Resou
 		NewRequestFilterResource,
 		NewRateLimitsResource,
 		NewMethodRateLimitResource,
+		NewStreamResource,
+		NewKVListResource,
+		NewKVListItemsResource,
+		NewKVValueResource,
 	}
 	return append(resources, securityEntryResources()...)
 }
@@ -147,5 +152,8 @@ func (p *quicknodeProvider) DataSources(_ context.Context) []func() datasource.D
 		NewEndpointDataSource,
 		NewEndpointsDataSource,
 		NewEndpointURLsDataSource,
+		NewStreamDataSource,
+		NewKVListDataSource,
+		NewKVValueDataSource,
 	}
 }
