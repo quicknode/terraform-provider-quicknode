@@ -5,6 +5,7 @@ provider for [Quicknode](https://www.quicknode.com). Manage RPC endpoints,
 security rules and rate limits with `terraform plan` and `terraform apply`.
 
 - [Provider documentation](./docs) — also published to the Terraform Registry
+- [Guide: How to Manage Quicknode Infrastructure as Code with Terraform](https://www.quicknode.com/guides/quicknode-products/manage-quicknode-infrastructure-with-terraform)
 - [Contributing](./CONTRIBUTING.md)
 - [Changelog](./CHANGELOG.md)
 

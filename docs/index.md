@@ -35,6 +35,11 @@ terraform {
 provider "quicknode" {}
 ```
 
+## Guides
+
+- [How to Manage Quicknode Infrastructure as Code with Terraform](https://www.quicknode.com/guides/quicknode-products/manage-quicknode-infrastructure-with-terraform):
+  a step-by-step walkthrough of setting up the provider and managing endpoints.
+
 ## What you can manage
 
 | Resource | Manages |
