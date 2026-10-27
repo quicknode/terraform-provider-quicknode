@@ -15,13 +15,18 @@ const rateLimitsBody = `{"data":{"rate_limits":[
 {"bucket":"rps","rate_limit":25,"source":"plan_default"},
 {"bucket":"rpm","rate_limit":500,"source":"plan_default"},
 {"bucket":"rpd","rate_limit":-1,"source":"plan_default"},
-{"bucket":"rps","rate_limit":10,"source":"user_override","id":"ovr-1"}]}}`
+{"bucket":"rps","rate_limit":10,"source":"user_override","id":"ovr-1"}],
+"limit_by_ip":true}}`
 
 func TestGetRateLimitsKeepsSourceAndID(t *testing.T) {
-	limits, err := newTestClient(t, rateLimitsBody).GetRateLimits(context.Background(), "1")
+	result, err := newTestClient(t, rateLimitsBody).GetRateLimits(context.Background(), "1")
 	if err != nil {
 		t.Fatalf("GetRateLimits: %v", err)
 	}
+	if !result.LimitByIP {
+		t.Error("LimitByIP = false, want true")
+	}
+	limits := result.Limits
 	if len(limits) != 4 {
 		t.Fatalf("got %d limits, want 4", len(limits))
 	}
@@ -85,6 +90,38 @@ func TestSetRateLimitsOmitsUnmanagedBuckets(t *testing.T) {
 			t.Errorf("%s was sent although the caller left it unset", unmanaged)
 		}
 	}
+	if _, present := captured["limit_by_ip"]; present {
+		t.Error("limit_by_ip was sent although the caller left it unset")
+	}
+}
+
+func TestSetRateLimitsSendsLimitByIPAlone(t *testing.T) {
+	var captured map[string]any
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &captured)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":{"limits":{"rps":-1,"rpm":-1,"rpd":-1},"limit_by_ip":false}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	quicknode, err := New("test-key", WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	limitByIP := false
+	if err := quicknode.SetRateLimits(context.Background(), "1", RateLimitOverrides{LimitByIP: &limitByIP}); err != nil {
+		t.Fatalf("SetRateLimits: %v", err)
+	}
+
+	if captured["limit_by_ip"] != false {
+		t.Errorf("limit_by_ip = %v, want false", captured["limit_by_ip"])
+	}
+	if _, present := captured["rate_limits"]; present {
+		t.Errorf("rate_limits was sent with no bucket set, which the route rejects: %v", captured)
+	}
 }
 
 func TestDeleteRateLimitOverrideRejectsFalseSuccess(t *testing.T) {
@@ -117,7 +154,7 @@ func TestRateLimitDeletesTolerateAbsence(t *testing.T) {
 
 func TestListMethodRateLimits(t *testing.T) {
 	const body = `{"data":{"rate_limiters":[{"id":"lim-1","interval":"second","rate":5,
-"status":"enabled","created":"1742400000","methods":["eth_getLogs","eth_call"]}]}}`
+"status":"enabled","created":"1742400000","methods":["eth_getLogs","eth_call"],"limit_by_ip":true}]}}`
 
 	limiters, err := newTestClient(t, body).ListMethodRateLimits(context.Background(), "1")
 	if err != nil {
@@ -127,7 +164,7 @@ func TestListMethodRateLimits(t *testing.T) {
 		t.Fatalf("got %d limiters, want 1", len(limiters))
 	}
 	limiter := limiters[0]
-	if limiter.ID != "lim-1" || limiter.Rate != 5 || limiter.Interval != "second" || limiter.Status != "enabled" {
+	if limiter.ID != "lim-1" || limiter.Rate != 5 || limiter.Interval != "second" || limiter.Status != "enabled" || !limiter.LimitByIP {
 		t.Errorf("limiter = %+v", limiter)
 	}
 	if len(limiter.Methods) != 2 || limiter.Methods[0] != "eth_getLogs" {
@@ -161,7 +198,7 @@ func TestUpdateMethodRateLimitSendsWholeObject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("UpdateMethodRateLimit: %v", err)
 	}
-	if captured["rate"] != float64(9) || captured["status"] != "disabled" {
+	if captured["rate"] != float64(9) || captured["status"] != "disabled" || captured["limit_by_ip"] != false {
 		t.Errorf("body = %v", captured)
 	}
 	if _, present := captured["interval"]; present {

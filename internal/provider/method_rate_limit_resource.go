@@ -42,6 +42,7 @@ type methodRateLimitResourceModel struct {
 	Rate       types.Int64  `tfsdk:"rate"`
 	Interval   types.String `tfsdk:"interval"`
 	Enabled    types.Bool   `tfsdk:"enabled"`
+	LimitByIP  types.Bool   `tfsdk:"limit_by_ip"`
 }
 
 func NewMethodRateLimitResource() resource.Resource {
@@ -90,6 +91,12 @@ func (r *methodRateLimitResource) Schema(_ context.Context, _ resource.SchemaReq
 				Default:             booldefault.StaticBool(true),
 				MarkdownDescription: "Whether the limiter is applied. Disabling keeps the definition in place, which suits turning a limit off during an incident without losing it.",
 			},
+			"limit_by_ip": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "Count the rate separately for each client IP instead of for the endpoint as a whole. Independent of `limit_by_ip` on `quicknode_endpoint_rate_limits`. Behind a proxy, set `ip_custom_header` on the endpoint so the client IP is read from the header the proxy forwards it in. Defaults to `false`.",
+			},
 		},
 	}
 }
@@ -121,9 +128,10 @@ func (r *methodRateLimitResource) Create(ctx context.Context, req resource.Creat
 
 	endpointID := plan.EndpointID.ValueString()
 	created, err := r.client.AddMethodRateLimit(ctx, endpointID, client.MethodRateLimit{
-		Methods:  methods,
-		Rate:     int(plan.Rate.ValueInt64()),
-		Interval: plan.Interval.ValueString(),
+		Methods:   methods,
+		Rate:      int(plan.Rate.ValueInt64()),
+		Interval:  plan.Interval.ValueString(),
+		LimitByIP: plan.LimitByIP.ValueBool(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Could not create the method rate limit", err.Error())
@@ -140,9 +148,10 @@ func (r *methodRateLimitResource) Create(ctx context.Context, req resource.Creat
 	// disabled needs a second call.
 	if !plan.Enabled.ValueBool() {
 		if err := r.client.UpdateMethodRateLimit(ctx, endpointID, created.ID, client.MethodRateLimit{
-			Methods: methods,
-			Rate:    int(plan.Rate.ValueInt64()),
-			Status:  limiterDisabled,
+			Methods:   methods,
+			Rate:      int(plan.Rate.ValueInt64()),
+			Status:    limiterDisabled,
+			LimitByIP: plan.LimitByIP.ValueBool(),
 		}); err != nil {
 			resp.Diagnostics.AddError("Created the method rate limit but could not disable it", err.Error())
 		}
@@ -179,6 +188,7 @@ func (r *methodRateLimitResource) Read(ctx context.Context, req resource.ReadReq
 		state.Rate = types.Int64Value(int64(limiter.Rate))
 		state.Interval = types.StringValue(limiter.Interval)
 		state.Enabled = types.BoolValue(limiter.Status != limiterDisabled)
+		state.LimitByIP = types.BoolValue(limiter.LimitByIP)
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return
 	}
@@ -205,9 +215,10 @@ func (r *methodRateLimitResource) Update(ctx context.Context, req resource.Updat
 		status = limiterDisabled
 	}
 	if err := r.client.UpdateMethodRateLimit(ctx, state.EndpointID.ValueString(), state.ID.ValueString(), client.MethodRateLimit{
-		Methods: methods,
-		Rate:    int(plan.Rate.ValueInt64()),
-		Status:  status,
+		Methods:   methods,
+		Rate:      int(plan.Rate.ValueInt64()),
+		Status:    status,
+		LimitByIP: plan.LimitByIP.ValueBool(),
 	}); err != nil {
 		resp.Diagnostics.AddError("Could not update the method rate limit", err.Error())
 		return
@@ -261,6 +272,7 @@ func (r *methodRateLimitResource) ImportState(ctx context.Context, req resource.
 			Rate:       types.Int64Value(int64(limiter.Rate)),
 			Interval:   types.StringValue(limiter.Interval),
 			Enabled:    types.BoolValue(limiter.Status != limiterDisabled),
+			LimitByIP:  types.BoolValue(limiter.LimitByIP),
 		}
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return

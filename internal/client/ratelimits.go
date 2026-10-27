@@ -29,13 +29,19 @@ type RateLimit struct {
 	ID     string
 }
 
-// RateLimitOverrides names the buckets a write can set. A nil field is left
-// alone, so a configuration that manages only one bucket does not disturb the
-// others.
+type EndpointRateLimits struct {
+	Limits    []RateLimit
+	LimitByIP bool
+}
+
+// RateLimitOverrides names the settings a write can change. A nil field is
+// left alone, so a configuration that manages only one bucket does not disturb
+// the others.
 type RateLimitOverrides struct {
-	RPS *int
-	RPM *int
-	RPD *int
+	RPS       *int
+	RPM       *int
+	RPD       *int
+	LimitByIP *bool
 }
 
 // MethodRateLimit throttles a named set of RPC methods independently of the
@@ -47,9 +53,11 @@ type MethodRateLimit struct {
 	Interval string
 	Status   string
 	Created  string
+
+	LimitByIP bool
 }
 
-func (c *Client) GetRateLimits(ctx context.Context, endpointID string) ([]RateLimit, error) {
+func (c *Client) GetRateLimits(ctx context.Context, endpointID string) (*EndpointRateLimits, error) {
 	const operation = "read endpoint rate limits"
 
 	resp, err := c.api.GetV0EndpointsByIdRateLimitsWithResponse(ctx, endpointID)
@@ -65,8 +73,14 @@ func (c *Client) GetRateLimits(ctx context.Context, endpointID string) ([]RateLi
 	if err := envelopeError(operation, resp.StatusCode(), resp.JSON200.Error); err != nil {
 		return nil, err
 	}
-	if resp.JSON200.Data == nil || resp.JSON200.Data.RateLimits == nil {
-		return nil, nil
+
+	result := &EndpointRateLimits{}
+	if resp.JSON200.Data == nil {
+		return result, nil
+	}
+	result.LimitByIP = deref(resp.JSON200.Data.LimitByIp)
+	if resp.JSON200.Data.RateLimits == nil {
+		return result, nil
 	}
 
 	limits := make([]RateLimit, 0, len(*resp.JSON200.Data.RateLimits))
@@ -82,22 +96,29 @@ func (c *Client) GetRateLimits(ctx context.Context, endpointID string) ([]RateLi
 		}
 		limits = append(limits, limit)
 	}
-	return limits, nil
+	result.Limits = limits
+	return result, nil
 }
 
-// SetRateLimits writes the buckets the caller manages. Managing none sends no
-// request at all.
+// SetRateLimits writes the settings the caller manages. Managing none sends no
+// request at all. The route rejects an empty rate_limits object, so it is left
+// out when no bucket is set.
 func (c *Client) SetRateLimits(ctx context.Context, endpointID string, overrides RateLimitOverrides) error {
 	const operation = "update endpoint rate limits"
 
-	if overrides.RPS == nil && overrides.RPM == nil && overrides.RPD == nil {
+	setsBucket := overrides.RPS != nil || overrides.RPM != nil || overrides.RPD != nil
+	if !setsBucket && overrides.LimitByIP == nil {
 		return nil
 	}
 
-	body := admin.PatchV0EndpointsByIdRateLimitsJSONRequestBody{}
-	body.RateLimits.Rps = overrides.RPS
-	body.RateLimits.Rpm = overrides.RPM
-	body.RateLimits.Rpd = overrides.RPD
+	body := admin.PatchV0EndpointsByIdRateLimitsJSONRequestBody{LimitByIp: overrides.LimitByIP}
+	if setsBucket {
+		body.RateLimits = &struct {
+			Rpd *int `json:"rpd,omitempty"`
+			Rpm *int `json:"rpm,omitempty"`
+			Rps *int `json:"rps,omitempty"`
+		}{Rpd: overrides.RPD, Rpm: overrides.RPM, Rps: overrides.RPS}
+	}
 
 	resp, err := c.api.PatchV0EndpointsByIdRateLimitsWithResponse(ctx, endpointID, body)
 	if err != nil {
@@ -156,10 +177,11 @@ func (c *Client) ListMethodRateLimits(ctx context.Context, endpointID string) ([
 	limiters := make([]MethodRateLimit, 0, len(*resp.JSON200.Data.RateLimiters))
 	for _, raw := range *resp.JSON200.Data.RateLimiters {
 		limiter := MethodRateLimit{
-			ID:       deref(raw.Id),
-			Interval: deref(raw.Interval),
-			Status:   deref(raw.Status),
-			Created:  deref(raw.Created),
+			ID:        deref(raw.Id),
+			Interval:  deref(raw.Interval),
+			Status:    deref(raw.Status),
+			Created:   deref(raw.Created),
+			LimitByIP: deref(raw.LimitByIp),
 		}
 		if raw.Rate != nil {
 			limiter.Rate = *raw.Rate
@@ -177,9 +199,10 @@ func (c *Client) AddMethodRateLimit(ctx context.Context, endpointID string, limi
 
 	resp, err := c.api.PostV0EndpointsByIdMethodRateLimitsWithResponse(ctx, endpointID,
 		admin.PostV0EndpointsByIdMethodRateLimitsJSONRequestBody{
-			Interval: limiter.Interval,
-			Methods:  limiter.Methods,
-			Rate:     limiter.Rate,
+			Interval:  limiter.Interval,
+			LimitByIp: &limiter.LimitByIP,
+			Methods:   limiter.Methods,
+			Rate:      limiter.Rate,
 		})
 	if err != nil {
 		return nil, err
@@ -196,10 +219,11 @@ func (c *Client) AddMethodRateLimit(ctx context.Context, endpointID string, limi
 
 	data := resp.JSON200.Data
 	created := &MethodRateLimit{
-		ID:       *data.Id,
-		Interval: deref(data.Interval),
-		Status:   deref(data.Status),
-		Created:  deref(data.Created),
+		ID:        *data.Id,
+		Interval:  deref(data.Interval),
+		Status:    deref(data.Status),
+		Created:   deref(data.Created),
+		LimitByIP: deref(data.LimitByIp),
 	}
 	if data.Rate != nil {
 		created.Rate = *data.Rate
@@ -218,9 +242,10 @@ func (c *Client) UpdateMethodRateLimit(ctx context.Context, endpointID, limiterI
 
 	resp, err := c.api.PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithResponse(ctx, endpointID, limiterID,
 		admin.PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdJSONRequestBody{
-			Methods: limiter.Methods,
-			Rate:    limiter.Rate,
-			Status:  limiter.Status,
+			LimitByIp: &limiter.LimitByIP,
+			Methods:   &limiter.Methods,
+			Rate:      &limiter.Rate,
+			Status:    &limiter.Status,
 		})
 	if err != nil {
 		return err

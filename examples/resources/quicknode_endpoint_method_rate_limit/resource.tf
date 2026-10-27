@@ -12,6 +12,10 @@ resource "quicknode_endpoint_method_rate_limit" "heavy_reads" {
   methods  = ["eth_getLogs", "debug_traceTransaction"]
   rate     = 5
   interval = "second"
+
+  # Count the rate per client IP, so one busy client cannot use up the budget
+  # for everyone else.
+  limit_by_ip = true
 }
 
 # Disabling keeps the definition in place, which suits turning a limit off

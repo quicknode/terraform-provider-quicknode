@@ -30,6 +30,9 @@ resource "quicknode_endpoint_rate_limits" "api" {
 
   rps = 25
   rpd = 1000000
+
+  # Each client IP gets its own 25 requests per second and 1,000,000 per day.
+  limit_by_ip = true
 }
 
 output "plan_allows_per_second" {
@@ -46,6 +49,7 @@ output "plan_allows_per_second" {
 
 ### Optional
 
+- `limit_by_ip` (Boolean) Count the buckets separately for each client IP instead of for the endpoint as a whole. Left out of the configuration, it keeps whatever value the endpoint already has. Behind a proxy, set `ip_custom_header` on the endpoint so the client IP is read from the header the proxy forwards it in. Destroying this resource turns it off.
 - `rpd` (Number) Maximum requests per day. Omit to keep the plan default.
 - `rpm` (Number) Maximum requests per minute. Omit to keep the plan default.
 - `rps` (Number) Maximum requests per second. Omit to keep the plan default.

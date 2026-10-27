@@ -16,6 +16,33 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// PostV0ActivityLogsParams defines parameters for PostV0ActivityLogs.
+type PostV0ActivityLogsParams struct {
+	// Q Search entry descriptions, endpoint subdomains, and team names. Case-insensitive.
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+
+	// Actor Only entries made by this user or API key. Use an id from /v0/activity_logs/filters.
+	Actor *string `form:"actor,omitempty" json:"actor,omitempty"`
+
+	// Type Only entries about this kind of thing: endpoint, team, member, role, billing, add_on, or api_key.
+	Type *string `form:"type,omitempty" json:"type,omitempty"`
+
+	// EndpointId Only entries about this endpoint, by endpoint ID.
+	EndpointId *string `form:"endpoint_id,omitempty" json:"endpoint_id,omitempty"`
+
+	// From Only entries at or after this time. ISO 8601 date or date-time.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To Only entries at or before this time. ISO 8601 date or date-time.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Limit Page size. Defaults to 20, maximum 100; larger values return 100.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Number of entries to skip. Defaults to 0.
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // GetV0EndpointsParams defines parameters for GetV0Endpoints.
 type GetV0EndpointsParams struct {
 	// Limit Specifies the maximum number of endpoints to retrieve in the response. The default value is set to 20
@@ -138,6 +165,9 @@ type PostV0EndpointsByIdMethodRateLimitsJSONBody struct {
 	// Interval Specifies the time interval for the rate limit; valid values include second, minute or hour
 	Interval string `json:"interval"`
 
+	// LimitByIp Set to true to apply the rate separately to each client IP. Set to false or omit this field to apply the rate to the endpoint as a whole (the existing behavior).
+	LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 	// Methods An array of method names to which the rate limiter applies
 	Methods []string `json:"methods"`
 
@@ -147,14 +177,17 @@ type PostV0EndpointsByIdMethodRateLimitsJSONBody struct {
 
 // PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdJSONBody defines parameters for PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId.
 type PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdJSONBody struct {
+	// LimitByIp Set to true to apply the rate separately to each client IP, or false to apply it to the endpoint as a whole. Omit this field to keep the current setting. This can be the only field in the request.
+	LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 	// Methods An array of method names to which the rate limiter applies
-	Methods []string `json:"methods"`
+	Methods *[]string `json:"methods,omitempty"`
 
 	// Rate  Specifies the maximum number of requests allowed for the specified methods within the defined interval
-	Rate int `json:"rate"`
+	Rate *int `json:"rate,omitempty"`
 
 	// Status The current status of the rate limiter; valid values include enabled or disabled
-	Status string `json:"status"`
+	Status *string `json:"status,omitempty"`
 }
 
 // GetV0EndpointsByIdMetricsParams defines parameters for GetV0EndpointsByIdMetrics.
@@ -169,10 +202,37 @@ type GetV0EndpointsByIdMetricsParams struct {
 	Percentile *int `form:"percentile,omitempty" json:"percentile,omitempty"`
 }
 
+// PostV0EndpointsByIdMetricsErrorsSummaryParams defines parameters for PostV0EndpointsByIdMetricsErrorsSummary.
+type PostV0EndpointsByIdMetricsErrorsSummaryParams struct {
+	// From ISO 8601 start time. Required together with to when last is omitted.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ISO 8601 end time. Required together with from when last is omitted.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Last Relative time window instead of from and to; for example, 1h for the last hour.
+	Last *string `form:"last,omitempty" json:"last,omitempty"`
+
+	// GroupBy Repeat this query parameter for grouping dimensions: method. Method grouping requires kind=rpc.
+	GroupBy *[]interface{} `form:"group_by[],omitempty" json:"group_by[],omitempty"`
+
+	// Kind Filter errors to rpc or http. Omit to include both. Use rpc when grouping by method.
+	Kind *string `form:"kind,omitempty" json:"kind,omitempty"`
+
+	// Limit Positive maximum number of results per page; for example, 2.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages.
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+}
+
 // PatchV0EndpointsByIdRateLimitsJSONBody defines parameters for PatchV0EndpointsByIdRateLimits.
 type PatchV0EndpointsByIdRateLimitsJSONBody struct {
-	// RateLimits Contains the rate limit configurations that you want to update
-	RateLimits struct {
+	// LimitByIp Set to true to apply the endpoint rate limits to each client IP address, or false to apply them to the endpoint as a whole. Omit to keep the current setting
+	LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
+	// RateLimits Contains the rate limit configurations that you want to update. Required unless limit_by_ip is present
+	RateLimits *struct {
 		// Rpd Specifies the maximum number of requests allowed per day
 		Rpd *int `json:"rpd,omitempty"`
 
@@ -181,7 +241,7 @@ type PatchV0EndpointsByIdRateLimitsJSONBody struct {
 
 		// Rps Specifies the maximum number of requests allowed per second
 		Rps *int `json:"rps,omitempty"`
-	} `json:"rate_limits"`
+	} `json:"rate_limits,omitempty"`
 }
 
 // PostV0EndpointsByIdSecurityDomainMasksJSONBody defines parameters for PostV0EndpointsByIdSecurityDomainMasks.
@@ -274,6 +334,51 @@ type GetV0MetricsParams struct {
 	Metric string `form:"metric" json:"metric"`
 }
 
+// PostV0MetricsErrorsSummaryParams defines parameters for PostV0MetricsErrorsSummary.
+type PostV0MetricsErrorsSummaryParams struct {
+	// From ISO 8601 start time. Required together with to when last is omitted.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ISO 8601 end time. Required together with from when last is omitted.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Last Relative time window instead of from and to; for example, 1h for the last hour.
+	Last *string `form:"last,omitempty" json:"last,omitempty"`
+
+	// GroupBy Repeat this query parameter for grouping dimensions: method. Method grouping requires kind=rpc.
+	GroupBy *[]interface{} `form:"group_by[],omitempty" json:"group_by[],omitempty"`
+
+	// Kind Filter errors to rpc or http. Omit to include both. Use rpc when grouping by method.
+	Kind *string `form:"kind,omitempty" json:"kind,omitempty"`
+
+	// Limit Positive maximum number of results per page; for example, 2.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages.
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+}
+
+// PostV0MetricsTrafficSummaryParams defines parameters for PostV0MetricsTrafficSummary.
+type PostV0MetricsTrafficSummaryParams struct {
+	// From ISO 8601 start time. Required together with to when last is omitted.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ISO 8601 end time. Required together with from when last is omitted.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Last Relative time window instead of from and to; for example, 1h for the last hour.
+	Last *string `form:"last,omitempty" json:"last,omitempty"`
+
+	// GroupBy Repeat this query parameter for grouping dimensions: method, endpoint. Omit it to return totals without a breakdown.
+	GroupBy *[]interface{} `form:"group_by[],omitempty" json:"group_by[],omitempty"`
+
+	// Limit Positive maximum number of results per page; for example, 2.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages.
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+}
+
 // PostV0TeamsJSONBody defines parameters for PostV0Teams.
 type PostV0TeamsJSONBody struct {
 	// Name The name for the new team
@@ -302,6 +407,45 @@ type PostV0TeamsByIdMembersJSONBody struct {
 type PatchV0ToolingAccessJSONBody struct {
 	// Enabled Set to true to enable (provision/reactivate) Tooling Access or false to disable it
 	Enabled bool `json:"enabled"`
+}
+
+// PostV0TransactionsParams defines parameters for PostV0Transactions.
+type PostV0TransactionsParams struct {
+	// From ISO 8601 start time. Required together with to when last is omitted.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ISO 8601 end time. Required together with from when last is omitted.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Last Relative time window instead of from and to; for example, 1h for the last hour.
+	Last *string `form:"last,omitempty" json:"last,omitempty"`
+
+	// Limit Positive maximum number of results per page; for example, 2.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages.
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Network Filter submissions by network identifier, such as robinhood-testnet.
+	Network *string `form:"network,omitempty" json:"network,omitempty"`
+}
+
+// PostV0TransactionsByNetworkByHashParams defines parameters for PostV0TransactionsByNetworkByHash.
+type PostV0TransactionsByNetworkByHashParams struct {
+	// IncludePayloads Set to true to include available request/response payload strings. Payloads are omitted when this parameter is not supplied.
+	IncludePayloads *bool `form:"include_payloads,omitempty" json:"include_payloads,omitempty"`
+}
+
+// PostV0UsageCreditsSummaryParams defines parameters for PostV0UsageCreditsSummary.
+type PostV0UsageCreditsSummaryParams struct {
+	// From ISO 8601 start time. Required together with to when last is omitted.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ISO 8601 end time. Required together with from when last is omitted.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Last Relative time window instead of from and to; for example, 1h for the last hour.
+	Last *string `form:"last,omitempty" json:"last,omitempty"`
 }
 
 // GetV0UsageRpcParams defines parameters for GetV0UsageRpc.
@@ -347,6 +491,69 @@ type GetV0UsageRpcByTagParams struct {
 
 	// EndTime End time as a unix timestamp
 	EndTime *int `form:"end_time,omitempty" json:"end_time,omitempty"`
+}
+
+// PostV0UsageRpcSummaryParams defines parameters for PostV0UsageRpcSummary.
+type PostV0UsageRpcSummaryParams struct {
+	// From ISO 8601 start time. Required together with to when last is omitted.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ISO 8601 end time. Required together with from when last is omitted.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Last Relative time window instead of from and to; for example, 1h for the last hour.
+	Last *string `form:"last,omitempty" json:"last,omitempty"`
+
+	// GroupBy Repeat this query parameter for grouping dimensions: method, network, endpoint. Omit it to return totals without a breakdown.
+	GroupBy *[]interface{} `form:"group_by[],omitempty" json:"group_by[],omitempty"`
+
+	// Limit Positive maximum number of results per page; for example, 2.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages.
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+}
+
+// PostV0UsageStreamsSummaryParams defines parameters for PostV0UsageStreamsSummary.
+type PostV0UsageStreamsSummaryParams struct {
+	// From ISO 8601 start time. Required together with to when last is omitted.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ISO 8601 end time. Required together with from when last is omitted.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Last Relative time window instead of from and to; for example, 1h for the last hour.
+	Last *string `form:"last,omitempty" json:"last,omitempty"`
+
+	// GroupBy Repeat this query parameter for grouping dimensions: stream. Omit it to return totals without a breakdown.
+	GroupBy *[]interface{} `form:"group_by[],omitempty" json:"group_by[],omitempty"`
+
+	// Limit Positive maximum number of results per page; for example, 2.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages.
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+}
+
+// PostV0UsageWebhooksSummaryParams defines parameters for PostV0UsageWebhooksSummary.
+type PostV0UsageWebhooksSummaryParams struct {
+	// From ISO 8601 start time. Required together with to when last is omitted.
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ISO 8601 end time. Required together with from when last is omitted.
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Last Relative time window instead of from and to; for example, 1h for the last hour.
+	Last *string `form:"last,omitempty" json:"last,omitempty"`
+
+	// GroupBy Repeat this query parameter for grouping dimensions: webhook. Omit it to return totals without a breakdown.
+	GroupBy *[]interface{} `form:"group_by[],omitempty" json:"group_by[],omitempty"`
+
+	// Limit Positive maximum number of results per page; for example, 2.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages.
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
 }
 
 // PostV0EndpointsJSONRequestBody defines body for PostV0Endpoints for application/json ContentType.
@@ -496,6 +703,21 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /v0/account/info (the `GetV0AccountInfo` operationId).
 	GetV0AccountInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV0ActivityLogs Returns activity log entries, newest first, with filters and pagination.
+	//
+	// Corresponds with POST /v0/activity_logs (the `PostV0ActivityLogs` operationId).
+	PostV0ActivityLogs(ctx context.Context, params *PostV0ActivityLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetV0ActivityLogsFilters Returns the actors and types you can filter by when listing activity log entries.
+	//
+	// Corresponds with GET /v0/activity_logs/filters (the `GetV0ActivityLogsFilters` operationId).
+	GetV0ActivityLogsFilters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetV0ActivityLogsById Returns a single activity log entry by ID.
+	//
+	// Corresponds with GET /v0/activity_logs/{id} (the `GetV0ActivityLogsById` operationId).
+	GetV0ActivityLogsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetV0ApiCreditsByChain Returns the API credit cost of each RPC method available on a chain.
 	//
@@ -689,19 +911,19 @@ type ClientInterface interface {
 	// Corresponds with GET /v0/endpoints/{id}/logs (the `GetV0EndpointsByIdLogs` operationId).
 	GetV0EndpointsByIdLogs(ctx context.Context, id string, params *GetV0EndpointsByIdLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetV0EndpointsByIdMethodRateLimits Gets method rate limits.
+	// GetV0EndpointsByIdMethodRateLimits Lists method rate limits, including whether each limit applies per client IP or to the endpoint as a whole.
 	//
 	// Corresponds with GET /v0/endpoints/{id}/method-rate-limits (the `GetV0EndpointsByIdMethodRateLimits` operationId).
 	GetV0EndpointsByIdMethodRateLimits(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostV0EndpointsByIdMethodRateLimitsWithBody Creates a method rate limit.
+	// PostV0EndpointsByIdMethodRateLimitsWithBody Creates a method rate limit per client IP or for the endpoint as a whole.
 	//
 	// Takes any type of body and a specified content type.
 	//
 	// Corresponds with POST /v0/endpoints/{id}/method-rate-limits (the `PostV0EndpointsByIdMethodRateLimits` operationId).
 	PostV0EndpointsByIdMethodRateLimitsWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostV0EndpointsByIdMethodRateLimits Creates a method rate limit.
+	// PostV0EndpointsByIdMethodRateLimits Creates a method rate limit per client IP or for the endpoint as a whole.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -715,12 +937,16 @@ type ClientInterface interface {
 
 	// PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithBody Updates a method rate limit.
 	//
+	// Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.
+	//
 	// Takes any type of body and a specified content type.
 	//
 	// Corresponds with PATCH /v0/endpoints/{id}/method-rate-limits/{method_rate_limit_id} (the `PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId` operationId).
 	PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithBody(ctx context.Context, id string, methodRateLimitId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId Updates a method rate limit.
+	//
+	// Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -732,6 +958,11 @@ type ClientInterface interface {
 	// Corresponds with GET /v0/endpoints/{id}/metrics (the `GetV0EndpointsByIdMetrics` operationId).
 	GetV0EndpointsByIdMetrics(ctx context.Context, id string, params *GetV0EndpointsByIdMetricsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostV0EndpointsByIdMetricsErrorsSummary Returns RPC and HTTP error counts for one endpoint for a time range.
+	//
+	// Corresponds with POST /v0/endpoints/{id}/metrics/errors/summary (the `PostV0EndpointsByIdMetricsErrorsSummary` operationId).
+	PostV0EndpointsByIdMetricsErrorsSummary(ctx context.Context, id string, params *PostV0EndpointsByIdMetricsErrorsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetV0EndpointsByIdRateLimits Gets endpoint rate limits.
 	//
 	// Gets endpoint rate limits. The response returns an array with the source for each rate limit, including plan defaults and user-set overrides.
@@ -741,7 +972,7 @@ type ClientInterface interface {
 
 	// PatchV0EndpointsByIdRateLimitsWithBody Updates endpoint rate limits.
 	//
-	// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.
+	// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -750,7 +981,7 @@ type ClientInterface interface {
 
 	// PatchV0EndpointsByIdRateLimits Updates endpoint rate limits.
 	//
-	// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.
+	// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -957,6 +1188,16 @@ type ClientInterface interface {
 	// Corresponds with GET /v0/metrics (the `GetV0Metrics` operationId).
 	GetV0Metrics(ctx context.Context, params *GetV0MetricsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostV0MetricsErrorsSummary Returns account RPC and HTTP error counts for a time range.
+	//
+	// Corresponds with POST /v0/metrics/errors/summary (the `PostV0MetricsErrorsSummary` operationId).
+	PostV0MetricsErrorsSummary(ctx context.Context, params *PostV0MetricsErrorsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV0MetricsTrafficSummary Returns successful requests, transferred bytes, credits, and distinct active methods for a time range.
+	//
+	// Corresponds with POST /v0/metrics/traffic/summary (the `PostV0MetricsTrafficSummary` operationId).
+	PostV0MetricsTrafficSummary(ctx context.Context, params *PostV0MetricsTrafficSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetV0Teams Retrieves a list of all teams.
 	//
 	// Corresponds with GET /v0/teams (the `GetV0Teams` operationId).
@@ -1061,6 +1302,21 @@ type ClientInterface interface {
 	// Corresponds with POST /v0/tooling-access/token (the `PostV0ToolingAccessToken` operationId).
 	PostV0ToolingAccessToken(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostV0Transactions Lists account transaction submissions for a time range, with cursor pagination.
+	//
+	// Corresponds with POST /v0/transactions (the `PostV0Transactions` operationId).
+	PostV0Transactions(ctx context.Context, params *PostV0TransactionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV0TransactionsByNetworkByHash Returns recorded submission attempts for a transaction, optionally including request and response payloads.
+	//
+	// Corresponds with POST /v0/transactions/{network}/{hash} (the `PostV0TransactionsByNetworkByHash` operationId).
+	PostV0TransactionsByNetworkByHash(ctx context.Context, network string, hash string, params *PostV0TransactionsByNetworkByHashParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV0UsageCreditsSummary Returns total account API credits for a time range.
+	//
+	// Corresponds with POST /v0/usage/credits/summary (the `PostV0UsageCreditsSummary` operationId).
+	PostV0UsageCreditsSummary(ctx context.Context, params *PostV0UsageCreditsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetV0UsageRpc Retrieves usage total for specified time range.
 	//
 	// Corresponds with GET /v0/usage/rpc (the `GetV0UsageRpc` operationId).
@@ -1087,6 +1343,21 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /v0/usage/rpc/by-tag (the `GetV0UsageRpcByTag` operationId).
 	GetV0UsageRpcByTag(ctx context.Context, params *GetV0UsageRpcByTagParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV0UsageRpcSummary Returns account RPC requests, transferred bytes, and credits for a time range.
+	//
+	// Corresponds with POST /v0/usage/rpc/summary (the `PostV0UsageRpcSummary` operationId).
+	PostV0UsageRpcSummary(ctx context.Context, params *PostV0UsageRpcSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV0UsageStreamsSummary Returns Streams blocks, transferred bytes, and block credits for a time range.
+	//
+	// Corresponds with POST /v0/usage/streams/summary (the `PostV0UsageStreamsSummary` operationId).
+	PostV0UsageStreamsSummary(ctx context.Context, params *PostV0UsageStreamsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV0UsageWebhooksSummary Returns Webhooks deliveries and credits for a time range.
+	//
+	// Corresponds with POST /v0/usage/webhooks/summary (the `PostV0UsageWebhooksSummary` operationId).
+	PostV0UsageWebhooksSummary(ctx context.Context, params *PostV0UsageWebhooksSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 // GetV0AccountInfo Returns information about the account associated with the API key.
@@ -1094,6 +1365,51 @@ type ClientInterface interface {
 // Corresponds with GET /v0/account/info (the `GetV0AccountInfo` operationId).
 func (c *Client) GetV0AccountInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetV0AccountInfoRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostV0ActivityLogs Returns activity log entries, newest first, with filters and pagination.
+//
+// Corresponds with POST /v0/activity_logs (the `PostV0ActivityLogs` operationId).
+func (c *Client) PostV0ActivityLogs(ctx context.Context, params *PostV0ActivityLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0ActivityLogsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetV0ActivityLogsFilters Returns the actors and types you can filter by when listing activity log entries.
+//
+// Corresponds with GET /v0/activity_logs/filters (the `GetV0ActivityLogsFilters` operationId).
+func (c *Client) GetV0ActivityLogsFilters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetV0ActivityLogsFiltersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetV0ActivityLogsById Returns a single activity log entry by ID.
+//
+// Corresponds with GET /v0/activity_logs/{id} (the `GetV0ActivityLogsById` operationId).
+func (c *Client) GetV0ActivityLogsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetV0ActivityLogsByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -1576,7 +1892,7 @@ func (c *Client) GetV0EndpointsByIdLogs(ctx context.Context, id string, params *
 	return c.Client.Do(req)
 }
 
-// GetV0EndpointsByIdMethodRateLimits Gets method rate limits.
+// GetV0EndpointsByIdMethodRateLimits Lists method rate limits, including whether each limit applies per client IP or to the endpoint as a whole.
 //
 // Corresponds with GET /v0/endpoints/{id}/method-rate-limits (the `GetV0EndpointsByIdMethodRateLimits` operationId).
 func (c *Client) GetV0EndpointsByIdMethodRateLimits(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1591,7 +1907,7 @@ func (c *Client) GetV0EndpointsByIdMethodRateLimits(ctx context.Context, id stri
 	return c.Client.Do(req)
 }
 
-// PostV0EndpointsByIdMethodRateLimitsWithBody Creates a method rate limit.
+// PostV0EndpointsByIdMethodRateLimitsWithBody Creates a method rate limit per client IP or for the endpoint as a whole.
 //
 // Takes any type of body and a specified content type.
 //
@@ -1608,7 +1924,7 @@ func (c *Client) PostV0EndpointsByIdMethodRateLimitsWithBody(ctx context.Context
 	return c.Client.Do(req)
 }
 
-// PostV0EndpointsByIdMethodRateLimits Creates a method rate limit.
+// PostV0EndpointsByIdMethodRateLimits Creates a method rate limit per client IP or for the endpoint as a whole.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -1642,6 +1958,8 @@ func (c *Client) DeleteV0EndpointsByIdMethodRateLimitsByMethodRateLimitId(ctx co
 
 // PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithBody Updates a method rate limit.
 //
+// Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.
+//
 // Takes any type of body and a specified content type.
 //
 // Corresponds with PATCH /v0/endpoints/{id}/method-rate-limits/{method_rate_limit_id} (the `PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId` operationId).
@@ -1658,6 +1976,8 @@ func (c *Client) PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithBody
 }
 
 // PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId Updates a method rate limit.
+//
+// Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -1689,6 +2009,21 @@ func (c *Client) GetV0EndpointsByIdMetrics(ctx context.Context, id string, param
 	return c.Client.Do(req)
 }
 
+// PostV0EndpointsByIdMetricsErrorsSummary Returns RPC and HTTP error counts for one endpoint for a time range.
+//
+// Corresponds with POST /v0/endpoints/{id}/metrics/errors/summary (the `PostV0EndpointsByIdMetricsErrorsSummary` operationId).
+func (c *Client) PostV0EndpointsByIdMetricsErrorsSummary(ctx context.Context, id string, params *PostV0EndpointsByIdMetricsErrorsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0EndpointsByIdMetricsErrorsSummaryRequest(c.Server, id, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetV0EndpointsByIdRateLimits Gets endpoint rate limits.
 //
 // Gets endpoint rate limits. The response returns an array with the source for each rate limit, including plan defaults and user-set overrides.
@@ -1708,7 +2043,7 @@ func (c *Client) GetV0EndpointsByIdRateLimits(ctx context.Context, id string, re
 
 // PatchV0EndpointsByIdRateLimitsWithBody Updates endpoint rate limits.
 //
-// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.
+// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.
 //
 // Takes any type of body and a specified content type.
 //
@@ -1727,7 +2062,7 @@ func (c *Client) PatchV0EndpointsByIdRateLimitsWithBody(ctx context.Context, id 
 
 // PatchV0EndpointsByIdRateLimits Updates endpoint rate limits.
 //
-// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.
+// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -2264,6 +2599,36 @@ func (c *Client) GetV0Metrics(ctx context.Context, params *GetV0MetricsParams, r
 	return c.Client.Do(req)
 }
 
+// PostV0MetricsErrorsSummary Returns account RPC and HTTP error counts for a time range.
+//
+// Corresponds with POST /v0/metrics/errors/summary (the `PostV0MetricsErrorsSummary` operationId).
+func (c *Client) PostV0MetricsErrorsSummary(ctx context.Context, params *PostV0MetricsErrorsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0MetricsErrorsSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostV0MetricsTrafficSummary Returns successful requests, transferred bytes, credits, and distinct active methods for a time range.
+//
+// Corresponds with POST /v0/metrics/traffic/summary (the `PostV0MetricsTrafficSummary` operationId).
+func (c *Client) PostV0MetricsTrafficSummary(ctx context.Context, params *PostV0MetricsTrafficSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0MetricsTrafficSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetV0Teams Retrieves a list of all teams.
 //
 // Corresponds with GET /v0/teams (the `GetV0Teams` operationId).
@@ -2528,6 +2893,51 @@ func (c *Client) PostV0ToolingAccessToken(ctx context.Context, reqEditors ...Req
 	return c.Client.Do(req)
 }
 
+// PostV0Transactions Lists account transaction submissions for a time range, with cursor pagination.
+//
+// Corresponds with POST /v0/transactions (the `PostV0Transactions` operationId).
+func (c *Client) PostV0Transactions(ctx context.Context, params *PostV0TransactionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0TransactionsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostV0TransactionsByNetworkByHash Returns recorded submission attempts for a transaction, optionally including request and response payloads.
+//
+// Corresponds with POST /v0/transactions/{network}/{hash} (the `PostV0TransactionsByNetworkByHash` operationId).
+func (c *Client) PostV0TransactionsByNetworkByHash(ctx context.Context, network string, hash string, params *PostV0TransactionsByNetworkByHashParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0TransactionsByNetworkByHashRequest(c.Server, network, hash, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostV0UsageCreditsSummary Returns total account API credits for a time range.
+//
+// Corresponds with POST /v0/usage/credits/summary (the `PostV0UsageCreditsSummary` operationId).
+func (c *Client) PostV0UsageCreditsSummary(ctx context.Context, params *PostV0UsageCreditsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0UsageCreditsSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetV0UsageRpc Retrieves usage total for specified time range.
 //
 // Corresponds with GET /v0/usage/rpc (the `GetV0UsageRpc` operationId).
@@ -2605,6 +3015,51 @@ func (c *Client) GetV0UsageRpcByTag(ctx context.Context, params *GetV0UsageRpcBy
 	return c.Client.Do(req)
 }
 
+// PostV0UsageRpcSummary Returns account RPC requests, transferred bytes, and credits for a time range.
+//
+// Corresponds with POST /v0/usage/rpc/summary (the `PostV0UsageRpcSummary` operationId).
+func (c *Client) PostV0UsageRpcSummary(ctx context.Context, params *PostV0UsageRpcSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0UsageRpcSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostV0UsageStreamsSummary Returns Streams blocks, transferred bytes, and block credits for a time range.
+//
+// Corresponds with POST /v0/usage/streams/summary (the `PostV0UsageStreamsSummary` operationId).
+func (c *Client) PostV0UsageStreamsSummary(ctx context.Context, params *PostV0UsageStreamsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0UsageStreamsSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostV0UsageWebhooksSummary Returns Webhooks deliveries and credits for a time range.
+//
+// Corresponds with POST /v0/usage/webhooks/summary (the `PostV0UsageWebhooksSummary` operationId).
+func (c *Client) PostV0UsageWebhooksSummary(ctx context.Context, params *PostV0UsageWebhooksSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV0UsageWebhooksSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // NewGetV0AccountInfoRequest constructs an http.Request for the GetV0AccountInfo method
 func NewGetV0AccountInfoRequest(server string) (*http.Request, error) {
 	var err error
@@ -2615,6 +3070,205 @@ func NewGetV0AccountInfoRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/v0/account/info")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostV0ActivityLogsRequest constructs an http.Request for the PostV0ActivityLogs method
+func NewPostV0ActivityLogsRequest(server string, params *PostV0ActivityLogsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/activity_logs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "q", *params.Q, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Actor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "actor", *params.Actor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Type != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "type", *params.Type, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.EndpointId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "endpoint_id", *params.EndpointId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetV0ActivityLogsFiltersRequest constructs an http.Request for the GetV0ActivityLogsFilters method
+func NewGetV0ActivityLogsFiltersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/activity_logs/filters")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetV0ActivityLogsByIdRequest constructs an http.Request for the GetV0ActivityLogsById method
+func NewGetV0ActivityLogsByIdRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/activity_logs/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3876,6 +4530,139 @@ func NewGetV0EndpointsByIdMetricsRequest(server string, id string, params *GetV0
 	return req, nil
 }
 
+// NewPostV0EndpointsByIdMetricsErrorsSummaryRequest constructs an http.Request for the PostV0EndpointsByIdMetricsErrorsSummary method
+func NewPostV0EndpointsByIdMetricsErrorsSummaryRequest(server string, id string, params *PostV0EndpointsByIdMetricsErrorsSummaryParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/endpoints/%s/metrics/errors/summary", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Last != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "last", *params.Last, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.GroupBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "group_by[]", *params.GroupBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Kind != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "kind", *params.Kind, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetV0EndpointsByIdRateLimitsRequest constructs an http.Request for the GetV0EndpointsByIdRateLimits method
 func NewGetV0EndpointsByIdRateLimitsRequest(server string, id string) (*http.Request, error) {
 	var err error
@@ -4943,6 +5730,246 @@ func NewGetV0MetricsRequest(server string, params *GetV0MetricsParams) (*http.Re
 	return req, nil
 }
 
+// NewPostV0MetricsErrorsSummaryRequest constructs an http.Request for the PostV0MetricsErrorsSummary method
+func NewPostV0MetricsErrorsSummaryRequest(server string, params *PostV0MetricsErrorsSummaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/metrics/errors/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Last != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "last", *params.Last, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.GroupBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "group_by[]", *params.GroupBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Kind != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "kind", *params.Kind, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostV0MetricsTrafficSummaryRequest constructs an http.Request for the PostV0MetricsTrafficSummary method
+func NewPostV0MetricsTrafficSummaryRequest(server string, params *PostV0MetricsTrafficSummaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/metrics/traffic/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Last != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "last", *params.Last, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.GroupBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "group_by[]", *params.GroupBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetV0TeamsRequest constructs an http.Request for the GetV0Teams method
 func NewGetV0TeamsRequest(server string) (*http.Request, error) {
 	var err error
@@ -5382,6 +6409,266 @@ func NewPostV0ToolingAccessTokenRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewPostV0TransactionsRequest constructs an http.Request for the PostV0Transactions method
+func NewPostV0TransactionsRequest(server string, params *PostV0TransactionsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/transactions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Last != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "last", *params.Last, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Network != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "network", *params.Network, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostV0TransactionsByNetworkByHashRequest constructs an http.Request for the PostV0TransactionsByNetworkByHash method
+func NewPostV0TransactionsByNetworkByHashRequest(server string, network string, hash string, params *PostV0TransactionsByNetworkByHashParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "network", network, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "hash", hash, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/transactions/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.IncludePayloads != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include_payloads", *params.IncludePayloads, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostV0UsageCreditsSummaryRequest constructs an http.Request for the PostV0UsageCreditsSummary method
+func NewPostV0UsageCreditsSummaryRequest(server string, params *PostV0UsageCreditsSummaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/usage/credits/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Last != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "last", *params.Last, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetV0UsageRpcRequest constructs an http.Request for the GetV0UsageRpc method
 func NewGetV0UsageRpcRequest(server string, params *GetV0UsageRpcParams) (*http.Request, error) {
 	var err error
@@ -5712,6 +6999,348 @@ func NewGetV0UsageRpcByTagRequest(server string, params *GetV0UsageRpcByTagParam
 	return req, nil
 }
 
+// NewPostV0UsageRpcSummaryRequest constructs an http.Request for the PostV0UsageRpcSummary method
+func NewPostV0UsageRpcSummaryRequest(server string, params *PostV0UsageRpcSummaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/usage/rpc/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Last != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "last", *params.Last, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.GroupBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "group_by[]", *params.GroupBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostV0UsageStreamsSummaryRequest constructs an http.Request for the PostV0UsageStreamsSummary method
+func NewPostV0UsageStreamsSummaryRequest(server string, params *PostV0UsageStreamsSummaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/usage/streams/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Last != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "last", *params.Last, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.GroupBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "group_by[]", *params.GroupBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostV0UsageWebhooksSummaryRequest constructs an http.Request for the PostV0UsageWebhooksSummary method
+func NewPostV0UsageWebhooksSummaryRequest(server string, params *PostV0UsageWebhooksSummaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v0/usage/webhooks/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Last != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "last", *params.Last, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.GroupBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "group_by[]", *params.GroupBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -5762,6 +7391,27 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /v0/account/info (the `GetV0AccountInfo` operationId).
 	GetV0AccountInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetV0AccountInfoResponse, error)
+
+	// PostV0ActivityLogsWithResponse Returns activity log entries, newest first, with filters and pagination.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/activity_logs (the `PostV0ActivityLogs` operationId).
+	PostV0ActivityLogsWithResponse(ctx context.Context, params *PostV0ActivityLogsParams, reqEditors ...RequestEditorFn) (*PostV0ActivityLogsResponse, error)
+
+	// GetV0ActivityLogsFiltersWithResponse Returns the actors and types you can filter by when listing activity log entries.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v0/activity_logs/filters (the `GetV0ActivityLogsFilters` operationId).
+	GetV0ActivityLogsFiltersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetV0ActivityLogsFiltersResponse, error)
+
+	// GetV0ActivityLogsByIdWithResponse Returns a single activity log entry by ID.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v0/activity_logs/{id} (the `GetV0ActivityLogsById` operationId).
+	GetV0ActivityLogsByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetV0ActivityLogsByIdResponse, error)
 
 	// GetV0ApiCreditsByChainWithResponse Returns the API credit cost of each RPC method available on a chain.
 	//
@@ -5983,21 +7633,21 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /v0/endpoints/{id}/logs (the `GetV0EndpointsByIdLogs` operationId).
 	GetV0EndpointsByIdLogsWithResponse(ctx context.Context, id string, params *GetV0EndpointsByIdLogsParams, reqEditors ...RequestEditorFn) (*GetV0EndpointsByIdLogsResponse, error)
 
-	// GetV0EndpointsByIdMethodRateLimitsWithResponse Gets method rate limits.
+	// GetV0EndpointsByIdMethodRateLimitsWithResponse Lists method rate limits, including whether each limit applies per client IP or to the endpoint as a whole.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with GET /v0/endpoints/{id}/method-rate-limits (the `GetV0EndpointsByIdMethodRateLimits` operationId).
 	GetV0EndpointsByIdMethodRateLimitsWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetV0EndpointsByIdMethodRateLimitsResponse, error)
 
-	// PostV0EndpointsByIdMethodRateLimitsWithBodyWithResponse Creates a method rate limit.
+	// PostV0EndpointsByIdMethodRateLimitsWithBodyWithResponse Creates a method rate limit per client IP or for the endpoint as a whole.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with POST /v0/endpoints/{id}/method-rate-limits (the `PostV0EndpointsByIdMethodRateLimits` operationId).
 	PostV0EndpointsByIdMethodRateLimitsWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV0EndpointsByIdMethodRateLimitsResponse, error)
 
-	// PostV0EndpointsByIdMethodRateLimitsWithResponse Creates a method rate limit.
+	// PostV0EndpointsByIdMethodRateLimitsWithResponse Creates a method rate limit per client IP or for the endpoint as a whole.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -6013,12 +7663,16 @@ type ClientWithResponsesInterface interface {
 
 	// PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithBodyWithResponse Updates a method rate limit.
 	//
+	// Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.
+	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with PATCH /v0/endpoints/{id}/method-rate-limits/{method_rate_limit_id} (the `PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId` operationId).
 	PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithBodyWithResponse(ctx context.Context, id string, methodRateLimitId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse, error)
 
 	// PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithResponse Updates a method rate limit.
+	//
+	// Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -6032,6 +7686,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /v0/endpoints/{id}/metrics (the `GetV0EndpointsByIdMetrics` operationId).
 	GetV0EndpointsByIdMetricsWithResponse(ctx context.Context, id string, params *GetV0EndpointsByIdMetricsParams, reqEditors ...RequestEditorFn) (*GetV0EndpointsByIdMetricsResponse, error)
 
+	// PostV0EndpointsByIdMetricsErrorsSummaryWithResponse Returns RPC and HTTP error counts for one endpoint for a time range.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/endpoints/{id}/metrics/errors/summary (the `PostV0EndpointsByIdMetricsErrorsSummary` operationId).
+	PostV0EndpointsByIdMetricsErrorsSummaryWithResponse(ctx context.Context, id string, params *PostV0EndpointsByIdMetricsErrorsSummaryParams, reqEditors ...RequestEditorFn) (*PostV0EndpointsByIdMetricsErrorsSummaryResponse, error)
+
 	// GetV0EndpointsByIdRateLimitsWithResponse Gets endpoint rate limits.
 	//
 	// Gets endpoint rate limits. The response returns an array with the source for each rate limit, including plan defaults and user-set overrides.
@@ -6043,7 +7704,7 @@ type ClientWithResponsesInterface interface {
 
 	// PatchV0EndpointsByIdRateLimitsWithBodyWithResponse Updates endpoint rate limits.
 	//
-	// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.
+	// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -6052,7 +7713,7 @@ type ClientWithResponsesInterface interface {
 
 	// PatchV0EndpointsByIdRateLimitsWithResponse Updates endpoint rate limits.
 	//
-	// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.
+	// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -6287,6 +7948,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /v0/metrics (the `GetV0Metrics` operationId).
 	GetV0MetricsWithResponse(ctx context.Context, params *GetV0MetricsParams, reqEditors ...RequestEditorFn) (*GetV0MetricsResponse, error)
 
+	// PostV0MetricsErrorsSummaryWithResponse Returns account RPC and HTTP error counts for a time range.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/metrics/errors/summary (the `PostV0MetricsErrorsSummary` operationId).
+	PostV0MetricsErrorsSummaryWithResponse(ctx context.Context, params *PostV0MetricsErrorsSummaryParams, reqEditors ...RequestEditorFn) (*PostV0MetricsErrorsSummaryResponse, error)
+
+	// PostV0MetricsTrafficSummaryWithResponse Returns successful requests, transferred bytes, credits, and distinct active methods for a time range.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/metrics/traffic/summary (the `PostV0MetricsTrafficSummary` operationId).
+	PostV0MetricsTrafficSummaryWithResponse(ctx context.Context, params *PostV0MetricsTrafficSummaryParams, reqEditors ...RequestEditorFn) (*PostV0MetricsTrafficSummaryResponse, error)
+
 	// GetV0TeamsWithResponse Retrieves a list of all teams.
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -6407,6 +8082,27 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /v0/tooling-access/token (the `PostV0ToolingAccessToken` operationId).
 	PostV0ToolingAccessTokenWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostV0ToolingAccessTokenResponse, error)
 
+	// PostV0TransactionsWithResponse Lists account transaction submissions for a time range, with cursor pagination.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/transactions (the `PostV0Transactions` operationId).
+	PostV0TransactionsWithResponse(ctx context.Context, params *PostV0TransactionsParams, reqEditors ...RequestEditorFn) (*PostV0TransactionsResponse, error)
+
+	// PostV0TransactionsByNetworkByHashWithResponse Returns recorded submission attempts for a transaction, optionally including request and response payloads.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/transactions/{network}/{hash} (the `PostV0TransactionsByNetworkByHash` operationId).
+	PostV0TransactionsByNetworkByHashWithResponse(ctx context.Context, network string, hash string, params *PostV0TransactionsByNetworkByHashParams, reqEditors ...RequestEditorFn) (*PostV0TransactionsByNetworkByHashResponse, error)
+
+	// PostV0UsageCreditsSummaryWithResponse Returns total account API credits for a time range.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/usage/credits/summary (the `PostV0UsageCreditsSummary` operationId).
+	PostV0UsageCreditsSummaryWithResponse(ctx context.Context, params *PostV0UsageCreditsSummaryParams, reqEditors ...RequestEditorFn) (*PostV0UsageCreditsSummaryResponse, error)
+
 	// GetV0UsageRpcWithResponse Retrieves usage total for specified time range.
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -6443,6 +8139,27 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /v0/usage/rpc/by-tag (the `GetV0UsageRpcByTag` operationId).
 	GetV0UsageRpcByTagWithResponse(ctx context.Context, params *GetV0UsageRpcByTagParams, reqEditors ...RequestEditorFn) (*GetV0UsageRpcByTagResponse, error)
+
+	// PostV0UsageRpcSummaryWithResponse Returns account RPC requests, transferred bytes, and credits for a time range.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/usage/rpc/summary (the `PostV0UsageRpcSummary` operationId).
+	PostV0UsageRpcSummaryWithResponse(ctx context.Context, params *PostV0UsageRpcSummaryParams, reqEditors ...RequestEditorFn) (*PostV0UsageRpcSummaryResponse, error)
+
+	// PostV0UsageStreamsSummaryWithResponse Returns Streams blocks, transferred bytes, and block credits for a time range.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/usage/streams/summary (the `PostV0UsageStreamsSummary` operationId).
+	PostV0UsageStreamsSummaryWithResponse(ctx context.Context, params *PostV0UsageStreamsSummaryParams, reqEditors ...RequestEditorFn) (*PostV0UsageStreamsSummaryResponse, error)
+
+	// PostV0UsageWebhooksSummaryWithResponse Returns Webhooks deliveries and credits for a time range.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v0/usage/webhooks/summary (the `PostV0UsageWebhooksSummary` operationId).
+	PostV0UsageWebhooksSummaryWithResponse(ctx context.Context, params *PostV0UsageWebhooksSummaryParams, reqEditors ...RequestEditorFn) (*PostV0UsageWebhooksSummaryResponse, error)
 }
 
 type GetV0AccountInfoResponse struct {
@@ -6540,6 +8257,399 @@ func (r GetV0AccountInfoResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetV0AccountInfoResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostV0ActivityLogsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Array of activity log entries, newest first.
+		Data *[]struct {
+			// Action What happened, such as created, updated, deleted, paused, invited, member_removed.
+			Action *string `json:"action,omitempty"`
+
+			// Actor Who made the change.
+			Actor *struct {
+				// Email Member's email; null for api_key, quicknode, deleted_user.
+				Email *string `json:"email,omitempty"`
+
+				// Id User UUID or API key ID; null for quicknode or deleted_user.
+				Id *string `json:"id,omitempty"`
+
+				// Name Member's name or Quicknode; null for api_key.
+				Name *string `json:"name,omitempty"`
+
+				// Type One of: user, api_key, quicknode, deleted_user.
+				Type *string `json:"type,omitempty"`
+			} `json:"actor,omitempty"`
+
+			// Description Human-readable summary, the same text the dashboard shows.
+			Description *string `json:"description,omitempty"`
+
+			// Id Stable UUID for the entry.
+			Id *string `json:"id,omitempty"`
+
+			// OccurredAt When the change happened, in ISO 8601 UTC format.
+			OccurredAt *string `json:"occurred_at,omitempty"`
+
+			// Target What was changed.
+			Target *struct {
+				// Id ID of the thing that changed.
+				Id *string `json:"id,omitempty"`
+
+				// Kind One of: endpoint, team, member, role, billing, add_on, api_key.
+				Kind *string `json:"kind,omitempty"`
+
+				// Label Display name of the kind.
+				Label *string `json:"label,omitempty"`
+
+				// Name Current name where there is one; null otherwise.
+				Name *string `json:"name,omitempty"`
+			} `json:"target,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+
+		// Pagination Pagination metadata.
+		Pagination *struct {
+			// Limit Page size used.
+			Limit *int `json:"limit,omitempty"`
+
+			// Offset Number of entries skipped.
+			Offset *int `json:"offset,omitempty"`
+
+			// Total Total count of entries matching the filters.
+			Total *int `json:"total,omitempty"`
+		} `json:"pagination,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0ActivityLogsResponse) GetJSON200() *struct {
+	// Data Array of activity log entries, newest first.
+	Data *[]struct {
+		// Action What happened, such as created, updated, deleted, paused, invited, member_removed.
+		Action *string `json:"action,omitempty"`
+
+		// Actor Who made the change.
+		Actor *struct {
+			// Email Member's email; null for api_key, quicknode, deleted_user.
+			Email *string `json:"email,omitempty"`
+
+			// Id User UUID or API key ID; null for quicknode or deleted_user.
+			Id *string `json:"id,omitempty"`
+
+			// Name Member's name or Quicknode; null for api_key.
+			Name *string `json:"name,omitempty"`
+
+			// Type One of: user, api_key, quicknode, deleted_user.
+			Type *string `json:"type,omitempty"`
+		} `json:"actor,omitempty"`
+
+		// Description Human-readable summary, the same text the dashboard shows.
+		Description *string `json:"description,omitempty"`
+
+		// Id Stable UUID for the entry.
+		Id *string `json:"id,omitempty"`
+
+		// OccurredAt When the change happened, in ISO 8601 UTC format.
+		OccurredAt *string `json:"occurred_at,omitempty"`
+
+		// Target What was changed.
+		Target *struct {
+			// Id ID of the thing that changed.
+			Id *string `json:"id,omitempty"`
+
+			// Kind One of: endpoint, team, member, role, billing, add_on, api_key.
+			Kind *string `json:"kind,omitempty"`
+
+			// Label Display name of the kind.
+			Label *string `json:"label,omitempty"`
+
+			// Name Current name where there is one; null otherwise.
+			Name *string `json:"name,omitempty"`
+		} `json:"target,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+
+	// Pagination Pagination metadata.
+	Pagination *struct {
+		// Limit Page size used.
+		Limit *int `json:"limit,omitempty"`
+
+		// Offset Number of entries skipped.
+		Offset *int `json:"offset,omitempty"`
+
+		// Total Total count of entries matching the filters.
+		Total *int `json:"total,omitempty"`
+	} `json:"pagination,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0ActivityLogsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0ActivityLogsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0ActivityLogsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0ActivityLogsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetV0ActivityLogsFiltersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Filter values available for your account.
+		Data *struct {
+			// Actors Members and API keys that appear in your log.
+			Actors *[]struct {
+				// Id User UUID or API key ID. Use this value for the actor filter.
+				Id *string `json:"id,omitempty"`
+
+				// Name Member's name; null for API keys.
+				Name *string `json:"name,omitempty"`
+
+				// Type Either user or api_key.
+				Type *string `json:"type,omitempty"`
+			} `json:"actors,omitempty"`
+
+			// Types Entry types you can filter by.
+			Types *[]struct {
+				// Label Display name for the type.
+				Label *string `json:"label,omitempty"`
+
+				// Value Type value to use in the type filter.
+				Value *string `json:"value,omitempty"`
+			} `json:"types,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetV0ActivityLogsFiltersResponse) GetJSON200() *struct {
+	// Data Filter values available for your account.
+	Data *struct {
+		// Actors Members and API keys that appear in your log.
+		Actors *[]struct {
+			// Id User UUID or API key ID. Use this value for the actor filter.
+			Id *string `json:"id,omitempty"`
+
+			// Name Member's name; null for API keys.
+			Name *string `json:"name,omitempty"`
+
+			// Type Either user or api_key.
+			Type *string `json:"type,omitempty"`
+		} `json:"actors,omitempty"`
+
+		// Types Entry types you can filter by.
+		Types *[]struct {
+			// Label Display name for the type.
+			Label *string `json:"label,omitempty"`
+
+			// Value Type value to use in the type filter.
+			Value *string `json:"value,omitempty"`
+		} `json:"types,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r GetV0ActivityLogsFiltersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetV0ActivityLogsFiltersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetV0ActivityLogsFiltersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetV0ActivityLogsFiltersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetV0ActivityLogsByIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data The activity log entry.
+		Data *struct {
+			// Action What happened, such as created, updated, deleted, paused, invited, member_removed.
+			Action *string `json:"action,omitempty"`
+
+			// Actor Who made the change.
+			Actor *struct {
+				// Email Member's email; null for api_key, quicknode, deleted_user.
+				Email *string `json:"email,omitempty"`
+
+				// Id User UUID or API key ID; null for quicknode or deleted_user.
+				Id *string `json:"id,omitempty"`
+
+				// Name Member's name or Quicknode; null for api_key.
+				Name *string `json:"name,omitempty"`
+
+				// Type One of: user, api_key, quicknode, deleted_user.
+				Type *string `json:"type,omitempty"`
+			} `json:"actor,omitempty"`
+
+			// Description Human-readable summary, the same text the dashboard shows.
+			Description *string `json:"description,omitempty"`
+
+			// Id Stable UUID for the entry.
+			Id *string `json:"id,omitempty"`
+
+			// OccurredAt When the change happened, in ISO 8601 UTC format.
+			OccurredAt *string `json:"occurred_at,omitempty"`
+
+			// Target What was changed.
+			Target *struct {
+				// Id ID of the thing that changed.
+				Id *string `json:"id,omitempty"`
+
+				// Kind One of: endpoint, team, member, role, billing, add_on, api_key.
+				Kind *string `json:"kind,omitempty"`
+
+				// Label Display name of the kind.
+				Label *string `json:"label,omitempty"`
+
+				// Name Current name where there is one; null otherwise.
+				Name *string `json:"name,omitempty"`
+			} `json:"target,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetV0ActivityLogsByIdResponse) GetJSON200() *struct {
+	// Data The activity log entry.
+	Data *struct {
+		// Action What happened, such as created, updated, deleted, paused, invited, member_removed.
+		Action *string `json:"action,omitempty"`
+
+		// Actor Who made the change.
+		Actor *struct {
+			// Email Member's email; null for api_key, quicknode, deleted_user.
+			Email *string `json:"email,omitempty"`
+
+			// Id User UUID or API key ID; null for quicknode or deleted_user.
+			Id *string `json:"id,omitempty"`
+
+			// Name Member's name or Quicknode; null for api_key.
+			Name *string `json:"name,omitempty"`
+
+			// Type One of: user, api_key, quicknode, deleted_user.
+			Type *string `json:"type,omitempty"`
+		} `json:"actor,omitempty"`
+
+		// Description Human-readable summary, the same text the dashboard shows.
+		Description *string `json:"description,omitempty"`
+
+		// Id Stable UUID for the entry.
+		Id *string `json:"id,omitempty"`
+
+		// OccurredAt When the change happened, in ISO 8601 UTC format.
+		OccurredAt *string `json:"occurred_at,omitempty"`
+
+		// Target What was changed.
+		Target *struct {
+			// Id ID of the thing that changed.
+			Id *string `json:"id,omitempty"`
+
+			// Kind One of: endpoint, team, member, role, billing, add_on, api_key.
+			Kind *string `json:"kind,omitempty"`
+
+			// Label Display name of the kind.
+			Label *string `json:"label,omitempty"`
+
+			// Name Current name where there is one; null otherwise.
+			Name *string `json:"name,omitempty"`
+		} `json:"target,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r GetV0ActivityLogsByIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetV0ActivityLogsByIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetV0ActivityLogsByIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetV0ActivityLogsByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -8647,6 +10757,9 @@ type GetV0EndpointsByIdMethodRateLimitsResponse struct {
 				// Interval The time interval for the rate limit
 				Interval *string `json:"interval,omitempty"`
 
+				// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+				LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 				// Methods A list of method names to which the rate limiter applies
 				Methods *[]string `json:"methods,omitempty"`
 
@@ -8677,6 +10790,9 @@ func (r GetV0EndpointsByIdMethodRateLimitsResponse) GetJSON200() *struct {
 
 			// Interval The time interval for the rate limit
 			Interval *string `json:"interval,omitempty"`
+
+			// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+			LimitByIp *bool `json:"limit_by_ip,omitempty"`
 
 			// Methods A list of method names to which the rate limiter applies
 			Methods *[]string `json:"methods,omitempty"`
@@ -8740,6 +10856,9 @@ type PostV0EndpointsByIdMethodRateLimitsResponse struct {
 			// Interval The time interval for the rate limit
 			Interval *string `json:"interval,omitempty"`
 
+			// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+			LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 			// Methods A list of methods the rate limiter applies to
 			Methods *[]string `json:"methods,omitempty"`
 
@@ -8767,6 +10886,9 @@ func (r PostV0EndpointsByIdMethodRateLimitsResponse) GetJSON200() *struct {
 
 		// Interval The time interval for the rate limit
 		Interval *string `json:"interval,omitempty"`
+
+		// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+		LimitByIp *bool `json:"limit_by_ip,omitempty"`
 
 		// Methods A list of methods the rate limiter applies to
 		Methods *[]string `json:"methods,omitempty"`
@@ -8882,6 +11004,9 @@ type PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse struct {
 			// Interval The time interval for the rate limit
 			Interval *string `json:"interval,omitempty"`
 
+			// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+			LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 			// Methods A list of methods the rate limiter applies to
 			Methods *[]string `json:"methods,omitempty"`
 
@@ -8909,6 +11034,9 @@ func (r PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse) GetJSON
 
 		// Interval The time interval for the rate limit
 		Interval *string `json:"interval,omitempty"`
+
+		// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+		LimitByIp *bool `json:"limit_by_ip,omitempty"`
 
 		// Methods A list of methods the rate limiter applies to
 		Methods *[]string `json:"methods,omitempty"`
@@ -9020,6 +11148,119 @@ func (r GetV0EndpointsByIdMetricsResponse) ContentType() string {
 	return ""
 }
 
+type PostV0EndpointsByIdMetricsErrorsSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// Breakdown Grouped results. Present when grouping is requested; can be empty.
+			Breakdown *[]struct {
+				// Count Number of errors in this group.
+				Count *float32 `json:"count,omitempty"`
+
+				// Kind Error kind: rpc or http.
+				Kind *string `json:"kind,omitempty"`
+
+				// Method RPC method name. In a breakdown, present when grouping by method.
+				Method *string `json:"method,omitempty"`
+			} `json:"breakdown,omitempty"`
+
+			// From Effective start of the returned time range, in ISO 8601 format.
+			From *string `json:"from,omitempty"`
+
+			// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+			NextCursor *string `json:"next_cursor,omitempty"`
+
+			// To Effective end of the returned time range, in ISO 8601 format.
+			To *string `json:"to,omitempty"`
+
+			// Totals Aggregate totals for the selected time range.
+			Totals *struct {
+				// HttpErrors Number of HTTP errors.
+				HttpErrors *float32 `json:"http_errors,omitempty"`
+
+				// RpcErrors Number of RPC errors.
+				RpcErrors *float32 `json:"rpc_errors,omitempty"`
+			} `json:"totals,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0EndpointsByIdMetricsErrorsSummaryResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// Breakdown Grouped results. Present when grouping is requested; can be empty.
+		Breakdown *[]struct {
+			// Count Number of errors in this group.
+			Count *float32 `json:"count,omitempty"`
+
+			// Kind Error kind: rpc or http.
+			Kind *string `json:"kind,omitempty"`
+
+			// Method RPC method name. In a breakdown, present when grouping by method.
+			Method *string `json:"method,omitempty"`
+		} `json:"breakdown,omitempty"`
+
+		// From Effective start of the returned time range, in ISO 8601 format.
+		From *string `json:"from,omitempty"`
+
+		// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+		NextCursor *string `json:"next_cursor,omitempty"`
+
+		// To Effective end of the returned time range, in ISO 8601 format.
+		To *string `json:"to,omitempty"`
+
+		// Totals Aggregate totals for the selected time range.
+		Totals *struct {
+			// HttpErrors Number of HTTP errors.
+			HttpErrors *float32 `json:"http_errors,omitempty"`
+
+			// RpcErrors Number of RPC errors.
+			RpcErrors *float32 `json:"rpc_errors,omitempty"`
+		} `json:"totals,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0EndpointsByIdMetricsErrorsSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0EndpointsByIdMetricsErrorsSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0EndpointsByIdMetricsErrorsSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0EndpointsByIdMetricsErrorsSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetV0EndpointsByIdRateLimitsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -9027,6 +11268,9 @@ type GetV0EndpointsByIdRateLimitsResponse struct {
 	JSON200 *struct {
 		// Data The data object which contains the endpoint rate limit configuration
 		Data *struct {
+			// LimitByIp Whether the endpoint rate limits apply to each client IP address
+			LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 			// RateLimits An array of endpoint rate limit configurations
 			RateLimits *[]struct {
 				// Bucket The rate limit bucket, such as rps, rpm, or rpd
@@ -9052,6 +11296,9 @@ type GetV0EndpointsByIdRateLimitsResponse struct {
 func (r GetV0EndpointsByIdRateLimitsResponse) GetJSON200() *struct {
 	// Data The data object which contains the endpoint rate limit configuration
 	Data *struct {
+		// LimitByIp Whether the endpoint rate limits apply to each client IP address
+		LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 		// RateLimits An array of endpoint rate limit configurations
 		RateLimits *[]struct {
 			// Bucket The rate limit bucket, such as rps, rpm, or rpd
@@ -9110,6 +11357,9 @@ type PatchV0EndpointsByIdRateLimitsResponse struct {
 	JSON200 *struct {
 		// Data The data object which contains the following fields:
 		Data *struct {
+			// LimitByIp Whether the endpoint rate limits apply to each client IP address
+			LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 			// Limits The limits object which contains the following fields:
 			Limits *struct {
 				// Rpd The maximum number of requests allowed per day. A value of -1 indicates that no endpoint-level override is set for this bucket.
@@ -9132,6 +11382,9 @@ type PatchV0EndpointsByIdRateLimitsResponse struct {
 func (r PatchV0EndpointsByIdRateLimitsResponse) GetJSON200() *struct {
 	// Data The data object which contains the following fields:
 	Data *struct {
+		// LimitByIp Whether the endpoint rate limits apply to each client IP address
+		LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 		// Limits The limits object which contains the following fields:
 		Limits *struct {
 			// Rpd The maximum number of requests allowed per day. A value of -1 indicates that no endpoint-level override is set for this bucket.
@@ -10765,6 +13018,286 @@ func (r GetV0MetricsResponse) ContentType() string {
 	return ""
 }
 
+type PostV0MetricsErrorsSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// Breakdown Grouped results. Present when grouping is requested; can be empty.
+			Breakdown *[]struct {
+				// Count Number of errors in this group.
+				Count *float32 `json:"count,omitempty"`
+
+				// Kind Error kind: rpc or http.
+				Kind *string `json:"kind,omitempty"`
+
+				// Method RPC method name. In a breakdown, present when grouping by method.
+				Method *string `json:"method,omitempty"`
+			} `json:"breakdown,omitempty"`
+
+			// From Effective start of the returned time range, in ISO 8601 format.
+			From *string `json:"from,omitempty"`
+
+			// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+			NextCursor *string `json:"next_cursor,omitempty"`
+
+			// To Effective end of the returned time range, in ISO 8601 format.
+			To *string `json:"to,omitempty"`
+
+			// Totals Aggregate totals for the selected time range.
+			Totals *struct {
+				// HttpErrors Number of HTTP errors.
+				HttpErrors *float32 `json:"http_errors,omitempty"`
+
+				// RpcErrors Number of RPC errors.
+				RpcErrors *float32 `json:"rpc_errors,omitempty"`
+			} `json:"totals,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0MetricsErrorsSummaryResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// Breakdown Grouped results. Present when grouping is requested; can be empty.
+		Breakdown *[]struct {
+			// Count Number of errors in this group.
+			Count *float32 `json:"count,omitempty"`
+
+			// Kind Error kind: rpc or http.
+			Kind *string `json:"kind,omitempty"`
+
+			// Method RPC method name. In a breakdown, present when grouping by method.
+			Method *string `json:"method,omitempty"`
+		} `json:"breakdown,omitempty"`
+
+		// From Effective start of the returned time range, in ISO 8601 format.
+		From *string `json:"from,omitempty"`
+
+		// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+		NextCursor *string `json:"next_cursor,omitempty"`
+
+		// To Effective end of the returned time range, in ISO 8601 format.
+		To *string `json:"to,omitempty"`
+
+		// Totals Aggregate totals for the selected time range.
+		Totals *struct {
+			// HttpErrors Number of HTTP errors.
+			HttpErrors *float32 `json:"http_errors,omitempty"`
+
+			// RpcErrors Number of RPC errors.
+			RpcErrors *float32 `json:"rpc_errors,omitempty"`
+		} `json:"totals,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0MetricsErrorsSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0MetricsErrorsSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0MetricsErrorsSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0MetricsErrorsSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostV0MetricsTrafficSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// Breakdown Grouped results. Present when grouping is requested; can be empty.
+			Breakdown *[]struct {
+				// ActiveMethods Number of distinct active methods.
+				ActiveMethods *int `json:"active_methods,omitempty"`
+
+				// Bytes Number of bytes transferred.
+				Bytes *int `json:"bytes,omitempty"`
+
+				// BytesCredits Credits consumed by transferred bytes.
+				BytesCredits *int `json:"bytes_credits,omitempty"`
+
+				// Credits Total API credits consumed.
+				Credits *int `json:"credits,omitempty"`
+
+				// Endpoint Endpoint UUID; present when grouping by endpoint.
+				Endpoint *string `json:"endpoint,omitempty"`
+
+				// Method RPC method name. In a breakdown, present when grouping by method.
+				Method *string `json:"method,omitempty"`
+
+				// RequestCredits Credits consumed by requests.
+				RequestCredits *int `json:"request_credits,omitempty"`
+
+				// SuccessfulRequests Number of successful requests.
+				SuccessfulRequests *int `json:"successful_requests,omitempty"`
+			} `json:"breakdown,omitempty"`
+
+			// From Effective start of the returned time range, in ISO 8601 format.
+			From *string `json:"from,omitempty"`
+
+			// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+			NextCursor *string `json:"next_cursor,omitempty"`
+
+			// To Effective end of the returned time range, in ISO 8601 format.
+			To *string `json:"to,omitempty"`
+
+			// Totals Aggregate totals for the selected time range.
+			Totals *struct {
+				// ActiveMethods Number of distinct active methods.
+				ActiveMethods *int `json:"active_methods,omitempty"`
+
+				// Bytes Number of bytes transferred.
+				Bytes *int `json:"bytes,omitempty"`
+
+				// BytesCredits Credits consumed by transferred bytes.
+				BytesCredits *int `json:"bytes_credits,omitempty"`
+
+				// Credits Total API credits consumed.
+				Credits *int `json:"credits,omitempty"`
+
+				// RequestCredits Credits consumed by requests.
+				RequestCredits *int `json:"request_credits,omitempty"`
+
+				// SuccessfulRequests Number of successful requests.
+				SuccessfulRequests *int `json:"successful_requests,omitempty"`
+			} `json:"totals,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0MetricsTrafficSummaryResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// Breakdown Grouped results. Present when grouping is requested; can be empty.
+		Breakdown *[]struct {
+			// ActiveMethods Number of distinct active methods.
+			ActiveMethods *int `json:"active_methods,omitempty"`
+
+			// Bytes Number of bytes transferred.
+			Bytes *int `json:"bytes,omitempty"`
+
+			// BytesCredits Credits consumed by transferred bytes.
+			BytesCredits *int `json:"bytes_credits,omitempty"`
+
+			// Credits Total API credits consumed.
+			Credits *int `json:"credits,omitempty"`
+
+			// Endpoint Endpoint UUID; present when grouping by endpoint.
+			Endpoint *string `json:"endpoint,omitempty"`
+
+			// Method RPC method name. In a breakdown, present when grouping by method.
+			Method *string `json:"method,omitempty"`
+
+			// RequestCredits Credits consumed by requests.
+			RequestCredits *int `json:"request_credits,omitempty"`
+
+			// SuccessfulRequests Number of successful requests.
+			SuccessfulRequests *int `json:"successful_requests,omitempty"`
+		} `json:"breakdown,omitempty"`
+
+		// From Effective start of the returned time range, in ISO 8601 format.
+		From *string `json:"from,omitempty"`
+
+		// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+		NextCursor *string `json:"next_cursor,omitempty"`
+
+		// To Effective end of the returned time range, in ISO 8601 format.
+		To *string `json:"to,omitempty"`
+
+		// Totals Aggregate totals for the selected time range.
+		Totals *struct {
+			// ActiveMethods Number of distinct active methods.
+			ActiveMethods *int `json:"active_methods,omitempty"`
+
+			// Bytes Number of bytes transferred.
+			Bytes *int `json:"bytes,omitempty"`
+
+			// BytesCredits Credits consumed by transferred bytes.
+			BytesCredits *int `json:"bytes_credits,omitempty"`
+
+			// Credits Total API credits consumed.
+			Credits *int `json:"credits,omitempty"`
+
+			// RequestCredits Credits consumed by requests.
+			RequestCredits *int `json:"request_credits,omitempty"`
+
+			// SuccessfulRequests Number of successful requests.
+			SuccessfulRequests *int `json:"successful_requests,omitempty"`
+		} `json:"totals,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0MetricsTrafficSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0MetricsTrafficSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0MetricsTrafficSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0MetricsTrafficSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetV0TeamsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -11737,6 +14270,363 @@ func (r PostV0ToolingAccessTokenResponse) ContentType() string {
 	return ""
 }
 
+type PostV0TransactionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// From Effective start of the returned time range, in ISO 8601 format.
+			From *string `json:"from,omitempty"`
+
+			// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+			NextCursor *string `json:"next_cursor,omitempty"`
+
+			// To Effective end of the returned time range, in ISO 8601 format.
+			To *string `json:"to,omitempty"`
+
+			// Transactions Transaction submissions matching the selected time range and filters.
+			Transactions *[]struct {
+				// Archive Whether the transaction is marked as archived.
+				Archive *bool `json:"archive,omitempty"`
+
+				// AttemptCount Number of recorded submission attempts.
+				AttemptCount *int `json:"attempt_count,omitempty"`
+
+				// EndpointIds Endpoint UUIDs associated with the submissions. These are not the numeric Admin API endpoint IDs.
+				EndpointIds *[]interface{} `json:"endpoint_ids,omitempty"`
+
+				// FirstSubmittedAt Timestamp of the first recorded submission.
+				FirstSubmittedAt *string `json:"first_submitted_at,omitempty"`
+
+				// Height Block height when available; otherwise null.
+				Height *string `json:"height,omitempty"`
+
+				// LastSubmittedAt Timestamp of the most recent recorded submission.
+				LastSubmittedAt *string `json:"last_submitted_at,omitempty"`
+
+				// Methods RPC method names used for submission.
+				Methods *[]interface{} `json:"methods,omitempty"`
+
+				// Network Network identifier.
+				Network *string `json:"network,omitempty"`
+
+				// State Recorded transaction submission state; for example, submitted. This is not confirmation of inclusion or finality.
+				State *string `json:"state,omitempty"`
+
+				// TransactionHash Transaction hash or signature.
+				TransactionHash *string `json:"transaction_hash,omitempty"`
+			} `json:"transactions,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0TransactionsResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// From Effective start of the returned time range, in ISO 8601 format.
+		From *string `json:"from,omitempty"`
+
+		// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+		NextCursor *string `json:"next_cursor,omitempty"`
+
+		// To Effective end of the returned time range, in ISO 8601 format.
+		To *string `json:"to,omitempty"`
+
+		// Transactions Transaction submissions matching the selected time range and filters.
+		Transactions *[]struct {
+			// Archive Whether the transaction is marked as archived.
+			Archive *bool `json:"archive,omitempty"`
+
+			// AttemptCount Number of recorded submission attempts.
+			AttemptCount *int `json:"attempt_count,omitempty"`
+
+			// EndpointIds Endpoint UUIDs associated with the submissions. These are not the numeric Admin API endpoint IDs.
+			EndpointIds *[]interface{} `json:"endpoint_ids,omitempty"`
+
+			// FirstSubmittedAt Timestamp of the first recorded submission.
+			FirstSubmittedAt *string `json:"first_submitted_at,omitempty"`
+
+			// Height Block height when available; otherwise null.
+			Height *string `json:"height,omitempty"`
+
+			// LastSubmittedAt Timestamp of the most recent recorded submission.
+			LastSubmittedAt *string `json:"last_submitted_at,omitempty"`
+
+			// Methods RPC method names used for submission.
+			Methods *[]interface{} `json:"methods,omitempty"`
+
+			// Network Network identifier.
+			Network *string `json:"network,omitempty"`
+
+			// State Recorded transaction submission state; for example, submitted. This is not confirmation of inclusion or finality.
+			State *string `json:"state,omitempty"`
+
+			// TransactionHash Transaction hash or signature.
+			TransactionHash *string `json:"transaction_hash,omitempty"`
+		} `json:"transactions,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0TransactionsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0TransactionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0TransactionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0TransactionsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostV0TransactionsByNetworkByHashResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// Data Recorded transaction details; null when exists is false.
+			Data *struct {
+				// Attempts Recorded attempts to submit this transaction.
+				Attempts *[]struct {
+					// EndpointId Endpoint UUID for this attempt; not the numeric Admin API endpoint ID.
+					EndpointId *string `json:"endpoint_id,omitempty"`
+
+					// Method RPC method name. In a breakdown, present when grouping by method.
+					Method *string `json:"method,omitempty"`
+
+					// Payloads Optional request and response payloads, returned when include_payloads=true and available.
+					Payloads *struct {
+						// Request Recorded request payload as a JSON-encoded string.
+						Request *string `json:"request,omitempty"`
+
+						// Response Recorded response payload as a JSON-encoded string.
+						Response *string `json:"response,omitempty"`
+					} `json:"payloads,omitempty"`
+
+					// RequestId Identifier of the recorded request.
+					RequestId *string `json:"request_id,omitempty"`
+
+					// SubmittedAt Timestamp of the submission attempt.
+					SubmittedAt *string `json:"submitted_at,omitempty"`
+				} `json:"attempts,omitempty"`
+
+				// FirstSubmittedAt Timestamp of the first recorded submission.
+				FirstSubmittedAt *string `json:"first_submitted_at,omitempty"`
+
+				// LastSubmittedAt Timestamp of the most recent recorded submission.
+				LastSubmittedAt *string `json:"last_submitted_at,omitempty"`
+
+				// Network Network identifier.
+				Network *string `json:"network,omitempty"`
+
+				// State Recorded transaction submission state; for example, submitted. This is not confirmation of inclusion or finality.
+				State *string `json:"state,omitempty"`
+
+				// TransactionHash Transaction hash or signature.
+				TransactionHash *string `json:"transaction_hash,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Exists Whether a matching transaction submission was found.
+			Exists *bool `json:"exists,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0TransactionsByNetworkByHashResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// Data Recorded transaction details; null when exists is false.
+		Data *struct {
+			// Attempts Recorded attempts to submit this transaction.
+			Attempts *[]struct {
+				// EndpointId Endpoint UUID for this attempt; not the numeric Admin API endpoint ID.
+				EndpointId *string `json:"endpoint_id,omitempty"`
+
+				// Method RPC method name. In a breakdown, present when grouping by method.
+				Method *string `json:"method,omitempty"`
+
+				// Payloads Optional request and response payloads, returned when include_payloads=true and available.
+				Payloads *struct {
+					// Request Recorded request payload as a JSON-encoded string.
+					Request *string `json:"request,omitempty"`
+
+					// Response Recorded response payload as a JSON-encoded string.
+					Response *string `json:"response,omitempty"`
+				} `json:"payloads,omitempty"`
+
+				// RequestId Identifier of the recorded request.
+				RequestId *string `json:"request_id,omitempty"`
+
+				// SubmittedAt Timestamp of the submission attempt.
+				SubmittedAt *string `json:"submitted_at,omitempty"`
+			} `json:"attempts,omitempty"`
+
+			// FirstSubmittedAt Timestamp of the first recorded submission.
+			FirstSubmittedAt *string `json:"first_submitted_at,omitempty"`
+
+			// LastSubmittedAt Timestamp of the most recent recorded submission.
+			LastSubmittedAt *string `json:"last_submitted_at,omitempty"`
+
+			// Network Network identifier.
+			Network *string `json:"network,omitempty"`
+
+			// State Recorded transaction submission state; for example, submitted. This is not confirmation of inclusion or finality.
+			State *string `json:"state,omitempty"`
+
+			// TransactionHash Transaction hash or signature.
+			TransactionHash *string `json:"transaction_hash,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Exists Whether a matching transaction submission was found.
+		Exists *bool `json:"exists,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0TransactionsByNetworkByHashResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0TransactionsByNetworkByHashResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0TransactionsByNetworkByHashResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0TransactionsByNetworkByHashResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostV0UsageCreditsSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// From Effective start of the returned time range, in ISO 8601 format.
+			From *string `json:"from,omitempty"`
+
+			// To Effective end of the returned time range, in ISO 8601 format.
+			To *string `json:"to,omitempty"`
+
+			// Totals Aggregate totals for the selected time range.
+			Totals *struct {
+				// Credits Total API credits consumed.
+				Credits *int `json:"credits,omitempty"`
+			} `json:"totals,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0UsageCreditsSummaryResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// From Effective start of the returned time range, in ISO 8601 format.
+		From *string `json:"from,omitempty"`
+
+		// To Effective end of the returned time range, in ISO 8601 format.
+		To *string `json:"to,omitempty"`
+
+		// Totals Aggregate totals for the selected time range.
+		Totals *struct {
+			// Credits Total API credits consumed.
+			Credits *int `json:"credits,omitempty"`
+		} `json:"totals,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0UsageCreditsSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0UsageCreditsSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0UsageCreditsSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0UsageCreditsSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetV0UsageRpcResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -12296,6 +15186,405 @@ func (r GetV0UsageRpcByTagResponse) ContentType() string {
 	return ""
 }
 
+type PostV0UsageRpcSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// Breakdown Grouped results. Present when grouping is requested; can be empty.
+			Breakdown *[]struct {
+				// Bytes Number of bytes transferred.
+				Bytes *int `json:"bytes,omitempty"`
+
+				// Credits Total API credits consumed.
+				Credits *int `json:"credits,omitempty"`
+
+				// DataCredits Credits consumed by data transfer.
+				DataCredits *int `json:"data_credits,omitempty"`
+
+				// Endpoint Endpoint UUID; present when grouping by endpoint.
+				Endpoint *string `json:"endpoint,omitempty"`
+
+				// Method RPC method name. In a breakdown, present when grouping by method.
+				Method *string `json:"method,omitempty"`
+
+				// Network Present when grouping by network.
+				Network *string `json:"network,omitempty"`
+
+				// Requests Number of RPC requests.
+				Requests *int `json:"requests,omitempty"`
+
+				// RpcCredits Credits consumed by RPC requests.
+				RpcCredits *int `json:"rpc_credits,omitempty"`
+			} `json:"breakdown,omitempty"`
+
+			// From Effective start of the returned time range, in ISO 8601 format.
+			From *string `json:"from,omitempty"`
+
+			// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+			NextCursor *string `json:"next_cursor,omitempty"`
+
+			// To Effective end of the returned time range, in ISO 8601 format.
+			To *string `json:"to,omitempty"`
+
+			// Totals Aggregate totals for the selected time range.
+			Totals *struct {
+				// Bytes Number of bytes transferred.
+				Bytes *int `json:"bytes,omitempty"`
+
+				// Credits Total API credits consumed.
+				Credits *int `json:"credits,omitempty"`
+
+				// DataCredits Credits consumed by data transfer.
+				DataCredits *int `json:"data_credits,omitempty"`
+
+				// Requests Number of RPC requests.
+				Requests *int `json:"requests,omitempty"`
+
+				// RpcCredits Credits consumed by RPC requests.
+				RpcCredits *int `json:"rpc_credits,omitempty"`
+			} `json:"totals,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0UsageRpcSummaryResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// Breakdown Grouped results. Present when grouping is requested; can be empty.
+		Breakdown *[]struct {
+			// Bytes Number of bytes transferred.
+			Bytes *int `json:"bytes,omitempty"`
+
+			// Credits Total API credits consumed.
+			Credits *int `json:"credits,omitempty"`
+
+			// DataCredits Credits consumed by data transfer.
+			DataCredits *int `json:"data_credits,omitempty"`
+
+			// Endpoint Endpoint UUID; present when grouping by endpoint.
+			Endpoint *string `json:"endpoint,omitempty"`
+
+			// Method RPC method name. In a breakdown, present when grouping by method.
+			Method *string `json:"method,omitempty"`
+
+			// Network Present when grouping by network.
+			Network *string `json:"network,omitempty"`
+
+			// Requests Number of RPC requests.
+			Requests *int `json:"requests,omitempty"`
+
+			// RpcCredits Credits consumed by RPC requests.
+			RpcCredits *int `json:"rpc_credits,omitempty"`
+		} `json:"breakdown,omitempty"`
+
+		// From Effective start of the returned time range, in ISO 8601 format.
+		From *string `json:"from,omitempty"`
+
+		// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+		NextCursor *string `json:"next_cursor,omitempty"`
+
+		// To Effective end of the returned time range, in ISO 8601 format.
+		To *string `json:"to,omitempty"`
+
+		// Totals Aggregate totals for the selected time range.
+		Totals *struct {
+			// Bytes Number of bytes transferred.
+			Bytes *int `json:"bytes,omitempty"`
+
+			// Credits Total API credits consumed.
+			Credits *int `json:"credits,omitempty"`
+
+			// DataCredits Credits consumed by data transfer.
+			DataCredits *int `json:"data_credits,omitempty"`
+
+			// Requests Number of RPC requests.
+			Requests *int `json:"requests,omitempty"`
+
+			// RpcCredits Credits consumed by RPC requests.
+			RpcCredits *int `json:"rpc_credits,omitempty"`
+		} `json:"totals,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0UsageRpcSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0UsageRpcSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0UsageRpcSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0UsageRpcSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostV0UsageStreamsSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// Breakdown Grouped results. Present when grouping is requested; can be empty.
+			Breakdown *[]struct {
+				// BlockCredits Credits consumed by Streams blocks.
+				BlockCredits *int `json:"block_credits,omitempty"`
+
+				// Blocks Number of Streams blocks processed.
+				Blocks *int `json:"blocks,omitempty"`
+
+				// Bytes Number of bytes transferred.
+				Bytes *int `json:"bytes,omitempty"`
+
+				// Stream Stream identifier. Present when grouping by stream.
+				Stream *string `json:"stream,omitempty"`
+			} `json:"breakdown,omitempty"`
+
+			// From Effective start of the returned time range, in ISO 8601 format.
+			From *string `json:"from,omitempty"`
+
+			// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+			NextCursor *string `json:"next_cursor,omitempty"`
+
+			// To Effective end of the returned time range, in ISO 8601 format.
+			To *string `json:"to,omitempty"`
+
+			// Totals Aggregate totals for the selected time range.
+			Totals *struct {
+				// BlockCredits Credits consumed by Streams blocks.
+				BlockCredits *int `json:"block_credits,omitempty"`
+
+				// Blocks Number of Streams blocks processed.
+				Blocks *int `json:"blocks,omitempty"`
+
+				// Bytes Number of bytes transferred.
+				Bytes *int `json:"bytes,omitempty"`
+			} `json:"totals,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0UsageStreamsSummaryResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// Breakdown Grouped results. Present when grouping is requested; can be empty.
+		Breakdown *[]struct {
+			// BlockCredits Credits consumed by Streams blocks.
+			BlockCredits *int `json:"block_credits,omitempty"`
+
+			// Blocks Number of Streams blocks processed.
+			Blocks *int `json:"blocks,omitempty"`
+
+			// Bytes Number of bytes transferred.
+			Bytes *int `json:"bytes,omitempty"`
+
+			// Stream Stream identifier. Present when grouping by stream.
+			Stream *string `json:"stream,omitempty"`
+		} `json:"breakdown,omitempty"`
+
+		// From Effective start of the returned time range, in ISO 8601 format.
+		From *string `json:"from,omitempty"`
+
+		// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+		NextCursor *string `json:"next_cursor,omitempty"`
+
+		// To Effective end of the returned time range, in ISO 8601 format.
+		To *string `json:"to,omitempty"`
+
+		// Totals Aggregate totals for the selected time range.
+		Totals *struct {
+			// BlockCredits Credits consumed by Streams blocks.
+			BlockCredits *int `json:"block_credits,omitempty"`
+
+			// Blocks Number of Streams blocks processed.
+			Blocks *int `json:"blocks,omitempty"`
+
+			// Bytes Number of bytes transferred.
+			Bytes *int `json:"bytes,omitempty"`
+		} `json:"totals,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0UsageStreamsSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0UsageStreamsSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0UsageStreamsSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0UsageStreamsSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostV0UsageWebhooksSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		// Data Response data. Null when the request fails.
+		Data *struct {
+			// Breakdown Grouped results. Present when grouping is requested; can be empty.
+			Breakdown *[]struct {
+				// Credits Total API credits consumed.
+				Credits *int `json:"credits,omitempty"`
+
+				// Deliveries Number of Webhooks deliveries.
+				Deliveries *int `json:"deliveries,omitempty"`
+
+				// Webhook Webhook identifier. Present when grouping by webhook.
+				Webhook *string `json:"webhook,omitempty"`
+			} `json:"breakdown,omitempty"`
+
+			// From Effective start of the returned time range, in ISO 8601 format.
+			From *string `json:"from,omitempty"`
+
+			// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+			NextCursor *string `json:"next_cursor,omitempty"`
+
+			// To Effective end of the returned time range, in ISO 8601 format.
+			To *string `json:"to,omitempty"`
+
+			// Totals Aggregate totals for the selected time range.
+			Totals *struct {
+				// Credits Total API credits consumed.
+				Credits *int `json:"credits,omitempty"`
+
+				// Deliveries Number of Webhooks deliveries.
+				Deliveries *int `json:"deliveries,omitempty"`
+			} `json:"totals,omitempty"`
+		} `json:"data,omitempty"`
+
+		// Error Error message on failure; null on success.
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostV0UsageWebhooksSummaryResponse) GetJSON200() *struct {
+	// Data Response data. Null when the request fails.
+	Data *struct {
+		// Breakdown Grouped results. Present when grouping is requested; can be empty.
+		Breakdown *[]struct {
+			// Credits Total API credits consumed.
+			Credits *int `json:"credits,omitempty"`
+
+			// Deliveries Number of Webhooks deliveries.
+			Deliveries *int `json:"deliveries,omitempty"`
+
+			// Webhook Webhook identifier. Present when grouping by webhook.
+			Webhook *string `json:"webhook,omitempty"`
+		} `json:"breakdown,omitempty"`
+
+		// From Effective start of the returned time range, in ISO 8601 format.
+		From *string `json:"from,omitempty"`
+
+		// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+		NextCursor *string `json:"next_cursor,omitempty"`
+
+		// To Effective end of the returned time range, in ISO 8601 format.
+		To *string `json:"to,omitempty"`
+
+		// Totals Aggregate totals for the selected time range.
+		Totals *struct {
+			// Credits Total API credits consumed.
+			Credits *int `json:"credits,omitempty"`
+
+			// Deliveries Number of Webhooks deliveries.
+			Deliveries *int `json:"deliveries,omitempty"`
+		} `json:"totals,omitempty"`
+	} `json:"data,omitempty"`
+
+	// Error Error message on failure; null on success.
+	Error *string `json:"error,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r PostV0UsageWebhooksSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV0UsageWebhooksSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV0UsageWebhooksSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostV0UsageWebhooksSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // GetV0AccountInfoWithResponse Returns information about the account associated with the API key.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -12307,6 +15596,45 @@ func (c *ClientWithResponses) GetV0AccountInfoWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseGetV0AccountInfoResponse(rsp)
+}
+
+// PostV0ActivityLogsWithResponse Returns activity log entries, newest first, with filters and pagination.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/activity_logs (the `PostV0ActivityLogs` operationId).
+func (c *ClientWithResponses) PostV0ActivityLogsWithResponse(ctx context.Context, params *PostV0ActivityLogsParams, reqEditors ...RequestEditorFn) (*PostV0ActivityLogsResponse, error) {
+	rsp, err := c.PostV0ActivityLogs(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0ActivityLogsResponse(rsp)
+}
+
+// GetV0ActivityLogsFiltersWithResponse Returns the actors and types you can filter by when listing activity log entries.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v0/activity_logs/filters (the `GetV0ActivityLogsFilters` operationId).
+func (c *ClientWithResponses) GetV0ActivityLogsFiltersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetV0ActivityLogsFiltersResponse, error) {
+	rsp, err := c.GetV0ActivityLogsFilters(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetV0ActivityLogsFiltersResponse(rsp)
+}
+
+// GetV0ActivityLogsByIdWithResponse Returns a single activity log entry by ID.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v0/activity_logs/{id} (the `GetV0ActivityLogsById` operationId).
+func (c *ClientWithResponses) GetV0ActivityLogsByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetV0ActivityLogsByIdResponse, error) {
+	rsp, err := c.GetV0ActivityLogsById(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetV0ActivityLogsByIdResponse(rsp)
 }
 
 // GetV0ApiCreditsByChainWithResponse Returns the API credit cost of each RPC method available on a chain.
@@ -12697,7 +16025,7 @@ func (c *ClientWithResponses) GetV0EndpointsByIdLogsWithResponse(ctx context.Con
 	return ParseGetV0EndpointsByIdLogsResponse(rsp)
 }
 
-// GetV0EndpointsByIdMethodRateLimitsWithResponse Gets method rate limits.
+// GetV0EndpointsByIdMethodRateLimitsWithResponse Lists method rate limits, including whether each limit applies per client IP or to the endpoint as a whole.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -12710,7 +16038,7 @@ func (c *ClientWithResponses) GetV0EndpointsByIdMethodRateLimitsWithResponse(ctx
 	return ParseGetV0EndpointsByIdMethodRateLimitsResponse(rsp)
 }
 
-// PostV0EndpointsByIdMethodRateLimitsWithBodyWithResponse Creates a method rate limit.
+// PostV0EndpointsByIdMethodRateLimitsWithBodyWithResponse Creates a method rate limit per client IP or for the endpoint as a whole.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -12723,7 +16051,7 @@ func (c *ClientWithResponses) PostV0EndpointsByIdMethodRateLimitsWithBodyWithRes
 	return ParsePostV0EndpointsByIdMethodRateLimitsResponse(rsp)
 }
 
-// PostV0EndpointsByIdMethodRateLimitsWithResponse Creates a method rate limit.
+// PostV0EndpointsByIdMethodRateLimitsWithResponse Creates a method rate limit per client IP or for the endpoint as a whole.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -12751,6 +16079,8 @@ func (c *ClientWithResponses) DeleteV0EndpointsByIdMethodRateLimitsByMethodRateL
 
 // PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithBodyWithResponse Updates a method rate limit.
 //
+// Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.
+//
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
 // Corresponds with PATCH /v0/endpoints/{id}/method-rate-limits/{method_rate_limit_id} (the `PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitId` operationId).
@@ -12763,6 +16093,8 @@ func (c *ClientWithResponses) PatchV0EndpointsByIdMethodRateLimitsByMethodRateLi
 }
 
 // PatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdWithResponse Updates a method rate limit.
+//
+// Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -12788,6 +16120,19 @@ func (c *ClientWithResponses) GetV0EndpointsByIdMetricsWithResponse(ctx context.
 	return ParseGetV0EndpointsByIdMetricsResponse(rsp)
 }
 
+// PostV0EndpointsByIdMetricsErrorsSummaryWithResponse Returns RPC and HTTP error counts for one endpoint for a time range.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/endpoints/{id}/metrics/errors/summary (the `PostV0EndpointsByIdMetricsErrorsSummary` operationId).
+func (c *ClientWithResponses) PostV0EndpointsByIdMetricsErrorsSummaryWithResponse(ctx context.Context, id string, params *PostV0EndpointsByIdMetricsErrorsSummaryParams, reqEditors ...RequestEditorFn) (*PostV0EndpointsByIdMetricsErrorsSummaryResponse, error) {
+	rsp, err := c.PostV0EndpointsByIdMetricsErrorsSummary(ctx, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0EndpointsByIdMetricsErrorsSummaryResponse(rsp)
+}
+
 // GetV0EndpointsByIdRateLimitsWithResponse Gets endpoint rate limits.
 //
 // Gets endpoint rate limits. The response returns an array with the source for each rate limit, including plan defaults and user-set overrides.
@@ -12805,7 +16150,7 @@ func (c *ClientWithResponses) GetV0EndpointsByIdRateLimitsWithResponse(ctx conte
 
 // PatchV0EndpointsByIdRateLimitsWithBodyWithResponse Updates endpoint rate limits.
 //
-// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.
+// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -12820,7 +16165,7 @@ func (c *ClientWithResponses) PatchV0EndpointsByIdRateLimitsWithBodyWithResponse
 
 // PatchV0EndpointsByIdRateLimitsWithResponse Updates endpoint rate limits.
 //
-// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.
+// Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -13253,6 +16598,32 @@ func (c *ClientWithResponses) GetV0MetricsWithResponse(ctx context.Context, para
 	return ParseGetV0MetricsResponse(rsp)
 }
 
+// PostV0MetricsErrorsSummaryWithResponse Returns account RPC and HTTP error counts for a time range.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/metrics/errors/summary (the `PostV0MetricsErrorsSummary` operationId).
+func (c *ClientWithResponses) PostV0MetricsErrorsSummaryWithResponse(ctx context.Context, params *PostV0MetricsErrorsSummaryParams, reqEditors ...RequestEditorFn) (*PostV0MetricsErrorsSummaryResponse, error) {
+	rsp, err := c.PostV0MetricsErrorsSummary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0MetricsErrorsSummaryResponse(rsp)
+}
+
+// PostV0MetricsTrafficSummaryWithResponse Returns successful requests, transferred bytes, credits, and distinct active methods for a time range.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/metrics/traffic/summary (the `PostV0MetricsTrafficSummary` operationId).
+func (c *ClientWithResponses) PostV0MetricsTrafficSummaryWithResponse(ctx context.Context, params *PostV0MetricsTrafficSummaryParams, reqEditors ...RequestEditorFn) (*PostV0MetricsTrafficSummaryResponse, error) {
+	rsp, err := c.PostV0MetricsTrafficSummary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0MetricsTrafficSummaryResponse(rsp)
+}
+
 // GetV0TeamsWithResponse Retrieves a list of all teams.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -13469,6 +16840,45 @@ func (c *ClientWithResponses) PostV0ToolingAccessTokenWithResponse(ctx context.C
 	return ParsePostV0ToolingAccessTokenResponse(rsp)
 }
 
+// PostV0TransactionsWithResponse Lists account transaction submissions for a time range, with cursor pagination.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/transactions (the `PostV0Transactions` operationId).
+func (c *ClientWithResponses) PostV0TransactionsWithResponse(ctx context.Context, params *PostV0TransactionsParams, reqEditors ...RequestEditorFn) (*PostV0TransactionsResponse, error) {
+	rsp, err := c.PostV0Transactions(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0TransactionsResponse(rsp)
+}
+
+// PostV0TransactionsByNetworkByHashWithResponse Returns recorded submission attempts for a transaction, optionally including request and response payloads.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/transactions/{network}/{hash} (the `PostV0TransactionsByNetworkByHash` operationId).
+func (c *ClientWithResponses) PostV0TransactionsByNetworkByHashWithResponse(ctx context.Context, network string, hash string, params *PostV0TransactionsByNetworkByHashParams, reqEditors ...RequestEditorFn) (*PostV0TransactionsByNetworkByHashResponse, error) {
+	rsp, err := c.PostV0TransactionsByNetworkByHash(ctx, network, hash, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0TransactionsByNetworkByHashResponse(rsp)
+}
+
+// PostV0UsageCreditsSummaryWithResponse Returns total account API credits for a time range.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/usage/credits/summary (the `PostV0UsageCreditsSummary` operationId).
+func (c *ClientWithResponses) PostV0UsageCreditsSummaryWithResponse(ctx context.Context, params *PostV0UsageCreditsSummaryParams, reqEditors ...RequestEditorFn) (*PostV0UsageCreditsSummaryResponse, error) {
+	rsp, err := c.PostV0UsageCreditsSummary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0UsageCreditsSummaryResponse(rsp)
+}
+
 // GetV0UsageRpcWithResponse Retrieves usage total for specified time range.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -13536,6 +16946,45 @@ func (c *ClientWithResponses) GetV0UsageRpcByTagWithResponse(ctx context.Context
 	return ParseGetV0UsageRpcByTagResponse(rsp)
 }
 
+// PostV0UsageRpcSummaryWithResponse Returns account RPC requests, transferred bytes, and credits for a time range.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/usage/rpc/summary (the `PostV0UsageRpcSummary` operationId).
+func (c *ClientWithResponses) PostV0UsageRpcSummaryWithResponse(ctx context.Context, params *PostV0UsageRpcSummaryParams, reqEditors ...RequestEditorFn) (*PostV0UsageRpcSummaryResponse, error) {
+	rsp, err := c.PostV0UsageRpcSummary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0UsageRpcSummaryResponse(rsp)
+}
+
+// PostV0UsageStreamsSummaryWithResponse Returns Streams blocks, transferred bytes, and block credits for a time range.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/usage/streams/summary (the `PostV0UsageStreamsSummary` operationId).
+func (c *ClientWithResponses) PostV0UsageStreamsSummaryWithResponse(ctx context.Context, params *PostV0UsageStreamsSummaryParams, reqEditors ...RequestEditorFn) (*PostV0UsageStreamsSummaryResponse, error) {
+	rsp, err := c.PostV0UsageStreamsSummary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0UsageStreamsSummaryResponse(rsp)
+}
+
+// PostV0UsageWebhooksSummaryWithResponse Returns Webhooks deliveries and credits for a time range.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v0/usage/webhooks/summary (the `PostV0UsageWebhooksSummary` operationId).
+func (c *ClientWithResponses) PostV0UsageWebhooksSummaryWithResponse(ctx context.Context, params *PostV0UsageWebhooksSummaryParams, reqEditors ...RequestEditorFn) (*PostV0UsageWebhooksSummaryResponse, error) {
+	rsp, err := c.PostV0UsageWebhooksSummary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV0UsageWebhooksSummaryResponse(rsp)
+}
+
 // ParseGetV0AccountInfoResponse parses an HTTP response from a GetV0AccountInfoWithResponse call
 func ParseGetV0AccountInfoResponse(rsp *http.Response) (*GetV0AccountInfoResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -13580,6 +17029,219 @@ func ParseGetV0AccountInfoResponse(rsp *http.Response) (*GetV0AccountInfoRespons
 			} `json:"data,omitempty"`
 
 			// Error An error message if any issue occurs
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV0ActivityLogsResponse parses an HTTP response from a PostV0ActivityLogsWithResponse call
+func ParsePostV0ActivityLogsResponse(rsp *http.Response) (*PostV0ActivityLogsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0ActivityLogsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Array of activity log entries, newest first.
+			Data *[]struct {
+				// Action What happened, such as created, updated, deleted, paused, invited, member_removed.
+				Action *string `json:"action,omitempty"`
+
+				// Actor Who made the change.
+				Actor *struct {
+					// Email Member's email; null for api_key, quicknode, deleted_user.
+					Email *string `json:"email,omitempty"`
+
+					// Id User UUID or API key ID; null for quicknode or deleted_user.
+					Id *string `json:"id,omitempty"`
+
+					// Name Member's name or Quicknode; null for api_key.
+					Name *string `json:"name,omitempty"`
+
+					// Type One of: user, api_key, quicknode, deleted_user.
+					Type *string `json:"type,omitempty"`
+				} `json:"actor,omitempty"`
+
+				// Description Human-readable summary, the same text the dashboard shows.
+				Description *string `json:"description,omitempty"`
+
+				// Id Stable UUID for the entry.
+				Id *string `json:"id,omitempty"`
+
+				// OccurredAt When the change happened, in ISO 8601 UTC format.
+				OccurredAt *string `json:"occurred_at,omitempty"`
+
+				// Target What was changed.
+				Target *struct {
+					// Id ID of the thing that changed.
+					Id *string `json:"id,omitempty"`
+
+					// Kind One of: endpoint, team, member, role, billing, add_on, api_key.
+					Kind *string `json:"kind,omitempty"`
+
+					// Label Display name of the kind.
+					Label *string `json:"label,omitempty"`
+
+					// Name Current name where there is one; null otherwise.
+					Name *string `json:"name,omitempty"`
+				} `json:"target,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+
+			// Pagination Pagination metadata.
+			Pagination *struct {
+				// Limit Page size used.
+				Limit *int `json:"limit,omitempty"`
+
+				// Offset Number of entries skipped.
+				Offset *int `json:"offset,omitempty"`
+
+				// Total Total count of entries matching the filters.
+				Total *int `json:"total,omitempty"`
+			} `json:"pagination,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetV0ActivityLogsFiltersResponse parses an HTTP response from a GetV0ActivityLogsFiltersWithResponse call
+func ParseGetV0ActivityLogsFiltersResponse(rsp *http.Response) (*GetV0ActivityLogsFiltersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetV0ActivityLogsFiltersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Filter values available for your account.
+			Data *struct {
+				// Actors Members and API keys that appear in your log.
+				Actors *[]struct {
+					// Id User UUID or API key ID. Use this value for the actor filter.
+					Id *string `json:"id,omitempty"`
+
+					// Name Member's name; null for API keys.
+					Name *string `json:"name,omitempty"`
+
+					// Type Either user or api_key.
+					Type *string `json:"type,omitempty"`
+				} `json:"actors,omitempty"`
+
+				// Types Entry types you can filter by.
+				Types *[]struct {
+					// Label Display name for the type.
+					Label *string `json:"label,omitempty"`
+
+					// Value Type value to use in the type filter.
+					Value *string `json:"value,omitempty"`
+				} `json:"types,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetV0ActivityLogsByIdResponse parses an HTTP response from a GetV0ActivityLogsByIdWithResponse call
+func ParseGetV0ActivityLogsByIdResponse(rsp *http.Response) (*GetV0ActivityLogsByIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetV0ActivityLogsByIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data The activity log entry.
+			Data *struct {
+				// Action What happened, such as created, updated, deleted, paused, invited, member_removed.
+				Action *string `json:"action,omitempty"`
+
+				// Actor Who made the change.
+				Actor *struct {
+					// Email Member's email; null for api_key, quicknode, deleted_user.
+					Email *string `json:"email,omitempty"`
+
+					// Id User UUID or API key ID; null for quicknode or deleted_user.
+					Id *string `json:"id,omitempty"`
+
+					// Name Member's name or Quicknode; null for api_key.
+					Name *string `json:"name,omitempty"`
+
+					// Type One of: user, api_key, quicknode, deleted_user.
+					Type *string `json:"type,omitempty"`
+				} `json:"actor,omitempty"`
+
+				// Description Human-readable summary, the same text the dashboard shows.
+				Description *string `json:"description,omitempty"`
+
+				// Id Stable UUID for the entry.
+				Id *string `json:"id,omitempty"`
+
+				// OccurredAt When the change happened, in ISO 8601 UTC format.
+				OccurredAt *string `json:"occurred_at,omitempty"`
+
+				// Target What was changed.
+				Target *struct {
+					// Id ID of the thing that changed.
+					Id *string `json:"id,omitempty"`
+
+					// Kind One of: endpoint, team, member, role, billing, add_on, api_key.
+					Kind *string `json:"kind,omitempty"`
+
+					// Label Display name of the kind.
+					Label *string `json:"label,omitempty"`
+
+					// Name Current name where there is one; null otherwise.
+					Name *string `json:"name,omitempty"`
+				} `json:"target,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
 			Error *string `json:"error,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -14778,6 +18440,9 @@ func ParseGetV0EndpointsByIdMethodRateLimitsResponse(rsp *http.Response) (*GetV0
 					// Interval The time interval for the rate limit
 					Interval *string `json:"interval,omitempty"`
 
+					// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+					LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 					// Methods A list of method names to which the rate limiter applies
 					Methods *[]string `json:"methods,omitempty"`
 
@@ -14828,6 +18493,9 @@ func ParsePostV0EndpointsByIdMethodRateLimitsResponse(rsp *http.Response) (*Post
 
 				// Interval The time interval for the rate limit
 				Interval *string `json:"interval,omitempty"`
+
+				// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+				LimitByIp *bool `json:"limit_by_ip,omitempty"`
 
 				// Methods A list of methods the rate limiter applies to
 				Methods *[]string `json:"methods,omitempty"`
@@ -14911,6 +18579,9 @@ func ParsePatchV0EndpointsByIdMethodRateLimitsByMethodRateLimitIdResponse(rsp *h
 				// Interval The time interval for the rate limit
 				Interval *string `json:"interval,omitempty"`
 
+				// LimitByIp Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)
+				LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 				// Methods A list of methods the rate limiter applies to
 				Methods *[]string `json:"methods,omitempty"`
 
@@ -14972,6 +18643,68 @@ func ParseGetV0EndpointsByIdMetricsResponse(rsp *http.Response) (*GetV0Endpoints
 	return response, nil
 }
 
+// ParsePostV0EndpointsByIdMetricsErrorsSummaryResponse parses an HTTP response from a PostV0EndpointsByIdMetricsErrorsSummaryWithResponse call
+func ParsePostV0EndpointsByIdMetricsErrorsSummaryResponse(rsp *http.Response) (*PostV0EndpointsByIdMetricsErrorsSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0EndpointsByIdMetricsErrorsSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// Breakdown Grouped results. Present when grouping is requested; can be empty.
+				Breakdown *[]struct {
+					// Count Number of errors in this group.
+					Count *float32 `json:"count,omitempty"`
+
+					// Kind Error kind: rpc or http.
+					Kind *string `json:"kind,omitempty"`
+
+					// Method RPC method name. In a breakdown, present when grouping by method.
+					Method *string `json:"method,omitempty"`
+				} `json:"breakdown,omitempty"`
+
+				// From Effective start of the returned time range, in ISO 8601 format.
+				From *string `json:"from,omitempty"`
+
+				// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+				NextCursor *string `json:"next_cursor,omitempty"`
+
+				// To Effective end of the returned time range, in ISO 8601 format.
+				To *string `json:"to,omitempty"`
+
+				// Totals Aggregate totals for the selected time range.
+				Totals *struct {
+					// HttpErrors Number of HTTP errors.
+					HttpErrors *float32 `json:"http_errors,omitempty"`
+
+					// RpcErrors Number of RPC errors.
+					RpcErrors *float32 `json:"rpc_errors,omitempty"`
+				} `json:"totals,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetV0EndpointsByIdRateLimitsResponse parses an HTTP response from a GetV0EndpointsByIdRateLimitsWithResponse call
 func ParseGetV0EndpointsByIdRateLimitsResponse(rsp *http.Response) (*GetV0EndpointsByIdRateLimitsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -14990,6 +18723,9 @@ func ParseGetV0EndpointsByIdRateLimitsResponse(rsp *http.Response) (*GetV0Endpoi
 		var dest struct {
 			// Data The data object which contains the endpoint rate limit configuration
 			Data *struct {
+				// LimitByIp Whether the endpoint rate limits apply to each client IP address
+				LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 				// RateLimits An array of endpoint rate limit configurations
 				RateLimits *[]struct {
 					// Bucket The rate limit bucket, such as rps, rpm, or rpd
@@ -15037,6 +18773,9 @@ func ParsePatchV0EndpointsByIdRateLimitsResponse(rsp *http.Response) (*PatchV0En
 		var dest struct {
 			// Data The data object which contains the following fields:
 			Data *struct {
+				// LimitByIp Whether the endpoint rate limits apply to each client IP address
+				LimitByIp *bool `json:"limit_by_ip,omitempty"`
+
 				// Limits The limits object which contains the following fields:
 				Limits *struct {
 					// Rpd The maximum number of requests allowed per day. A value of -1 indicates that no endpoint-level override is set for this bucket.
@@ -15969,6 +19708,157 @@ func ParseGetV0MetricsResponse(rsp *http.Response) (*GetV0MetricsResponse, error
 	return response, nil
 }
 
+// ParsePostV0MetricsErrorsSummaryResponse parses an HTTP response from a PostV0MetricsErrorsSummaryWithResponse call
+func ParsePostV0MetricsErrorsSummaryResponse(rsp *http.Response) (*PostV0MetricsErrorsSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0MetricsErrorsSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// Breakdown Grouped results. Present when grouping is requested; can be empty.
+				Breakdown *[]struct {
+					// Count Number of errors in this group.
+					Count *float32 `json:"count,omitempty"`
+
+					// Kind Error kind: rpc or http.
+					Kind *string `json:"kind,omitempty"`
+
+					// Method RPC method name. In a breakdown, present when grouping by method.
+					Method *string `json:"method,omitempty"`
+				} `json:"breakdown,omitempty"`
+
+				// From Effective start of the returned time range, in ISO 8601 format.
+				From *string `json:"from,omitempty"`
+
+				// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+				NextCursor *string `json:"next_cursor,omitempty"`
+
+				// To Effective end of the returned time range, in ISO 8601 format.
+				To *string `json:"to,omitempty"`
+
+				// Totals Aggregate totals for the selected time range.
+				Totals *struct {
+					// HttpErrors Number of HTTP errors.
+					HttpErrors *float32 `json:"http_errors,omitempty"`
+
+					// RpcErrors Number of RPC errors.
+					RpcErrors *float32 `json:"rpc_errors,omitempty"`
+				} `json:"totals,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV0MetricsTrafficSummaryResponse parses an HTTP response from a PostV0MetricsTrafficSummaryWithResponse call
+func ParsePostV0MetricsTrafficSummaryResponse(rsp *http.Response) (*PostV0MetricsTrafficSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0MetricsTrafficSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// Breakdown Grouped results. Present when grouping is requested; can be empty.
+				Breakdown *[]struct {
+					// ActiveMethods Number of distinct active methods.
+					ActiveMethods *int `json:"active_methods,omitempty"`
+
+					// Bytes Number of bytes transferred.
+					Bytes *int `json:"bytes,omitempty"`
+
+					// BytesCredits Credits consumed by transferred bytes.
+					BytesCredits *int `json:"bytes_credits,omitempty"`
+
+					// Credits Total API credits consumed.
+					Credits *int `json:"credits,omitempty"`
+
+					// Endpoint Endpoint UUID; present when grouping by endpoint.
+					Endpoint *string `json:"endpoint,omitempty"`
+
+					// Method RPC method name. In a breakdown, present when grouping by method.
+					Method *string `json:"method,omitempty"`
+
+					// RequestCredits Credits consumed by requests.
+					RequestCredits *int `json:"request_credits,omitempty"`
+
+					// SuccessfulRequests Number of successful requests.
+					SuccessfulRequests *int `json:"successful_requests,omitempty"`
+				} `json:"breakdown,omitempty"`
+
+				// From Effective start of the returned time range, in ISO 8601 format.
+				From *string `json:"from,omitempty"`
+
+				// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+				NextCursor *string `json:"next_cursor,omitempty"`
+
+				// To Effective end of the returned time range, in ISO 8601 format.
+				To *string `json:"to,omitempty"`
+
+				// Totals Aggregate totals for the selected time range.
+				Totals *struct {
+					// ActiveMethods Number of distinct active methods.
+					ActiveMethods *int `json:"active_methods,omitempty"`
+
+					// Bytes Number of bytes transferred.
+					Bytes *int `json:"bytes,omitempty"`
+
+					// BytesCredits Credits consumed by transferred bytes.
+					BytesCredits *int `json:"bytes_credits,omitempty"`
+
+					// Credits Total API credits consumed.
+					Credits *int `json:"credits,omitempty"`
+
+					// RequestCredits Credits consumed by requests.
+					RequestCredits *int `json:"request_credits,omitempty"`
+
+					// SuccessfulRequests Number of successful requests.
+					SuccessfulRequests *int `json:"successful_requests,omitempty"`
+				} `json:"totals,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetV0TeamsResponse parses an HTTP response from a GetV0TeamsWithResponse call
 func ParseGetV0TeamsResponse(rsp *http.Response) (*GetV0TeamsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -16521,6 +20411,201 @@ func ParsePostV0ToolingAccessTokenResponse(rsp *http.Response) (*PostV0ToolingAc
 	return response, nil
 }
 
+// ParsePostV0TransactionsResponse parses an HTTP response from a PostV0TransactionsWithResponse call
+func ParsePostV0TransactionsResponse(rsp *http.Response) (*PostV0TransactionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0TransactionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// From Effective start of the returned time range, in ISO 8601 format.
+				From *string `json:"from,omitempty"`
+
+				// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+				NextCursor *string `json:"next_cursor,omitempty"`
+
+				// To Effective end of the returned time range, in ISO 8601 format.
+				To *string `json:"to,omitempty"`
+
+				// Transactions Transaction submissions matching the selected time range and filters.
+				Transactions *[]struct {
+					// Archive Whether the transaction is marked as archived.
+					Archive *bool `json:"archive,omitempty"`
+
+					// AttemptCount Number of recorded submission attempts.
+					AttemptCount *int `json:"attempt_count,omitempty"`
+
+					// EndpointIds Endpoint UUIDs associated with the submissions. These are not the numeric Admin API endpoint IDs.
+					EndpointIds *[]interface{} `json:"endpoint_ids,omitempty"`
+
+					// FirstSubmittedAt Timestamp of the first recorded submission.
+					FirstSubmittedAt *string `json:"first_submitted_at,omitempty"`
+
+					// Height Block height when available; otherwise null.
+					Height *string `json:"height,omitempty"`
+
+					// LastSubmittedAt Timestamp of the most recent recorded submission.
+					LastSubmittedAt *string `json:"last_submitted_at,omitempty"`
+
+					// Methods RPC method names used for submission.
+					Methods *[]interface{} `json:"methods,omitempty"`
+
+					// Network Network identifier.
+					Network *string `json:"network,omitempty"`
+
+					// State Recorded transaction submission state; for example, submitted. This is not confirmation of inclusion or finality.
+					State *string `json:"state,omitempty"`
+
+					// TransactionHash Transaction hash or signature.
+					TransactionHash *string `json:"transaction_hash,omitempty"`
+				} `json:"transactions,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV0TransactionsByNetworkByHashResponse parses an HTTP response from a PostV0TransactionsByNetworkByHashWithResponse call
+func ParsePostV0TransactionsByNetworkByHashResponse(rsp *http.Response) (*PostV0TransactionsByNetworkByHashResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0TransactionsByNetworkByHashResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// Data Recorded transaction details; null when exists is false.
+				Data *struct {
+					// Attempts Recorded attempts to submit this transaction.
+					Attempts *[]struct {
+						// EndpointId Endpoint UUID for this attempt; not the numeric Admin API endpoint ID.
+						EndpointId *string `json:"endpoint_id,omitempty"`
+
+						// Method RPC method name. In a breakdown, present when grouping by method.
+						Method *string `json:"method,omitempty"`
+
+						// Payloads Optional request and response payloads, returned when include_payloads=true and available.
+						Payloads *struct {
+							// Request Recorded request payload as a JSON-encoded string.
+							Request *string `json:"request,omitempty"`
+
+							// Response Recorded response payload as a JSON-encoded string.
+							Response *string `json:"response,omitempty"`
+						} `json:"payloads,omitempty"`
+
+						// RequestId Identifier of the recorded request.
+						RequestId *string `json:"request_id,omitempty"`
+
+						// SubmittedAt Timestamp of the submission attempt.
+						SubmittedAt *string `json:"submitted_at,omitempty"`
+					} `json:"attempts,omitempty"`
+
+					// FirstSubmittedAt Timestamp of the first recorded submission.
+					FirstSubmittedAt *string `json:"first_submitted_at,omitempty"`
+
+					// LastSubmittedAt Timestamp of the most recent recorded submission.
+					LastSubmittedAt *string `json:"last_submitted_at,omitempty"`
+
+					// Network Network identifier.
+					Network *string `json:"network,omitempty"`
+
+					// State Recorded transaction submission state; for example, submitted. This is not confirmation of inclusion or finality.
+					State *string `json:"state,omitempty"`
+
+					// TransactionHash Transaction hash or signature.
+					TransactionHash *string `json:"transaction_hash,omitempty"`
+				} `json:"data,omitempty"`
+
+				// Exists Whether a matching transaction submission was found.
+				Exists *bool `json:"exists,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV0UsageCreditsSummaryResponse parses an HTTP response from a PostV0UsageCreditsSummaryWithResponse call
+func ParsePostV0UsageCreditsSummaryResponse(rsp *http.Response) (*PostV0UsageCreditsSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0UsageCreditsSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// From Effective start of the returned time range, in ISO 8601 format.
+				From *string `json:"from,omitempty"`
+
+				// To Effective end of the returned time range, in ISO 8601 format.
+				To *string `json:"to,omitempty"`
+
+				// Totals Aggregate totals for the selected time range.
+				Totals *struct {
+					// Credits Total API credits consumed.
+					Credits *int `json:"credits,omitempty"`
+				} `json:"totals,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetV0UsageRpcResponse parses an HTTP response from a GetV0UsageRpcWithResponse call
 func ParseGetV0UsageRpcResponse(rsp *http.Response) (*GetV0UsageRpcResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -16816,6 +20901,222 @@ func ParseGetV0UsageRpcByTagResponse(rsp *http.Response) (*GetV0UsageRpcByTagRes
 			} `json:"data,omitempty"`
 
 			// Error Contains error details if the request failed; null if successful
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV0UsageRpcSummaryResponse parses an HTTP response from a PostV0UsageRpcSummaryWithResponse call
+func ParsePostV0UsageRpcSummaryResponse(rsp *http.Response) (*PostV0UsageRpcSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0UsageRpcSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// Breakdown Grouped results. Present when grouping is requested; can be empty.
+				Breakdown *[]struct {
+					// Bytes Number of bytes transferred.
+					Bytes *int `json:"bytes,omitempty"`
+
+					// Credits Total API credits consumed.
+					Credits *int `json:"credits,omitempty"`
+
+					// DataCredits Credits consumed by data transfer.
+					DataCredits *int `json:"data_credits,omitempty"`
+
+					// Endpoint Endpoint UUID; present when grouping by endpoint.
+					Endpoint *string `json:"endpoint,omitempty"`
+
+					// Method RPC method name. In a breakdown, present when grouping by method.
+					Method *string `json:"method,omitempty"`
+
+					// Network Present when grouping by network.
+					Network *string `json:"network,omitempty"`
+
+					// Requests Number of RPC requests.
+					Requests *int `json:"requests,omitempty"`
+
+					// RpcCredits Credits consumed by RPC requests.
+					RpcCredits *int `json:"rpc_credits,omitempty"`
+				} `json:"breakdown,omitempty"`
+
+				// From Effective start of the returned time range, in ISO 8601 format.
+				From *string `json:"from,omitempty"`
+
+				// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+				NextCursor *string `json:"next_cursor,omitempty"`
+
+				// To Effective end of the returned time range, in ISO 8601 format.
+				To *string `json:"to,omitempty"`
+
+				// Totals Aggregate totals for the selected time range.
+				Totals *struct {
+					// Bytes Number of bytes transferred.
+					Bytes *int `json:"bytes,omitempty"`
+
+					// Credits Total API credits consumed.
+					Credits *int `json:"credits,omitempty"`
+
+					// DataCredits Credits consumed by data transfer.
+					DataCredits *int `json:"data_credits,omitempty"`
+
+					// Requests Number of RPC requests.
+					Requests *int `json:"requests,omitempty"`
+
+					// RpcCredits Credits consumed by RPC requests.
+					RpcCredits *int `json:"rpc_credits,omitempty"`
+				} `json:"totals,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV0UsageStreamsSummaryResponse parses an HTTP response from a PostV0UsageStreamsSummaryWithResponse call
+func ParsePostV0UsageStreamsSummaryResponse(rsp *http.Response) (*PostV0UsageStreamsSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0UsageStreamsSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// Breakdown Grouped results. Present when grouping is requested; can be empty.
+				Breakdown *[]struct {
+					// BlockCredits Credits consumed by Streams blocks.
+					BlockCredits *int `json:"block_credits,omitempty"`
+
+					// Blocks Number of Streams blocks processed.
+					Blocks *int `json:"blocks,omitempty"`
+
+					// Bytes Number of bytes transferred.
+					Bytes *int `json:"bytes,omitempty"`
+
+					// Stream Stream identifier. Present when grouping by stream.
+					Stream *string `json:"stream,omitempty"`
+				} `json:"breakdown,omitempty"`
+
+				// From Effective start of the returned time range, in ISO 8601 format.
+				From *string `json:"from,omitempty"`
+
+				// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+				NextCursor *string `json:"next_cursor,omitempty"`
+
+				// To Effective end of the returned time range, in ISO 8601 format.
+				To *string `json:"to,omitempty"`
+
+				// Totals Aggregate totals for the selected time range.
+				Totals *struct {
+					// BlockCredits Credits consumed by Streams blocks.
+					BlockCredits *int `json:"block_credits,omitempty"`
+
+					// Blocks Number of Streams blocks processed.
+					Blocks *int `json:"blocks,omitempty"`
+
+					// Bytes Number of bytes transferred.
+					Bytes *int `json:"bytes,omitempty"`
+				} `json:"totals,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV0UsageWebhooksSummaryResponse parses an HTTP response from a PostV0UsageWebhooksSummaryWithResponse call
+func ParsePostV0UsageWebhooksSummaryResponse(rsp *http.Response) (*PostV0UsageWebhooksSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV0UsageWebhooksSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Data Response data. Null when the request fails.
+			Data *struct {
+				// Breakdown Grouped results. Present when grouping is requested; can be empty.
+				Breakdown *[]struct {
+					// Credits Total API credits consumed.
+					Credits *int `json:"credits,omitempty"`
+
+					// Deliveries Number of Webhooks deliveries.
+					Deliveries *int `json:"deliveries,omitempty"`
+
+					// Webhook Webhook identifier. Present when grouping by webhook.
+					Webhook *string `json:"webhook,omitempty"`
+				} `json:"breakdown,omitempty"`
+
+				// From Effective start of the returned time range, in ISO 8601 format.
+				From *string `json:"from,omitempty"`
+
+				// NextCursor Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor.
+				NextCursor *string `json:"next_cursor,omitempty"`
+
+				// To Effective end of the returned time range, in ISO 8601 format.
+				To *string `json:"to,omitempty"`
+
+				// Totals Aggregate totals for the selected time range.
+				Totals *struct {
+					// Credits Total API credits consumed.
+					Credits *int `json:"credits,omitempty"`
+
+					// Deliveries Number of Webhooks deliveries.
+					Deliveries *int `json:"deliveries,omitempty"`
+				} `json:"totals,omitempty"`
+			} `json:"data,omitempty"`
+
+			// Error Error message on failure; null on success.
 			Error *string `json:"error,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {

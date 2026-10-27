@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -38,6 +39,7 @@ type rateLimitsResourceModel struct {
 	RPS         types.Int64  `tfsdk:"rps"`
 	RPM         types.Int64  `tfsdk:"rpm"`
 	RPD         types.Int64  `tfsdk:"rpd"`
+	LimitByIP   types.Bool   `tfsdk:"limit_by_ip"`
 	PlanDefault types.Object `tfsdk:"plan_default"`
 }
 
@@ -75,6 +77,15 @@ func (r *rateLimitsResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"rps": bucket("Maximum requests per second. Omit to keep the plan default."),
 			"rpm": bucket("Maximum requests per minute. Omit to keep the plan default."),
 			"rpd": bucket("Maximum requests per day. Omit to keep the plan default."),
+			"limit_by_ip": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				MarkdownDescription: "Count the buckets separately for each client IP instead of for the endpoint as a whole. " +
+					"Left out of the configuration, it keeps whatever value the endpoint already has. " +
+					"Behind a proxy, set `ip_custom_header` on the endpoint so the client IP is read from the header the proxy forwards it in. " +
+					"Destroying this resource turns it off.",
+				PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
+			},
 			"plan_default": schema.SingleNestedAttribute{
 				Computed:            true,
 				MarkdownDescription: "What the account's Quicknode plan allows, before any override set here. A bucket the plan does not limit is reported as `-1`.",
@@ -114,7 +125,7 @@ func (r *rateLimitsResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	plan.ID = plan.EndpointID
-	resp.Diagnostics.Append(r.readPlanDefaults(ctx, endpointID, &plan)...)
+	resp.Diagnostics.Append(r.readComputed(ctx, endpointID, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -138,11 +149,12 @@ func (r *rateLimitsResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	overrides, defaults := splitRateLimits(limits)
+	overrides, defaults := splitRateLimits(limits.Limits)
 	state.ID = state.EndpointID
 	state.RPS = bucketOrNull(overrides, client.BucketRPS)
 	state.RPM = bucketOrNull(overrides, client.BucketRPM)
 	state.RPD = bucketOrNull(overrides, client.BucketRPD)
+	state.LimitByIP = types.BoolValue(limits.LimitByIP)
 
 	planDefault, diags := planDefaultObject(defaults)
 	resp.Diagnostics.Append(diags...)
@@ -179,22 +191,24 @@ func (r *rateLimitsResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 	}
 
-	if overrides := overridesFrom(plan); overrides.RPS != nil || overrides.RPM != nil || overrides.RPD != nil {
-		if err := r.client.SetRateLimits(ctx, endpointID, overrides); err != nil {
-			resp.Diagnostics.AddError("Could not update the endpoint rate limits", err.Error())
-			return
-		}
+	overrides := overridesFrom(plan)
+	if plan.LimitByIP.Equal(state.LimitByIP) {
+		overrides.LimitByIP = nil
+	}
+	if err := r.client.SetRateLimits(ctx, endpointID, overrides); err != nil {
+		resp.Diagnostics.AddError("Could not update the endpoint rate limits", err.Error())
+		return
 	}
 
-	resp.Diagnostics.Append(r.readPlanDefaults(ctx, endpointID, &plan)...)
+	resp.Diagnostics.Append(r.readComputed(ctx, endpointID, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// Delete returns every bucket to the plan default. The limits belong to the
-// endpoint, so nothing is torn down.
+// Delete returns every bucket to the plan default and stops counting them per
+// client IP. The limits belong to the endpoint, so nothing is torn down.
 func (r *rateLimitsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state rateLimitsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -202,8 +216,18 @@ func (r *rateLimitsResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
+	endpointID := state.EndpointID.ValueString()
 	all := map[string]bool{client.BucketRPS: true, client.BucketRPM: true, client.BucketRPD: true}
-	resp.Diagnostics.Append(r.dropOverrides(ctx, state.EndpointID.ValueString(), all)...)
+	resp.Diagnostics.Append(r.dropOverrides(ctx, endpointID, all)...)
+	if resp.Diagnostics.HasError() || !state.LimitByIP.ValueBool() {
+		return
+	}
+
+	limitByIP := false
+	err := r.client.SetRateLimits(ctx, endpointID, client.RateLimitOverrides{LimitByIP: &limitByIP})
+	if err != nil && !client.IsNotFound(err) {
+		resp.Diagnostics.AddError("Could not turn off per-IP rate limiting", err.Error())
+	}
 }
 
 func (r *rateLimitsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -223,7 +247,7 @@ func (r *rateLimitsResource) dropOverrides(ctx context.Context, endpointID strin
 		return diags
 	}
 
-	for _, limit := range limits {
+	for _, limit := range limits.Limits {
 		if limit.Source != client.SourceUserOverride || limit.ID == "" || !buckets[limit.Bucket] {
 			continue
 		}
@@ -235,15 +259,18 @@ func (r *rateLimitsResource) dropOverrides(ctx context.Context, endpointID strin
 	return diags
 }
 
-func (r *rateLimitsResource) readPlanDefaults(ctx context.Context, endpointID string, model *rateLimitsResourceModel) diag.Diagnostics {
+func (r *rateLimitsResource) readComputed(ctx context.Context, endpointID string, model *rateLimitsResourceModel) diag.Diagnostics {
 	limits, err := r.client.GetRateLimits(ctx, endpointID)
 	if err != nil {
 		var diags diag.Diagnostics
 		diags.AddError("Could not read the endpoint rate limits back", err.Error())
 		return diags
 	}
-	_, defaults := splitRateLimits(limits)
+	_, defaults := splitRateLimits(limits.Limits)
 
+	if model.LimitByIP.IsUnknown() {
+		model.LimitByIP = types.BoolValue(limits.LimitByIP)
+	}
 	planDefault, diags := planDefaultObject(defaults)
 	model.PlanDefault = planDefault
 	return diags
@@ -264,6 +291,10 @@ func overridesFrom(model rateLimitsResourceModel) client.RateLimitOverrides {
 		}
 		wanted := int(bucket.value.ValueInt64())
 		*bucket.target = &wanted
+	}
+	if !model.LimitByIP.IsNull() && !model.LimitByIP.IsUnknown() {
+		limitByIP := model.LimitByIP.ValueBool()
+		overrides.LimitByIP = &limitByIP
 	}
 	return overrides
 }
