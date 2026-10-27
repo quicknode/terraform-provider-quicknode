@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+FEATURES:
+
+* `quicknode_endpoint_rate_limits` gains `limit_by_ip`, the dashboard's "Limit by IP
+  address" setting. Left out of the configuration, it keeps the endpoint's current
+  value. Destroying the resource turns it off.
+* `quicknode_endpoint_method_rate_limit` gains `limit_by_ip`. It defaults to `false`,
+  so a limiter set to count per IP outside Terraform plans a change back to `false`
+  unless the configuration sets it.
+
 ## 0.4.0
 
 FEATURES:

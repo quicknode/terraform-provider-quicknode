@@ -269,10 +269,11 @@ resource "quicknode_endpoint_rate_limits" "test" {
 		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: withBuckets("  rps = 25\n  rpm = 500"),
+				Config: withBuckets("  rps = 25\n  rpm = 500\n  limit_by_ip = true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("quicknode_endpoint_rate_limits.test", "rps", "25"),
 					resource.TestCheckResourceAttr("quicknode_endpoint_rate_limits.test", "rpm", "500"),
+					resource.TestCheckResourceAttr("quicknode_endpoint_rate_limits.test", "limit_by_ip", "true"),
 					resource.TestCheckResourceAttrSet("quicknode_endpoint_rate_limits.test", "plan_default.rps"),
 				),
 			},
@@ -281,6 +282,14 @@ resource "quicknode_endpoint_rate_limits" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("quicknode_endpoint_rate_limits.test", "rps", "25"),
 					resource.TestCheckNoResourceAttr("quicknode_endpoint_rate_limits.test", "rpm"),
+					resource.TestCheckResourceAttr("quicknode_endpoint_rate_limits.test", "limit_by_ip", "true"),
+				),
+			},
+			{
+				Config: withBuckets("  limit_by_ip = false"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckNoResourceAttr("quicknode_endpoint_rate_limits.test", "rps"),
+					resource.TestCheckResourceAttr("quicknode_endpoint_rate_limits.test", "limit_by_ip", "false"),
 				),
 			},
 		},
@@ -288,7 +297,7 @@ resource "quicknode_endpoint_rate_limits" "test" {
 }
 
 func TestAccMethodRateLimit_lifecycle(t *testing.T) {
-	withRate := func(rate int, enabled bool) string {
+	withRate := func(rate int, enabled, limitByIP bool) string {
 		return fmt.Sprintf(`
 resource "quicknode_endpoint" "test" {
   chain      = %q
@@ -304,8 +313,9 @@ resource "quicknode_endpoint_method_rate_limit" "test" {
   rate        = %d
   interval    = "second"
   enabled     = %t
+  limit_by_ip = %t
 }
-`, acceptanceChain, acceptanceNetwork, rate, enabled)
+`, acceptanceChain, acceptanceNetwork, rate, enabled, limitByIP)
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -314,17 +324,19 @@ resource "quicknode_endpoint_method_rate_limit" "test" {
 		CheckDestroy:             testAccCheckEndpointsDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: withRate(5, true),
+				Config: withRate(5, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("quicknode_endpoint_method_rate_limit.test", "rate", "5"),
 					resource.TestCheckResourceAttr("quicknode_endpoint_method_rate_limit.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("quicknode_endpoint_method_rate_limit.test", "limit_by_ip", "true"),
 				),
 			},
 			{
-				Config: withRate(9, false),
+				Config: withRate(9, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("quicknode_endpoint_method_rate_limit.test", "rate", "9"),
 					resource.TestCheckResourceAttr("quicknode_endpoint_method_rate_limit.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("quicknode_endpoint_method_rate_limit.test", "limit_by_ip", "false"),
 				),
 			},
 		},

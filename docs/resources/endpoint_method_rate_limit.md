@@ -30,6 +30,10 @@ resource "quicknode_endpoint_method_rate_limit" "heavy_reads" {
   methods  = ["eth_getLogs", "debug_traceTransaction"]
   rate     = 5
   interval = "second"
+
+  # Count the rate per client IP, so one busy client cannot use up the budget
+  # for everyone else.
+  limit_by_ip = true
 }
 
 # Disabling keeps the definition in place, which suits turning a limit off
@@ -57,6 +61,7 @@ resource "quicknode_endpoint_method_rate_limit" "trace_block" {
 ### Optional
 
 - `enabled` (Boolean) Whether the limiter is applied. Disabling keeps the definition in place, which suits turning a limit off during an incident without losing it.
+- `limit_by_ip` (Boolean) Count the rate separately for each client IP instead of for the endpoint as a whole. Independent of `limit_by_ip` on `quicknode_endpoint_rate_limits`. Behind a proxy, set `ip_custom_header` on the endpoint so the client IP is read from the header the proxy forwards it in. Defaults to `false`.
 
 ### Read-Only
 

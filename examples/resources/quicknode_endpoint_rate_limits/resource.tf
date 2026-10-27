@@ -12,6 +12,9 @@ resource "quicknode_endpoint_rate_limits" "api" {
 
   rps = 25
   rpd = 1000000
+
+  # Each client IP gets its own 25 requests per second and 1,000,000 per day.
+  limit_by_ip = true
 }
 
 output "plan_allows_per_second" {

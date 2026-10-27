@@ -149,6 +149,415 @@
         }
       }
     },
+    "/v0/activity_logs": {
+      "post": {
+        "operationId": "post_v0_activity_logs",
+        "summary": "Returns activity log entries, newest first, with filters and pagination.",
+        "tags": [
+          "activity_logs"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/activity-logs/v0-activity-logs"
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Search entry descriptions, endpoint subdomains, and team names. Case-insensitive."
+            },
+            "description": "Search entry descriptions, endpoint subdomains, and team names. Case-insensitive."
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Only entries made by this user or API key. Use an id from /v0/activity_logs/filters."
+            },
+            "description": "Only entries made by this user or API key. Use an id from /v0/activity_logs/filters."
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Only entries about this kind of thing: endpoint, team, member, role, billing, add_on, or api_key."
+            },
+            "description": "Only entries about this kind of thing: endpoint, team, member, role, billing, add_on, or api_key."
+          },
+          {
+            "name": "endpoint_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Only entries about this endpoint, by endpoint ID."
+            },
+            "description": "Only entries about this endpoint, by endpoint ID."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Only entries at or after this time. ISO 8601 date or date-time."
+            },
+            "description": "Only entries at or after this time. ISO 8601 date or date-time."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Only entries at or before this time. ISO 8601 date or date-time."
+            },
+            "description": "Only entries at or before this time. ISO 8601 date or date-time."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Page size. Defaults to 20, maximum 100; larger values return 100."
+            },
+            "description": "Page size. Defaults to 20, maximum 100; larger values return 100."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Number of entries to skip. Defaults to 0."
+            },
+            "description": "Number of entries to skip. Defaults to 0."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Stable UUID for the entry."
+                          },
+                          "occurred_at": {
+                            "type": "string",
+                            "description": "When the change happened, in ISO 8601 UTC format."
+                          },
+                          "action": {
+                            "type": "string",
+                            "description": "What happened, such as created, updated, deleted, paused, invited, member_removed."
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Human-readable summary, the same text the dashboard shows."
+                          },
+                          "target": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "ID of the thing that changed."
+                              },
+                              "kind": {
+                                "type": "string",
+                                "description": "One of: endpoint, team, member, role, billing, add_on, api_key."
+                              },
+                              "label": {
+                                "type": "string",
+                                "description": "Display name of the kind."
+                              },
+                              "name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "description": "Current name where there is one; null otherwise."
+                              }
+                            },
+                            "description": "What was changed."
+                          },
+                          "actor": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "description": "User UUID or API key ID; null for quicknode or deleted_user."
+                              },
+                              "type": {
+                                "type": "string",
+                                "description": "One of: user, api_key, quicknode, deleted_user."
+                              },
+                              "name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "description": "Member's name or Quicknode; null for api_key."
+                              },
+                              "email": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "description": "Member's email; null for api_key, quicknode, deleted_user."
+                              }
+                            },
+                            "description": "Who made the change."
+                          }
+                        }
+                      },
+                      "description": "Array of activity log entries, newest first."
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer",
+                          "description": "Total count of entries matching the filters."
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "description": "Page size used."
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "description": "Number of entries skipped."
+                        }
+                      },
+                      "description": "Pagination metadata."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/activity_logs/filters": {
+      "get": {
+        "operationId": "get_v0_activity_logs_filters",
+        "summary": "Returns the actors and types you can filter by when listing activity log entries.",
+        "tags": [
+          "activity_logs"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/activity-logs/v0-activity-logs-filters"
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "actors": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "User UUID or API key ID. Use this value for the actor filter."
+                              },
+                              "type": {
+                                "type": "string",
+                                "description": "Either user or api_key."
+                              },
+                              "name": {
+                                "type": "string",
+                                "description": "Member's name; null for API keys."
+                              }
+                            }
+                          },
+                          "description": "Members and API keys that appear in your log."
+                        },
+                        "types": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string",
+                                "description": "Type value to use in the type filter."
+                              },
+                              "label": {
+                                "type": "string",
+                                "description": "Display name for the type."
+                              }
+                            }
+                          },
+                          "description": "Entry types you can filter by."
+                        }
+                      },
+                      "description": "Filter values available for your account."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/activity_logs/{id}": {
+      "get": {
+        "operationId": "get_v0_activity_logs_by_id",
+        "summary": "Returns a single activity log entry by ID.",
+        "tags": [
+          "activity_logs"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/activity-logs/v0-activity-logs-id"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "The UUID of the activity log entry. Get an id from the list activity log entries response. The ID is not case-sensitive. Returns 404 if the ID is not in your account's log."
+            },
+            "required": true,
+            "description": "The UUID of the activity log entry. Get an id from the list activity log entries response. The ID is not case-sensitive. Returns 404 if the ID is not in your account's log."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Stable UUID for the entry."
+                        },
+                        "occurred_at": {
+                          "type": "string",
+                          "description": "When the change happened, in ISO 8601 UTC format."
+                        },
+                        "action": {
+                          "type": "string",
+                          "description": "What happened, such as created, updated, deleted, paused, invited, member_removed."
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "Human-readable summary, the same text the dashboard shows."
+                        },
+                        "target": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "ID of the thing that changed."
+                            },
+                            "kind": {
+                              "type": "string",
+                              "description": "One of: endpoint, team, member, role, billing, add_on, api_key."
+                            },
+                            "label": {
+                              "type": "string",
+                              "description": "Display name of the kind."
+                            },
+                            "name": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "description": "Current name where there is one; null otherwise."
+                            }
+                          },
+                          "description": "What was changed."
+                        },
+                        "actor": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "description": "User UUID or API key ID; null for quicknode or deleted_user."
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "One of: user, api_key, quicknode, deleted_user."
+                            },
+                            "name": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "description": "Member's name or Quicknode; null for api_key."
+                            },
+                            "email": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "description": "Member's email; null for api_key, quicknode, deleted_user."
+                            }
+                          },
+                          "description": "Who made the change."
+                        }
+                      },
+                      "description": "The activity log entry."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v0/api-credits/{chain}": {
       "get": {
         "operationId": "get_v0_api_credits_by_chain",
@@ -533,7 +942,7 @@
     "/v0/endpoints/{id}/method-rate-limits": {
       "get": {
         "operationId": "get_v0_endpoints_by_id_method_rate_limits",
-        "summary": "Gets method rate limits.",
+        "summary": "Lists method rate limits, including whether each limit applies per client IP or to the endpoint as a whole.",
         "tags": [
           "endpoints"
         ],
@@ -582,6 +991,10 @@
                                 "items": {},
                                 "description": "A list of method names to which the rate limiter applies "
                               },
+                              "limit_by_ip": {
+                                "type": "boolean",
+                                "description": "Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)"
+                              },
                               "rate": {
                                 "type": "integer",
                                 "description": "The number of allowed requests within the specified interval"
@@ -614,7 +1027,7 @@
       },
       "post": {
         "operationId": "post_v0_endpoints_by_id_method_rate_limits",
-        "summary": "Creates a method rate limit.",
+        "summary": "Creates a method rate limit per client IP or for the endpoint as a whole.",
         "tags": [
           "endpoints"
         ],
@@ -653,6 +1066,10 @@
                   "rate": {
                     "type": "integer",
                     "description": " Specifies the maximum number of requests allowed for the specified methods within the defined interval"
+                  },
+                  "limit_by_ip": {
+                    "type": "boolean",
+                    "description": "Set to true to apply the rate separately to each client IP. Set to false or omit this field to apply the rate to the endpoint as a whole (the existing behavior)."
                   }
                 },
                 "required": [
@@ -687,6 +1104,10 @@
                           "type": "array",
                           "items": {},
                           "description": "A list of methods the rate limiter applies to"
+                        },
+                        "limit_by_ip": {
+                          "type": "boolean",
+                          "description": "Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)"
                         },
                         "rate": {
                           "type": "integer",
@@ -726,6 +1147,7 @@
           "description": "Quicknode docs",
           "url": "https://www.quicknode.com/docs/admin-api/endpoint-rate-limits/v0-endpoints-id-method-rate-limits-method_rate_limit_id"
         },
+        "description": "Updates a method rate limit. Send only the fields to change; omitted fields retain their current values.",
         "parameters": [
           {
             "name": "id",
@@ -749,7 +1171,7 @@
           }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
@@ -767,13 +1189,12 @@
                   "rate": {
                     "type": "integer",
                     "description": " Specifies the maximum number of requests allowed for the specified methods within the defined interval"
+                  },
+                  "limit_by_ip": {
+                    "type": "boolean",
+                    "description": "Set to true to apply the rate separately to each client IP, or false to apply it to the endpoint as a whole. Omit this field to keep the current setting. This can be the only field in the request."
                   }
-                },
-                "required": [
-                  "status",
-                  "methods",
-                  "rate"
-                ]
+                }
               }
             }
           }
@@ -801,6 +1222,10 @@
                           "type": "array",
                           "items": {},
                           "description": "A list of methods the rate limiter applies to"
+                        },
+                        "limit_by_ip": {
+                          "type": "boolean",
+                          "description": "Whether the rate limit applies separately to each client IP (true) or to the endpoint as a whole (false)"
                         },
                         "rate": {
                           "type": "integer",
@@ -895,7 +1320,7 @@
           "description": "Quicknode docs",
           "url": "https://www.quicknode.com/docs/admin-api/endpoint-rate-limits/v0-endpoints-id-rate-limits"
         },
-        "description": "Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. The response returns the effective endpoint-level limits as a flat limits object.",
+        "description": "Updates endpoint rate limits. Only rate limits specified in the payload are updated; omitted rate limits remain unchanged. Set limit_by_ip to apply the endpoint rate limits to each client IP address. The response returns the effective endpoint-level limits as a flat limits object.",
         "parameters": [
           {
             "name": "id",
@@ -909,7 +1334,7 @@
           }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
@@ -931,12 +1356,13 @@
                         "description": "Specifies the maximum number of requests allowed per minute"
                       }
                     },
-                    "description": "Contains the rate limit configurations that you want to update"
+                    "description": "Contains the rate limit configurations that you want to update. Required unless limit_by_ip is present"
+                  },
+                  "limit_by_ip": {
+                    "type": "boolean",
+                    "description": "Set to true to apply the endpoint rate limits to each client IP address, or false to apply them to the endpoint as a whole. Omit to keep the current setting"
                   }
-                },
-                "required": [
-                  "rate_limits"
-                ]
+                }
               }
             }
           }
@@ -969,6 +1395,10 @@
                             }
                           },
                           "description": "The limits object which contains the following fields:"
+                        },
+                        "limit_by_ip": {
+                          "type": "boolean",
+                          "description": "Whether the endpoint rate limits apply to each client IP address"
                         }
                       },
                       "description": "The data object which contains the following fields:"
@@ -1042,6 +1472,10 @@
                             }
                           },
                           "description": "An array of endpoint rate limit configurations"
+                        },
+                        "limit_by_ip": {
+                          "type": "boolean",
+                          "description": "Whether the endpoint rate limits apply to each client IP address"
                         }
                       },
                       "description": "The data object which contains the endpoint rate limit configuration"
@@ -4227,6 +4661,1433 @@
                         }
                       },
                       "description": "Contains detailed information about a specific log entry, including the raw request that was sent and the response that was received."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/endpoints/{id}/metrics/errors/summary": {
+      "post": {
+        "operationId": "post_v0_endpoints_by_id_metrics_errors_summary",
+        "summary": "Returns RPC and HTTP error counts for one endpoint for a time range.",
+        "tags": [
+          "endpoints"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-endpoints-id-metrics-errors-summary"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Numeric Admin API endpoint ID returned by GET /v0/endpoints. Do not use an endpoint UUID from a transaction record."
+            },
+            "required": true,
+            "description": "Numeric Admin API endpoint ID returned by GET /v0/endpoints. Do not use an endpoint UUID from a transaction record."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 start time. Required together with to when last is omitted."
+            },
+            "description": "ISO 8601 start time. Required together with to when last is omitted."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 end time. Required together with from when last is omitted."
+            },
+            "description": "ISO 8601 end time. Required together with from when last is omitted."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+            },
+            "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+          },
+          {
+            "name": "group_by[]",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {},
+              "description": "Repeat this query parameter for grouping dimensions: method. Method grouping requires kind=rpc."
+            },
+            "description": "Repeat this query parameter for grouping dimensions: method. Method grouping requires kind=rpc."
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Filter errors to rpc or http. Omit to include both. Use rpc when grouping by method."
+            },
+            "description": "Filter errors to rpc or http. Omit to include both. Use rpc when grouping by method."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Positive maximum number of results per page; for example, 2."
+            },
+            "description": "Positive maximum number of results per page; for example, 2."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+            },
+            "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "description": "Effective start of the returned time range, in ISO 8601 format."
+                            },
+                            "to": {
+                              "type": "string",
+                              "description": "Effective end of the returned time range, in ISO 8601 format."
+                            },
+                            "totals": {
+                              "type": "object",
+                              "properties": {
+                                "rpc_errors": {
+                                  "type": "number",
+                                  "description": "Number of RPC errors."
+                                },
+                                "http_errors": {
+                                  "type": "number",
+                                  "description": "Number of HTTP errors."
+                                }
+                              },
+                              "description": "Aggregate totals for the selected time range."
+                            },
+                            "next_cursor": {
+                              "type": "string",
+                              "description": "Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor."
+                            },
+                            "breakdown": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "method": {
+                                    "type": "string",
+                                    "description": "RPC method name. In a breakdown, present when grouping by method."
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "description": "Error kind: rpc or http."
+                                  },
+                                  "count": {
+                                    "type": "number",
+                                    "description": "Number of errors in this group."
+                                  }
+                                }
+                              },
+                              "description": "Grouped results. Present when grouping is requested; can be empty."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/metrics/errors/summary": {
+      "post": {
+        "operationId": "post_v0_metrics_errors_summary",
+        "summary": "Returns account RPC and HTTP error counts for a time range.",
+        "tags": [
+          "metrics"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-metrics-errors-summary"
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 start time. Required together with to when last is omitted."
+            },
+            "description": "ISO 8601 start time. Required together with to when last is omitted."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 end time. Required together with from when last is omitted."
+            },
+            "description": "ISO 8601 end time. Required together with from when last is omitted."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+            },
+            "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+          },
+          {
+            "name": "group_by[]",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {},
+              "description": "Repeat this query parameter for grouping dimensions: method. Method grouping requires kind=rpc."
+            },
+            "description": "Repeat this query parameter for grouping dimensions: method. Method grouping requires kind=rpc."
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Filter errors to rpc or http. Omit to include both. Use rpc when grouping by method."
+            },
+            "description": "Filter errors to rpc or http. Omit to include both. Use rpc when grouping by method."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Positive maximum number of results per page; for example, 2."
+            },
+            "description": "Positive maximum number of results per page; for example, 2."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+            },
+            "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "description": "Effective start of the returned time range, in ISO 8601 format."
+                            },
+                            "to": {
+                              "type": "string",
+                              "description": "Effective end of the returned time range, in ISO 8601 format."
+                            },
+                            "totals": {
+                              "type": "object",
+                              "properties": {
+                                "rpc_errors": {
+                                  "type": "number",
+                                  "description": "Number of RPC errors."
+                                },
+                                "http_errors": {
+                                  "type": "number",
+                                  "description": "Number of HTTP errors."
+                                }
+                              },
+                              "description": "Aggregate totals for the selected time range."
+                            },
+                            "next_cursor": {
+                              "type": "string",
+                              "description": "Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor."
+                            },
+                            "breakdown": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "method": {
+                                    "type": "string",
+                                    "description": "RPC method name. In a breakdown, present when grouping by method."
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "description": "Error kind: rpc or http."
+                                  },
+                                  "count": {
+                                    "type": "number",
+                                    "description": "Number of errors in this group."
+                                  }
+                                }
+                              },
+                              "description": "Grouped results. Present when grouping is requested; can be empty."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/metrics/traffic/summary": {
+      "post": {
+        "operationId": "post_v0_metrics_traffic_summary",
+        "summary": "Returns successful requests, transferred bytes, credits, and distinct active methods for a time range.",
+        "tags": [
+          "metrics"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-metrics-traffic-summary"
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 start time. Required together with to when last is omitted."
+            },
+            "description": "ISO 8601 start time. Required together with to when last is omitted."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 end time. Required together with from when last is omitted."
+            },
+            "description": "ISO 8601 end time. Required together with from when last is omitted."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+            },
+            "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+          },
+          {
+            "name": "group_by[]",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {},
+              "description": "Repeat this query parameter for grouping dimensions: method, endpoint. Omit it to return totals without a breakdown."
+            },
+            "description": "Repeat this query parameter for grouping dimensions: method, endpoint. Omit it to return totals without a breakdown."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Positive maximum number of results per page; for example, 2."
+            },
+            "description": "Positive maximum number of results per page; for example, 2."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+            },
+            "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "description": "Effective start of the returned time range, in ISO 8601 format."
+                            },
+                            "to": {
+                              "type": "string",
+                              "description": "Effective end of the returned time range, in ISO 8601 format."
+                            },
+                            "totals": {
+                              "type": "object",
+                              "properties": {
+                                "successful_requests": {
+                                  "type": "integer",
+                                  "description": "Number of successful requests."
+                                },
+                                "bytes": {
+                                  "type": "integer",
+                                  "description": "Number of bytes transferred."
+                                },
+                                "request_credits": {
+                                  "type": "integer",
+                                  "description": "Credits consumed by requests."
+                                },
+                                "bytes_credits": {
+                                  "type": "integer",
+                                  "description": "Credits consumed by transferred bytes."
+                                },
+                                "credits": {
+                                  "type": "integer",
+                                  "description": "Total API credits consumed."
+                                },
+                                "active_methods": {
+                                  "type": "integer",
+                                  "description": "Number of distinct active methods."
+                                }
+                              },
+                              "description": "Aggregate totals for the selected time range."
+                            },
+                            "breakdown": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "method": {
+                                    "type": "string",
+                                    "description": "RPC method name. In a breakdown, present when grouping by method."
+                                  },
+                                  "successful_requests": {
+                                    "type": "integer",
+                                    "description": "Number of successful requests."
+                                  },
+                                  "bytes": {
+                                    "type": "integer",
+                                    "description": "Number of bytes transferred."
+                                  },
+                                  "request_credits": {
+                                    "type": "integer",
+                                    "description": "Credits consumed by requests."
+                                  },
+                                  "bytes_credits": {
+                                    "type": "integer",
+                                    "description": "Credits consumed by transferred bytes."
+                                  },
+                                  "credits": {
+                                    "type": "integer",
+                                    "description": "Total API credits consumed."
+                                  },
+                                  "active_methods": {
+                                    "type": "integer",
+                                    "description": "Number of distinct active methods."
+                                  },
+                                  "endpoint": {
+                                    "type": "string",
+                                    "description": "Endpoint UUID; present when grouping by endpoint."
+                                  }
+                                }
+                              },
+                              "description": "Grouped results. Present when grouping is requested; can be empty."
+                            },
+                            "next_cursor": {
+                              "type": "string",
+                              "description": "Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/transactions": {
+      "post": {
+        "operationId": "post_v0_transactions",
+        "summary": "Lists account transaction submissions for a time range, with cursor pagination.",
+        "tags": [
+          "transactions"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-transactions"
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 start time. Required together with to when last is omitted."
+            },
+            "description": "ISO 8601 start time. Required together with to when last is omitted."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 end time. Required together with from when last is omitted."
+            },
+            "description": "ISO 8601 end time. Required together with from when last is omitted."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+            },
+            "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Positive maximum number of results per page; for example, 2."
+            },
+            "description": "Positive maximum number of results per page; for example, 2."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+            },
+            "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+          },
+          {
+            "name": "network",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Filter submissions by network identifier, such as robinhood-testnet."
+            },
+            "description": "Filter submissions by network identifier, such as robinhood-testnet."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "description": "Effective start of the returned time range, in ISO 8601 format."
+                            },
+                            "to": {
+                              "type": "string",
+                              "description": "Effective end of the returned time range, in ISO 8601 format."
+                            },
+                            "transactions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "network": {
+                                    "type": "string",
+                                    "description": "Network identifier."
+                                  },
+                                  "transaction_hash": {
+                                    "type": "string",
+                                    "description": "Transaction hash or signature."
+                                  },
+                                  "first_submitted_at": {
+                                    "type": "string",
+                                    "description": "Timestamp of the first recorded submission."
+                                  },
+                                  "last_submitted_at": {
+                                    "type": "string",
+                                    "description": "Timestamp of the most recent recorded submission."
+                                  },
+                                  "attempt_count": {
+                                    "type": "integer",
+                                    "description": "Number of recorded submission attempts."
+                                  },
+                                  "endpoint_ids": {
+                                    "type": "array",
+                                    "items": {},
+                                    "description": "Endpoint UUIDs associated with the submissions. These are not the numeric Admin API endpoint IDs."
+                                  },
+                                  "methods": {
+                                    "type": "array",
+                                    "items": {},
+                                    "description": "RPC method names used for submission."
+                                  },
+                                  "archive": {
+                                    "type": "boolean",
+                                    "description": "Whether the transaction is marked as archived."
+                                  },
+                                  "height": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "description": "Block height when available; otherwise null."
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "description": "Recorded transaction submission state; for example, submitted. This is not confirmation of inclusion or finality."
+                                  }
+                                }
+                              },
+                              "description": "Transaction submissions matching the selected time range and filters."
+                            },
+                            "next_cursor": {
+                              "type": "string",
+                              "description": "Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/transactions/{network}/{hash}": {
+      "post": {
+        "operationId": "post_v0_transactions_by_network_by_hash",
+        "summary": "Returns recorded submission attempts for a transaction, optionally including request and response payloads.",
+        "tags": [
+          "transactions"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-transactions-network-hash"
+        },
+        "parameters": [
+          {
+            "name": "network",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Network returned by GET /v0/transactions."
+            },
+            "required": true,
+            "description": "Network returned by GET /v0/transactions."
+          },
+          {
+            "name": "hash",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Transaction hash or signature returned by GET /v0/transactions. URL-encode this path segment."
+            },
+            "required": true,
+            "description": "Transaction hash or signature returned by GET /v0/transactions. URL-encode this path segment."
+          },
+          {
+            "name": "include_payloads",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "Set to true to include available request/response payload strings. Payloads are omitted when this parameter is not supplied."
+            },
+            "description": "Set to true to include available request/response payload strings. Payloads are omitted when this parameter is not supplied."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "exists": {
+                              "type": "boolean",
+                              "description": "Whether a matching transaction submission was found."
+                            },
+                            "data": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "network": {
+                                      "type": "string",
+                                      "description": "Network identifier."
+                                    },
+                                    "transaction_hash": {
+                                      "type": "string",
+                                      "description": "Transaction hash or signature."
+                                    },
+                                    "first_submitted_at": {
+                                      "type": "string",
+                                      "description": "Timestamp of the first recorded submission."
+                                    },
+                                    "last_submitted_at": {
+                                      "type": "string",
+                                      "description": "Timestamp of the most recent recorded submission."
+                                    },
+                                    "state": {
+                                      "type": "string",
+                                      "description": "Recorded transaction submission state; for example, submitted. This is not confirmation of inclusion or finality."
+                                    },
+                                    "attempts": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "submitted_at": {
+                                            "type": "string",
+                                            "description": "Timestamp of the submission attempt."
+                                          },
+                                          "endpoint_id": {
+                                            "type": "string",
+                                            "description": "Endpoint UUID for this attempt; not the numeric Admin API endpoint ID."
+                                          },
+                                          "method": {
+                                            "type": "string",
+                                            "description": "RPC method name. In a breakdown, present when grouping by method."
+                                          },
+                                          "request_id": {
+                                            "type": "string",
+                                            "description": "Identifier of the recorded request."
+                                          },
+                                          "payloads": {
+                                            "type": "object",
+                                            "properties": {
+                                              "request": {
+                                                "type": "string",
+                                                "description": "Recorded request payload as a JSON-encoded string."
+                                              },
+                                              "response": {
+                                                "type": "string",
+                                                "description": "Recorded response payload as a JSON-encoded string."
+                                              }
+                                            },
+                                            "description": "Optional request and response payloads, returned when include_payloads=true and available."
+                                          }
+                                        }
+                                      },
+                                      "description": "Recorded attempts to submit this transaction."
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Recorded transaction details; null when exists is false."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/usage/credits/summary": {
+      "post": {
+        "operationId": "post_v0_usage_credits_summary",
+        "summary": "Returns total account API credits for a time range.",
+        "tags": [
+          "usage"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-usage-credits-summary"
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 start time. Required together with to when last is omitted."
+            },
+            "description": "ISO 8601 start time. Required together with to when last is omitted."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 end time. Required together with from when last is omitted."
+            },
+            "description": "ISO 8601 end time. Required together with from when last is omitted."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+            },
+            "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "description": "Effective start of the returned time range, in ISO 8601 format."
+                            },
+                            "to": {
+                              "type": "string",
+                              "description": "Effective end of the returned time range, in ISO 8601 format."
+                            },
+                            "totals": {
+                              "type": "object",
+                              "properties": {
+                                "credits": {
+                                  "type": "integer",
+                                  "description": "Total API credits consumed."
+                                }
+                              },
+                              "description": "Aggregate totals for the selected time range."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/usage/rpc/summary": {
+      "post": {
+        "operationId": "post_v0_usage_rpc_summary",
+        "summary": "Returns account RPC requests, transferred bytes, and credits for a time range.",
+        "tags": [
+          "usage"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-usage-rpc-summary"
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 start time. Required together with to when last is omitted."
+            },
+            "description": "ISO 8601 start time. Required together with to when last is omitted."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 end time. Required together with from when last is omitted."
+            },
+            "description": "ISO 8601 end time. Required together with from when last is omitted."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+            },
+            "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+          },
+          {
+            "name": "group_by[]",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {},
+              "description": "Repeat this query parameter for grouping dimensions: method, network, endpoint. Omit it to return totals without a breakdown."
+            },
+            "description": "Repeat this query parameter for grouping dimensions: method, network, endpoint. Omit it to return totals without a breakdown."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Positive maximum number of results per page; for example, 2."
+            },
+            "description": "Positive maximum number of results per page; for example, 2."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+            },
+            "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "description": "Effective start of the returned time range, in ISO 8601 format."
+                            },
+                            "to": {
+                              "type": "string",
+                              "description": "Effective end of the returned time range, in ISO 8601 format."
+                            },
+                            "totals": {
+                              "type": "object",
+                              "properties": {
+                                "requests": {
+                                  "type": "integer",
+                                  "description": "Number of RPC requests."
+                                },
+                                "bytes": {
+                                  "type": "integer",
+                                  "description": "Number of bytes transferred."
+                                },
+                                "rpc_credits": {
+                                  "type": "integer",
+                                  "description": "Credits consumed by RPC requests."
+                                },
+                                "data_credits": {
+                                  "type": "integer",
+                                  "description": "Credits consumed by data transfer."
+                                },
+                                "credits": {
+                                  "type": "integer",
+                                  "description": "Total API credits consumed."
+                                }
+                              },
+                              "description": "Aggregate totals for the selected time range."
+                            },
+                            "breakdown": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "method": {
+                                    "type": "string",
+                                    "description": "RPC method name. In a breakdown, present when grouping by method."
+                                  },
+                                  "requests": {
+                                    "type": "integer",
+                                    "description": "Number of RPC requests."
+                                  },
+                                  "bytes": {
+                                    "type": "integer",
+                                    "description": "Number of bytes transferred."
+                                  },
+                                  "rpc_credits": {
+                                    "type": "integer",
+                                    "description": "Credits consumed by RPC requests."
+                                  },
+                                  "data_credits": {
+                                    "type": "integer",
+                                    "description": "Credits consumed by data transfer."
+                                  },
+                                  "credits": {
+                                    "type": "integer",
+                                    "description": "Total API credits consumed."
+                                  },
+                                  "network": {
+                                    "type": "string",
+                                    "description": "Present when grouping by network."
+                                  },
+                                  "endpoint": {
+                                    "type": "string",
+                                    "description": "Endpoint UUID; present when grouping by endpoint."
+                                  }
+                                }
+                              },
+                              "description": "Grouped results. Present when grouping is requested; can be empty."
+                            },
+                            "next_cursor": {
+                              "type": "string",
+                              "description": "Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/usage/streams/summary": {
+      "post": {
+        "operationId": "post_v0_usage_streams_summary",
+        "summary": "Returns Streams blocks, transferred bytes, and block credits for a time range.",
+        "tags": [
+          "usage"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-usage-streams-summary"
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 start time. Required together with to when last is omitted."
+            },
+            "description": "ISO 8601 start time. Required together with to when last is omitted."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 end time. Required together with from when last is omitted."
+            },
+            "description": "ISO 8601 end time. Required together with from when last is omitted."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+            },
+            "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+          },
+          {
+            "name": "group_by[]",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {},
+              "description": "Repeat this query parameter for grouping dimensions: stream. Omit it to return totals without a breakdown."
+            },
+            "description": "Repeat this query parameter for grouping dimensions: stream. Omit it to return totals without a breakdown."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Positive maximum number of results per page; for example, 2."
+            },
+            "description": "Positive maximum number of results per page; for example, 2."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+            },
+            "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "description": "Effective start of the returned time range, in ISO 8601 format."
+                            },
+                            "to": {
+                              "type": "string",
+                              "description": "Effective end of the returned time range, in ISO 8601 format."
+                            },
+                            "totals": {
+                              "type": "object",
+                              "properties": {
+                                "blocks": {
+                                  "type": "integer",
+                                  "description": "Number of Streams blocks processed."
+                                },
+                                "bytes": {
+                                  "type": "integer",
+                                  "description": "Number of bytes transferred."
+                                },
+                                "block_credits": {
+                                  "type": "integer",
+                                  "description": "Credits consumed by Streams blocks."
+                                }
+                              },
+                              "description": "Aggregate totals for the selected time range."
+                            },
+                            "breakdown": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "stream": {
+                                    "type": "string",
+                                    "description": "Stream identifier. Present when grouping by stream."
+                                  },
+                                  "blocks": {
+                                    "type": "integer",
+                                    "description": "Number of Streams blocks processed."
+                                  },
+                                  "bytes": {
+                                    "type": "integer",
+                                    "description": "Number of bytes transferred."
+                                  },
+                                  "block_credits": {
+                                    "type": "integer",
+                                    "description": "Credits consumed by Streams blocks."
+                                  }
+                                }
+                              },
+                              "description": "Grouped results. Present when grouping is requested; can be empty."
+                            },
+                            "next_cursor": {
+                              "type": "string",
+                              "description": "Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/usage/webhooks/summary": {
+      "post": {
+        "operationId": "post_v0_usage_webhooks_summary",
+        "summary": "Returns Webhooks deliveries and credits for a time range.",
+        "tags": [
+          "usage"
+        ],
+        "externalDocs": {
+          "description": "Quicknode docs",
+          "url": "https://www.quicknode.com/docs/admin-api/observability/v0-usage-webhooks-summary"
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 start time. Required together with to when last is omitted."
+            },
+            "description": "ISO 8601 start time. Required together with to when last is omitted."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 end time. Required together with from when last is omitted."
+            },
+            "description": "ISO 8601 end time. Required together with from when last is omitted."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+            },
+            "description": "Relative time window instead of from and to; for example, 1h for the last hour."
+          },
+          {
+            "name": "group_by[]",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {},
+              "description": "Repeat this query parameter for grouping dimensions: webhook. Omit it to return totals without a breakdown."
+            },
+            "description": "Repeat this query parameter for grouping dimensions: webhook. Omit it to return totals without a breakdown."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Positive maximum number of results per page; for example, 2."
+            },
+            "description": "Positive maximum number of results per page; for example, 2."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+            },
+            "description": "Opaque next_cursor from the previous response. Keep the same time range, filters, grouping, and limit when requesting subsequent pages."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "description": "Effective start of the returned time range, in ISO 8601 format."
+                            },
+                            "to": {
+                              "type": "string",
+                              "description": "Effective end of the returned time range, in ISO 8601 format."
+                            },
+                            "totals": {
+                              "type": "object",
+                              "properties": {
+                                "deliveries": {
+                                  "type": "integer",
+                                  "description": "Number of Webhooks deliveries."
+                                },
+                                "credits": {
+                                  "type": "integer",
+                                  "description": "Total API credits consumed."
+                                }
+                              },
+                              "description": "Aggregate totals for the selected time range."
+                            },
+                            "breakdown": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "webhook": {
+                                    "type": "string",
+                                    "description": "Webhook identifier. Present when grouping by webhook."
+                                  },
+                                  "deliveries": {
+                                    "type": "integer",
+                                    "description": "Number of Webhooks deliveries."
+                                  },
+                                  "credits": {
+                                    "type": "integer",
+                                    "description": "Total API credits consumed."
+                                  }
+                                }
+                              },
+                              "description": "Grouped results. Present when grouping is requested; can be empty."
+                            },
+                            "next_cursor": {
+                              "type": "string",
+                              "description": "Opaque continuation cursor. Present when another page is available. Pass it unchanged as cursor."
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Response data. Null when the request fails."
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Error message on failure; null on success."
                     }
                   }
                 }
